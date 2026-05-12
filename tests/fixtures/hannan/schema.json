@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shona-api.local/tests/fixtures/hannan/schema.json",
+  "title": "Hannan parser fixture corpus",
+  "type": "object",
+  "required": ["fixture_format_version", "source", "entries"],
+  "properties": {
+    "fixture_format_version": {
+      "const": "hannan-fixture-v1"
+    },
+    "source": {
+      "type": "object",
+      "required": ["source_key", "source_filename", "rights_note"],
+      "properties": {
+        "source_key": {"const": "source_hannan"},
+        "source_filename": {"const": "hannan_dictionary.pdf"},
+        "rights_note": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "entries": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/entry"}
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": [
+        "id",
+        "raw_entry_text",
+        "expected_parse",
+        "coverage_tags",
+        "provenance",
+        "annotation"
+      ],
+      "properties": {
+        "id": {"type": "string"},
+        "raw_entry_text": {"type": "string"},
+        "expected_parse": {"$ref": "#/$defs/expected_parse"},
+        "coverage_tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "annotation": {"$ref": "#/$defs/annotation"}
+      },
+      "additionalProperties": false
+    },
+    "expected_parse": {
+      "type": "object",
+      "required": [
+        "headword",
+        "normalized_headword",
+        "headword_kind",
+        "comparative_bantu_marker",
+        "tone_pattern",
+        "dialects",
+        "part_of_speech",
+        "noun",
+        "verb",
+        "etymology",
+        "derived_forms",
+        "senses"
+      ],
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "source_key",
+        "source_filename",
+        "entry_locator",
+        "page_reference",
+        "extraction_method"
+      ],
+      "additionalProperties": true
+    },
+    "annotation": {
+      "type": "object",
+      "required": [
+        "annotator",
+        "annotated_on",
+        "confidence",
+        "uncertainties",
+        "notes"
+      ],
+      "additionalProperties": true
+    }
+  }
+}
