@@ -100,3 +100,14 @@ class TsumoDetailView(FigurativeExpressionSubtypeDetailView):
     subtype = FigurativeExpression.Subtype.TSUMO
     subtype_label = "tsumo"
     not_found_code = "TSUMO_NOT_FOUND"
+
+
+class MadimikiraListView(FigurativeExpressionSubtypeListView):
+    subtype = FigurativeExpression.Subtype.MADIMIKIRA
+    subtype_label = "madimikira"
+
+
+class MadimikiraDetailView(FigurativeExpressionSubtypeDetailView):
+    subtype = FigurativeExpression.Subtype.MADIMIKIRA
+    subtype_label = "madimikira"
+    not_found_code = "MADIMIKIRA_NOT_FOUND"
