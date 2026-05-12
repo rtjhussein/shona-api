@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "shona_api.releases",
     "shona_api.records",
     "shona_api.sources",
+    "shona_api.web",
 ]
 
 MIDDLEWARE = [
