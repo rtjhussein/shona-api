@@ -50,7 +50,11 @@ class LemmaReadView(APIView):
     def _get_lemma(self, public_id):
         try:
             return (
-                Lemma.objects.prefetch_related(
+                Lemma.objects.select_related(
+                    "noun_class",
+                    "noun_class__default_plural_class",
+                )
+                .prefetch_related(
                     "senses",
                     "tone_records__form",
                     "forms__sense",
@@ -134,6 +138,9 @@ class SearchView(APIView):
     def _lemma_queryset(self):
         return Lemma.objects.filter(
             review_state__in=self.public_review_states,
+        ).select_related(
+            "noun_class",
+            "noun_class__default_plural_class",
         ).prefetch_related(
             "senses",
             "tone_records__form",
@@ -146,7 +153,12 @@ class SearchView(APIView):
                 review_state__in=self.public_review_states,
                 lemma__review_state__in=self.public_review_states,
             )
-            .select_related("lemma", "sense")
+            .select_related(
+                "lemma",
+                "lemma__noun_class",
+                "lemma__noun_class__default_plural_class",
+                "sense",
+            )
             .prefetch_related(
                 Prefetch(
                     "lemma__forms",

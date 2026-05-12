@@ -1,9 +1,47 @@
 from rest_framework import serializers
 
-from .models import Form, Lemma, Sense, ToneRecord
+from .models import Form, Lemma, NounClass, Sense, ToneRecord
+
+
+class NounClassSerializer(serializers.ModelSerializer):
+    default_plural_class_number = serializers.SerializerMethodField()
+
+    class Meta:
+        model = NounClass
+        fields = (
+            "public_id",
+            "class_number",
+            "label",
+            "nominal_prefix",
+            "prefix_allomorphs",
+            "default_plural_class_number",
+            "subject_concord",
+            "object_concord",
+            "possessive_concord",
+            "adjectival_concord",
+            "relative_concord",
+            "associative_concord",
+            "demonstrative_proximal",
+            "demonstrative_medial",
+            "demonstrative_distal",
+            "additional_concords",
+            "dialect_overrides",
+            "provenance",
+            "revision",
+            "review_state",
+        )
+
+    def get_default_plural_class_number(self, obj):
+        return (
+            obj.default_plural_class.class_number
+            if obj.default_plural_class is not None
+            else None
+        )
 
 
 class LemmaCoreSerializer(serializers.ModelSerializer):
+    noun_class = NounClassSerializer(read_only=True)
+
     class Meta:
         model = Lemma
         fields = (
@@ -13,6 +51,7 @@ class LemmaCoreSerializer(serializers.ModelSerializer):
             "headword_kind",
             "part_of_speech_code",
             "part_of_speech_label",
+            "noun_class",
             "dialects",
             "comparative_bantu_marker",
             "phonology_inventory_version",

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Form, Lemma, Sense, ToneRecord
+from .models import Form, Lemma, NounClass, Sense, ToneRecord
 
 
 class SenseInline(admin.TabularInline):
@@ -24,16 +24,40 @@ class FormInline(admin.TabularInline):
     show_change_link = True
 
 
+@admin.register(NounClass)
+class NounClassAdmin(admin.ModelAdmin):
+    list_display = (
+        "class_number",
+        "label",
+        "nominal_prefix",
+        "subject_concord",
+        "default_plural_class",
+        "review_state",
+        "updated_at",
+    )
+    list_filter = ("review_state", "default_plural_class")
+    search_fields = (
+        "class_number",
+        "label",
+        "nominal_prefix",
+        "subject_concord",
+        "object_concord",
+        "public_id",
+    )
+    readonly_fields = ("id", "public_id", "created_at", "updated_at")
+
+
 @admin.register(Lemma)
 class LemmaAdmin(admin.ModelAdmin):
     list_display = (
         "headword",
         "headword_kind",
+        "noun_class",
         "part_of_speech_code",
         "review_state",
         "updated_at",
     )
-    list_filter = ("headword_kind", "part_of_speech_code", "review_state")
+    list_filter = ("headword_kind", "noun_class", "part_of_speech_code", "review_state")
     search_fields = (
         "headword",
         "normalized_headword",
