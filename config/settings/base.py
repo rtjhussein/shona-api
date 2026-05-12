@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "shona_api.health",
+    "shona_api.records",
     "shona_api.sources",
 ]
 
