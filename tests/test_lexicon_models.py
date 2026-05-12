@@ -89,6 +89,49 @@ def test_lemma_and_form_compute_phonology_fields_on_save():
 
 
 @pytest.mark.django_db
+def test_lemma_stores_default_learner_metadata_without_guessing():
+    lemma = Lemma.objects.create(headword="mhoro")
+
+    assert lemma.learner_level == Lemma.LearnerLevel.UNKNOWN
+    assert lemma.curriculum_stage == Lemma.CurriculumStage.UNKNOWN
+    assert lemma.curriculum_domains == []
+    assert lemma.learning_functions == []
+    assert lemma.communication_contexts == []
+    assert lemma.register_tags == []
+    assert lemma.learner_source_links == []
+    assert lemma.first_appearance_source_key == ""
+    assert lemma.first_appearance_locator == ""
+    assert lemma.first_appearance_unit == ""
+    assert lemma.first_appearance_lesson is None
+    assert lemma.first_appearance_page == ""
+    assert lemma.frequency_tier == Lemma.FrequencyTier.UNKNOWN
+    assert lemma.frequency_score == 0.0
+
+
+@pytest.mark.django_db
+def test_lemma_validates_learner_metadata_list_fields():
+    lemma = Lemma(
+        headword="mhoro",
+        curriculum_domains={"bad": "shape"},
+        learning_functions="vocabulary",
+        communication_contexts={},
+        register_tags={},
+        learner_source_links={},
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        lemma.full_clean()
+
+    assert set(exc_info.value.message_dict) == {
+        "curriculum_domains",
+        "learning_functions",
+        "communication_contexts",
+        "register_tags",
+        "learner_source_links",
+    }
+
+
+@pytest.mark.django_db
 def test_noun_class_records_store_concords_and_link_to_noun_lemmas():
     plural_class = NounClass.objects.create(
         class_number="2",
@@ -183,6 +226,8 @@ def test_lexicon_admin_exposes_linked_records_for_crud():
         "headword_kind",
         "noun_class",
         "part_of_speech_code",
+        "learner_level",
+        "frequency_tier",
         "review_state",
         "updated_at",
     )
