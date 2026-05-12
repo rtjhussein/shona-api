@@ -260,6 +260,20 @@ h1 {
   font-weight: 850;
 }
 
+.headword-link,
+.text-link {
+  color: inherit;
+  text-decoration-color: rgba(10, 127, 100, 0.35);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.headword-link:hover,
+.text-link:hover {
+  color: var(--accent-strong);
+  text-decoration-color: currentColor;
+}
+
 .result-subtitle {
   margin-bottom: 0;
   color: var(--muted);
@@ -309,6 +323,153 @@ h1 {
     "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
+.entry-panel {
+  padding-bottom: 28px;
+}
+
+.entry-nav {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.entry-results {
+  display: grid;
+  gap: 18px;
+}
+
+.entry-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.entry-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+}
+
+.entry-headword {
+  margin-bottom: 0;
+  font-size: 4.4rem;
+  line-height: 0.98;
+}
+
+.entry-meta {
+  margin-top: 16px;
+}
+
+.entry-section {
+  margin-top: 28px;
+}
+
+.entry-section h3,
+.related-card h2 {
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+}
+
+.definition-list,
+.compact-list,
+.example-list,
+.related-list {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.definition-list {
+  display: grid;
+  gap: 18px;
+}
+
+.definition-list p,
+.compact-list p,
+.related-list p {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.example-list {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.compact-list,
+.related-list {
+  display: grid;
+  gap: 12px;
+}
+
+.compact-list strong,
+.related-list strong {
+  margin-right: 8px;
+}
+
+.kv-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.kv-row {
+  min-width: 0;
+}
+
+.kv-row dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.kv-row dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.related-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.raw-json-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 16px 18px;
+}
+
+.raw-json-panel summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.raw-json {
+  max-height: 460px;
+  overflow: auto;
+  margin: 16px 0 0;
+  border-radius: 8px;
+  background: #101418;
+  color: #eef6f3;
+  padding: 16px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.muted {
+  color: var(--muted);
+}
+
 @media (max-width: 700px) {
   .dictionary-shell {
     width: min(100vw - 20px, 1120px);
@@ -323,10 +484,16 @@ h1 {
     font-size: 2.65rem;
   }
 
+  .entry-headword {
+    font-size: 2.4rem;
+  }
+
   .search-row,
   .api-key-row,
   .result-header,
-  .results-summary {
+  .results-summary,
+  .entry-heading,
+  .related-header {
     align-items: stretch;
     flex-direction: column;
   }
@@ -335,5 +502,9 @@ h1 {
   .secondary-button,
   .ghost-button {
     width: 100%;
+  }
+
+  .kv-list {
+    grid-template-columns: 1fr;
   }
 }

@@ -12,6 +12,7 @@
   const saveKeyButton = shell.querySelector("[data-save-key]");
   const clearKeyButton = shell.querySelector("[data-clear-key]");
   const searchEndpoint = shell.dataset.searchEndpoint;
+  const entryUrlTemplate = shell.dataset.entryUrlTemplate;
   const apiKeyStorage = shell.dataset.apiKeyStorage;
 
   const savedKey = window.localStorage.getItem(apiKeyStorage);
@@ -145,7 +146,11 @@
       <li class="result-card">
         <div class="result-header">
           <div>
-            <h3 class="headword">${escapeHtml(lemma.headword || "Untitled lemma")}</h3>
+            <h3 class="headword">
+              <a class="headword-link" href="${escapeAttribute(entryUrl(lemma.public_id))}">
+                ${escapeHtml(lemma.headword || "Untitled lemma")}
+              </a>
+            </h3>
             <p class="result-subtitle">${escapeHtml(pos)}</p>
           </div>
           <div class="badge-row">
@@ -211,6 +216,13 @@
     return count === 1 ? singular : plural;
   }
 
+  function entryUrl(publicId) {
+    if (!entryUrlTemplate || !publicId) {
+      return "#";
+    }
+    return entryUrlTemplate.replace("__PUBLIC_ID__", encodeURIComponent(publicId));
+  }
+
   function humanize(value) {
     if (!value) {
       return "";
@@ -225,5 +237,9 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value).replace(/`/g, "&#096;");
   }
 })();
