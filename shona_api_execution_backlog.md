@@ -76,6 +76,26 @@ Create progressively:
 - repeated review tranches
 - repeated enrichment batches
 
+## 2.4 Test-first implementation policy
+
+All agent-built features must be implemented test-first where practical.
+
+Required test policy:
+
+- For rule-based logic, capture the expected contract behavior in tests before implementation.
+- Bug fixes must begin with a failing regression test that demonstrates the bug.
+- API endpoints must have request/response contract tests.
+- Morphology, normalization, and search logic must have fixture-based test suites.
+- Every issue is complete only when code, tests, and acceptance criteria all pass.
+
+Pull request policy:
+
+- Every implementation PR must list the tests/checks run.
+- The PR body is the primary place to log tests/checks for review.
+- If an issue is completed without code changes, the issue comment must explain why no tests were required.
+- The PR body must include the closing keyword for the issue, for example `Closes #123`, so the issue closes only after merge.
+- Do not manually close implementation issues before the PR is reviewed and merged.
+
 ---
 
 # 3. Source Key Map
@@ -678,7 +698,10 @@ The GitHub labels to assign.
 # 10. Backlog
 
 Execution rule:
-Use this backlog one issue at a time. An issue is ready for a fresh agent/chat only when its `blockers` value is `none` or every listed blocker has already been completed and merged. Issues marked `state:blocked` should be created on the board for visibility, but should not be assigned to an implementation chat until their blockers clear.
+Use this backlog one issue at a time. An issue is ready for a fresh agent/chat only when its `blockers` value is `none` or every listed blocker has already been completed, reviewed, tested, and merged. Issues marked `state:blocked` should be created on the board for visibility, but should not be assigned to an implementation chat until their blockers clear.
+
+Completion rule:
+An implementation issue is complete only after the pull request is reviewed/accepted, merged, linked tests/checks pass, acceptance criteria are satisfied, the issue has the correct `state:done` label, the project item is marked `Done`, and the GitHub issue is closed by the merged PR.
 
 ## ISSUE-000 — Define source role map and ingestion rules
 
