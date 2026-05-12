@@ -123,4 +123,3 @@ class ExtractionUnit(models.Model):
 
     def __str__(self):
         return f"{self.source_key} {self.source_location_reference}"
-

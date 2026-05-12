@@ -29,4 +29,3 @@ class ExtractionUnitAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created_at", "updated_at")
     ordering = ("review_state", "-created_at")
-
