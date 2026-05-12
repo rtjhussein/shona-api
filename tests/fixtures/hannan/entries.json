@@ -1,0 +1,547 @@
+{
+  "fixture_format_version": "hannan-fixture-v1",
+  "source": {
+    "source_key": "source_hannan",
+    "source_filename": "hannan_dictionary.pdf",
+    "rights_note": "The source PDF remains local-only. This corpus contains short, manually selected entry excerpts solely as parser fixtures."
+  },
+  "entries": [
+    {
+      "id": "hannan-bonya-v-001",
+      "raw_entry_text": "-bonya [L] K v i Water; discharge (of eyes). cp -pupira KZ. 2. t Z Catch in falling-stone trap. 3. KoZ Beat to pulp (fresh roots or leaves). Riva rinobonya mbeva: the trap catches mice.",
+      "expected_parse": {
+        "headword": "-bonya",
+        "normalized_headword": "bonya",
+        "headword_kind": "verb_stem",
+        "comparative_bantu_marker": false,
+        "tone_pattern": "L",
+        "dialects": ["K"],
+        "part_of_speech": {"code": "v", "label": "verb"},
+        "noun": null,
+        "verb": {
+          "entry_grammar": ["i"],
+          "transitivity_by_sense": [
+            {"sense_number": 1, "grammar": ["i"]},
+            {"sense_number": 2, "grammar": ["t"]},
+            {"sense_number": 3, "grammar": []}
+          ]
+        },
+        "etymology": [],
+        "derived_forms": [],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "Water; discharge (of eyes).",
+            "dialects": ["K"],
+            "grammar": ["i"],
+            "examples": [],
+            "cross_references": [{"type": "cp", "target": "-pupira", "dialects": ["K", "Z"]}]
+          },
+          {
+            "number": 2,
+            "definition": "Catch in falling-stone trap.",
+            "dialects": ["Z"],
+            "grammar": ["t"],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 3,
+            "definition": "Beat to pulp (fresh roots or leaves).",
+            "dialects": ["Ko", "Z"],
+            "grammar": [],
+            "examples": [
+              {
+                "shona": "Riva rinobonya mbeva",
+                "english": "the trap catches mice"
+              }
+            ],
+            "cross_references": []
+          }
+        ]
+      },
+      "coverage_tags": [
+        "cross_reference",
+        "dialect_scoped_sense",
+        "example_sentence",
+        "tone_pattern",
+        "verb_transitivity"
+      ],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword -bonya",
+        "page_reference": "PDF page 50, printed page 26",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "medium",
+        "uncertainties": [
+          {
+            "path": "expected_parse.dialects",
+            "note": "The leading K may apply to the first sense rather than the whole entry; later senses carry explicit Z/KoZ markers.",
+            "status": "preserve_for_parser_review"
+          }
+        ],
+        "notes": [
+          "Exercises numbered senses, sense-local transitivity, compact dialect codes, cp references, and an example sentence."
+        ]
+      }
+    },
+    {
+      "id": "hannan-boo-ideo-001",
+      "raw_entry_text": "boo [LH] KMZ ideo of Piercing through. 2. KZ of Being common property, gratuitous.",
+      "expected_parse": {
+        "headword": "boo",
+        "normalized_headword": "boo",
+        "headword_kind": "ideophone",
+        "comparative_bantu_marker": false,
+        "tone_pattern": "LH",
+        "dialects": ["K", "M", "Z"],
+        "part_of_speech": {"code": "ideo", "label": "ideophone"},
+        "noun": null,
+        "verb": null,
+        "etymology": [],
+        "derived_forms": [],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "of Piercing through.",
+            "dialects": ["K", "M", "Z"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 2,
+            "definition": "of Being common property, gratuitous.",
+            "dialects": ["K", "Z"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          }
+        ]
+      },
+      "coverage_tags": ["dialect_scoped_sense", "ideophone", "tone_pattern"],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword boo",
+        "page_reference": "PDF page 50, printed page 26",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "high",
+        "uncertainties": [],
+        "notes": [
+          "Covers ideophone POS and a second sense with narrower dialect coverage than the entry-level marker."
+        ]
+      }
+    },
+    {
+      "id": "hannan-bota-n-001",
+      "raw_entry_text": "bota [HH] KMZ n 5, pl: mab- & map-, Thin porridge.",
+      "expected_parse": {
+        "headword": "bota",
+        "normalized_headword": "bota",
+        "headword_kind": "noun",
+        "comparative_bantu_marker": false,
+        "tone_pattern": "HH",
+        "dialects": ["K", "M", "Z"],
+        "part_of_speech": {"code": "n", "label": "noun"},
+        "noun": {
+          "classes": [5],
+          "plural_prefixes": ["mab-", "map-"]
+        },
+        "verb": null,
+        "etymology": [],
+        "derived_forms": [],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "Thin porridge.",
+            "dialects": ["K", "M", "Z"],
+            "grammar": ["class 5", "plural mab-", "plural map-"],
+            "examples": [],
+            "cross_references": []
+          }
+        ]
+      },
+      "coverage_tags": ["multiple_plural_prefixes", "noun_class", "tone_pattern"],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword bota",
+        "page_reference": "PDF page 50, printed page 26",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "high",
+        "uncertainties": [],
+        "notes": [
+          "Covers noun class plus alternate plural prefixes joined by ampersand notation."
+        ]
+      }
+    },
+    {
+      "id": "hannan-bopa-v-001",
+      "raw_entry_text": "\\u2020-bopa [H] vt Tie up. Inspan. Brake. < Fanigalo. cp -sunga KKoMZ.",
+      "expected_parse": {
+        "headword": "-bopa",
+        "normalized_headword": "bopa",
+        "headword_kind": "verb_stem",
+        "comparative_bantu_marker": true,
+        "tone_pattern": "H",
+        "dialects": [],
+        "part_of_speech": {"code": "vt", "label": "transitive verb"},
+        "noun": null,
+        "verb": {
+          "entry_grammar": ["vt"],
+          "transitivity_by_sense": [
+            {"sense_number": 1, "grammar": ["vt"]}
+          ]
+        },
+        "etymology": [
+          {"marker": "<", "source": "Fanigalo"}
+        ],
+        "derived_forms": [],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "Tie up. Inspan. Brake.",
+            "dialects": [],
+            "grammar": ["vt"],
+            "examples": [],
+            "cross_references": [{"type": "cp", "target": "-sunga", "dialects": ["K", "Ko", "M", "Z"]}]
+          }
+        ]
+      },
+      "coverage_tags": [
+        "comparative_bantu_marker",
+        "cross_reference",
+        "etymology_marker",
+        "tone_pattern",
+        "verb_transitivity"
+      ],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword -bopa",
+        "page_reference": "PDF page 50, printed page 26",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "medium",
+        "uncertainties": [
+          {
+            "path": "expected_parse.etymology[0].source",
+            "note": "pdftotext split the source word across a line; fixture normalizes it to Fanigalo for parser expectation.",
+            "status": "normalized_from_line_wrap"
+          }
+        ],
+        "notes": [
+          "Covers dagger marker, stem hyphen, vt-as-POS shorthand, etymology marker, and compact KKoMZ dialect parsing."
+        ]
+      }
+    },
+    {
+      "id": "hannan-buda-v-001",
+      "raw_entry_text": "-buda [H] KKoMZ vi Come out. 2. Rise (sun). 3. KZ Be well. cp -simba KKoMZ. 4. KMZ Fade (past tense). 5. KMZ Run (present tense; e.g. shirt being washed). > mbudo; rubudiko. Ndinobuda muhotwe: my nose is bleeding. Ndabuda basa: I have left my employment. Gumbezi iri rakabuda: this blanket has lost its original colour.",
+      "expected_parse": {
+        "headword": "-buda",
+        "normalized_headword": "buda",
+        "headword_kind": "verb_stem",
+        "comparative_bantu_marker": false,
+        "tone_pattern": "H",
+        "dialects": ["K", "Ko", "M", "Z"],
+        "part_of_speech": {"code": "vi", "label": "intransitive verb"},
+        "noun": null,
+        "verb": {
+          "entry_grammar": ["vi"],
+          "transitivity_by_sense": [
+            {"sense_number": 1, "grammar": ["vi"]},
+            {"sense_number": 2, "grammar": ["vi"]},
+            {"sense_number": 3, "grammar": ["vi"]},
+            {"sense_number": 4, "grammar": ["vi"]},
+            {"sense_number": 5, "grammar": ["vi"]}
+          ]
+        },
+        "etymology": [],
+        "derived_forms": [
+          {"marker": ">", "forms": ["mbudo", "rubudiko"]}
+        ],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "Come out.",
+            "dialects": ["K", "Ko", "M", "Z"],
+            "grammar": ["vi"],
+            "examples": [
+              {"shona": "Ndinobuda muhotwe", "english": "my nose is bleeding"},
+              {"shona": "Ndabuda basa", "english": "I have left my employment"}
+            ],
+            "cross_references": []
+          },
+          {
+            "number": 2,
+            "definition": "Rise (sun).",
+            "dialects": ["K", "Ko", "M", "Z"],
+            "grammar": ["vi"],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 3,
+            "definition": "Be well.",
+            "dialects": ["K", "Z"],
+            "grammar": ["vi"],
+            "examples": [],
+            "cross_references": [{"type": "cp", "target": "-simba", "dialects": ["K", "Ko", "M", "Z"]}]
+          },
+          {
+            "number": 4,
+            "definition": "Fade (past tense).",
+            "dialects": ["K", "M", "Z"],
+            "grammar": ["vi"],
+            "examples": [
+              {"shona": "Gumbezi iri rakabuda", "english": "this blanket has lost its original colour"}
+            ],
+            "cross_references": []
+          },
+          {
+            "number": 5,
+            "definition": "Run (present tense; e.g. shirt being washed).",
+            "dialects": ["K", "M", "Z"],
+            "grammar": ["vi"],
+            "examples": [],
+            "cross_references": []
+          }
+        ]
+      },
+      "coverage_tags": [
+        "cross_reference",
+        "derivation_marker",
+        "dialect_scoped_sense",
+        "example_sentence",
+        "tone_pattern",
+        "verb_transitivity"
+      ],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword -buda",
+        "page_reference": "PDF page 51, printed page 27",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "medium",
+        "uncertainties": [
+          {
+            "path": "expected_parse.senses[0].examples",
+            "note": "The printed examples follow all senses; the fixture attaches examples to the nearest plausible senses for parser regression use.",
+            "status": "requires_human_review"
+          }
+        ],
+        "notes": [
+          "Covers a long multi-sense verb, compact KKoMZ dialect marker, sense-local dialect narrowing, derived-form marker, cp reference, and multiple examples."
+        ]
+      }
+    },
+    {
+      "id": "hannan-bu-ideo-001",
+      "raw_entry_text": "bu [L] KMZ ideo of Falling flatly (heavy object). 2. K of Blinking eyes (e.g. when threatened). 3. K of Keeping mouth closed. 4. KZ of Clapping cupped hands. 5. Z of Being ready to be drunk (beer). 6. K of Beating person or dog on tender spot with short stick.",
+      "expected_parse": {
+        "headword": "bu",
+        "normalized_headword": "bu",
+        "headword_kind": "ideophone",
+        "comparative_bantu_marker": false,
+        "tone_pattern": "L",
+        "dialects": ["K", "M", "Z"],
+        "part_of_speech": {"code": "ideo", "label": "ideophone"},
+        "noun": null,
+        "verb": null,
+        "etymology": [],
+        "derived_forms": [],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "of Falling flatly (heavy object).",
+            "dialects": ["K", "M", "Z"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 2,
+            "definition": "of Blinking eyes (e.g. when threatened).",
+            "dialects": ["K"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 3,
+            "definition": "of Keeping mouth closed.",
+            "dialects": ["K"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 4,
+            "definition": "of Clapping cupped hands.",
+            "dialects": ["K", "Z"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 5,
+            "definition": "of Being ready to be drunk (beer).",
+            "dialects": ["Z"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 6,
+            "definition": "of Beating person or dog on tender spot with short stick.",
+            "dialects": ["K"],
+            "grammar": [],
+            "examples": [],
+            "cross_references": []
+          }
+        ]
+      },
+      "coverage_tags": ["dialect_scoped_sense", "ideophone", "tone_pattern"],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword bu, low-tone ideophone entry",
+        "page_reference": "PDF page 51, printed page 27",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "high",
+        "uncertainties": [],
+        "notes": [
+          "Covers repeated homograph handling by identifying the low-tone ideophone entry and six dialect-scoped senses."
+        ]
+      }
+    },
+    {
+      "id": "hannan-budiriro-n-001",
+      "raw_entry_text": "budiriro [HHHL] KMZ n 9, pl: mab-, Success. 2. Progress (cultural).",
+      "expected_parse": {
+        "headword": "budiriro",
+        "normalized_headword": "budiriro",
+        "headword_kind": "noun",
+        "comparative_bantu_marker": false,
+        "tone_pattern": "HHHL",
+        "dialects": ["K", "M", "Z"],
+        "part_of_speech": {"code": "n", "label": "noun"},
+        "noun": {
+          "classes": [9],
+          "plural_prefixes": ["mab-"]
+        },
+        "verb": null,
+        "etymology": [],
+        "derived_forms": [],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "Success.",
+            "dialects": ["K", "M", "Z"],
+            "grammar": ["class 9", "plural mab-"],
+            "examples": [],
+            "cross_references": []
+          },
+          {
+            "number": 2,
+            "definition": "Progress (cultural).",
+            "dialects": ["K", "M", "Z"],
+            "grammar": ["class 9", "plural mab-"],
+            "examples": [],
+            "cross_references": []
+          }
+        ]
+      },
+      "coverage_tags": ["noun_class", "tone_pattern"],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword budiriro",
+        "page_reference": "PDF page 52, printed page 28",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "high",
+        "uncertainties": [],
+        "notes": [
+          "Covers class 9 noun notation with plural prefix and multiple short numbered senses."
+        ]
+      }
+    },
+    {
+      "id": "hannan-bopiro-n-001",
+      "raw_entry_text": "bopiro [LHL] KZ n 5, pl: mab-, Chattering. Chatter (e.g. of children or birds).",
+      "expected_parse": {
+        "headword": "bopiro",
+        "normalized_headword": "bopiro",
+        "headword_kind": "noun",
+        "comparative_bantu_marker": false,
+        "tone_pattern": "LHL",
+        "dialects": ["K", "Z"],
+        "part_of_speech": {"code": "n", "label": "noun"},
+        "noun": {
+          "classes": [5],
+          "plural_prefixes": ["mab-"]
+        },
+        "verb": null,
+        "etymology": [],
+        "derived_forms": [],
+        "senses": [
+          {
+            "number": 1,
+            "definition": "Chattering. Chatter (e.g. of children or birds).",
+            "dialects": ["K", "Z"],
+            "grammar": ["class 5", "plural mab-"],
+            "examples": [],
+            "cross_references": []
+          }
+        ]
+      },
+      "coverage_tags": ["noun_class", "tone_pattern"],
+      "provenance": {
+        "source_key": "source_hannan",
+        "source_filename": "hannan_dictionary.pdf",
+        "entry_locator": "headword bopiro",
+        "page_reference": "PDF page 50, printed page 26",
+        "extraction_method": "manual annotation from pdftotext -layout output"
+      },
+      "annotation": {
+        "annotator": "codex",
+        "annotated_on": "2026-05-12",
+        "confidence": "high",
+        "uncertainties": [],
+        "notes": [
+          "Covers a simple noun entry that parser tests can use as a low-noise baseline."
+        ]
+      }
+    }
+  ]
+}
