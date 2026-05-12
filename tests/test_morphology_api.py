@@ -191,3 +191,174 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
         "supported_shape": "subject_concord + no + verb_stem",
         "supported_rule_ids": ["fortune.verbal.slots.001"],
     }
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_returns_bounded_positive_present_verb_form(
+    client, api_key, current_release, verb_lemma
+):
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular",
+                },
+                "tense_aspect": "present",
+                "polarity": "positive",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["api_version"] == "v1"
+    assert body["data_release"] == current_release.version
+    assert body["rule_set_version"] == current_release.rule_set_version
+    assert body["data"]["rule_set_version"] == current_release.rule_set_version
+    assert body["data"]["generator_version"] == "shona-morphology-generator-v1"
+    assert body["data"]["confidence"] == 0.86
+    assert body["data"]["generated"]["form"] == "ndinobuda"
+    assert body["data"]["generated"]["normalized"] == "ndinobuda"
+    assert body["data"]["generated"]["rule_id"] == "fortune.verbal.slots.001"
+    assert body["data"]["generated"]["lemma"] == {
+        "public_id": verb_lemma.public_id,
+        "headword": "-buda",
+        "normalized_headword": "buda",
+        "part_of_speech_code": "vi",
+    }
+    assert body["data"]["generated"]["slots"]["subject"] == {
+        "surface": "ndi",
+        "type": "person",
+        "label": "1st person singular subject concord",
+        "person": "first",
+        "number": "singular",
+    }
+    assert body["data"]["generated"]["phonology"]["syllables"] == [
+        "ndi",
+        "no",
+        "bu",
+        "da",
+    ]
+    assert body["data"]["warnings"] == [
+        {
+            "code": "GENERATION_PARTIAL_RULE_SET",
+            "message": (
+                "v1 generation supports only single-token positive present verb forms."
+            ),
+        },
+        {
+            "code": "TONE_NOT_GENERATED",
+            "message": (
+                "Tone, object markers, negative forms, and extensions are not generated."
+            ),
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_can_use_reviewed_noun_class_subject_concord(
+    client, api_key, current_release, verb_lemma
+):
+    noun_class = NounClass.objects.create(
+        class_number="2",
+        display_order=2,
+        label="Class 2",
+        nominal_prefix="va",
+        subject_concord="va",
+        review_state=ReviewState.APPROVED,
+    )
+
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "noun_class",
+                    "class_number": "2",
+                },
+                "tense_aspect": "present",
+                "polarity": "positive",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    generated = response.json()["data"]["generated"]
+    assert generated["form"] == "vanobuda"
+    assert generated["slots"]["subject"] == {
+        "surface": "va",
+        "type": "noun_class",
+        "label": "Class 2",
+        "class_number": "2",
+        "noun_class_public_id": noun_class.public_id,
+    }
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_requires_structured_features(client, api_key, current_release):
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": "lemma_test",
+            "features": "present positive",
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "api_version": "v1",
+        "error": {
+            "code": "GENERATION_FEATURES_REQUIRED",
+            "message": "Generation requires a structured 'features' object.",
+            "detail": {"field": "features", "expected_type": "object"},
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_returns_structured_unsupported_failure(
+    client, api_key, current_release, verb_lemma
+):
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular",
+                },
+                "tense_aspect": "past",
+                "polarity": "positive",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["api_version"] == "v1"
+    assert body["error"]["code"] == "GENERATION_UNSUPPORTED"
+    assert body["error"]["detail"] == {
+        "field": "tense_aspect",
+        "received": "past",
+        "supported": ["present"],
+        "supported_shape": "subject_concord + no + verb_stem",
+        "supported_rule_ids": ["fortune.verbal.slots.001"],
+    }
