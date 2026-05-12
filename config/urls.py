@@ -2,7 +2,12 @@ from django.contrib import admin
 from django.urls import path
 
 from shona_api.health.views import HealthView
-from shona_api.figurative_language.views import TsumoDetailView, TsumoListView
+from shona_api.figurative_language.views import (
+    MadimikiraDetailView,
+    MadimikiraListView,
+    TsumoDetailView,
+    TsumoListView,
+)
 from shona_api.lexicon.views import LemmaReadView, SearchView
 from shona_api.morphology.views import AnalyzeView, GenerateView
 from shona_api.web.views import DictionarySearchView
@@ -22,6 +27,16 @@ urlpatterns = [
         "v1/figurative-expressions/tsumo/<str:public_id>",
         TsumoDetailView.as_view(),
         name="tsumo-detail",
+    ),
+    path(
+        "v1/figurative-expressions/madimikira",
+        MadimikiraListView.as_view(),
+        name="madimikira-list",
+    ),
+    path(
+        "v1/figurative-expressions/madimikira/<str:public_id>",
+        MadimikiraDetailView.as_view(),
+        name="madimikira-detail",
     ),
     path("v1/generate", GenerateView.as_view(), name="generate"),
     path("v1/lemmas/<str:public_id>", LemmaReadView.as_view(), name="lemma-read"),
