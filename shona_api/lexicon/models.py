@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from shona_api.editorial.models import ReviewState
@@ -38,6 +39,82 @@ class PhonologyFieldsMixin(models.Model):
         )
 
 
+class NounClass(CanonicalRecord):
+    public_id_prefix = "nounclass"
+
+    class_number = models.CharField(
+        max_length=16,
+        unique=True,
+        db_index=True,
+        help_text="Readable Shona noun-class identifier such as 1, 1a, 2, or 15.",
+    )
+    display_order = models.PositiveSmallIntegerField(default=0, db_index=True)
+    label = models.CharField(max_length=120, blank=True)
+    nominal_prefix = models.CharField(max_length=32, blank=True)
+    prefix_allomorphs = models.JSONField(default=list, blank=True)
+    default_plural_class = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        related_name="singular_classes",
+        null=True,
+        blank=True,
+    )
+    subject_concord = models.CharField(max_length=32, blank=True)
+    object_concord = models.CharField(max_length=32, blank=True)
+    possessive_concord = models.CharField(max_length=32, blank=True)
+    adjectival_concord = models.CharField(max_length=32, blank=True)
+    relative_concord = models.CharField(max_length=32, blank=True)
+    associative_concord = models.CharField(max_length=32, blank=True)
+    demonstrative_proximal = models.CharField(max_length=32, blank=True)
+    demonstrative_medial = models.CharField(max_length=32, blank=True)
+    demonstrative_distal = models.CharField(max_length=32, blank=True)
+    additional_concords = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Reserved slot for later morphology concord types.",
+    )
+    dialect_overrides = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=(
+            "Dialect-keyed morphology overrides, for example "
+            "{'Z': {'subject_concord': 'u'}}."
+        ),
+    )
+    notes = models.TextField(blank=True)
+    review_state = models.CharField(
+        max_length=32,
+        choices=ReviewState.choices,
+        default=ReviewState.DRAFT,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("display_order", "class_number")
+        indexes = [
+            models.Index(fields=("review_state", "class_number")),
+        ]
+
+    def __str__(self):
+        label = f" {self.label}" if self.label else ""
+        return f"Class {self.class_number}{label}"
+
+    def clean(self):
+        errors = {}
+        if not isinstance(self.prefix_allomorphs, list):
+            errors["prefix_allomorphs"] = "Prefix allomorphs must be a list."
+        if not isinstance(self.additional_concords, dict):
+            errors["additional_concords"] = "Additional concords must be an object."
+        if not isinstance(self.dialect_overrides, dict):
+            errors["dialect_overrides"] = "Dialect overrides must be an object."
+        if self.pk and self.default_plural_class_id == self.pk:
+            errors["default_plural_class"] = "A noun class cannot pluralize to itself."
+        if errors:
+            raise ValidationError(errors)
+
+
 class Lemma(PhonologyFieldsMixin, CanonicalRecord):
     class HeadwordKind(models.TextChoices):
         WORD = "word", "Word"
@@ -58,6 +135,13 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
     )
     part_of_speech_code = models.CharField(max_length=32, blank=True, db_index=True)
     part_of_speech_label = models.CharField(max_length=120, blank=True)
+    noun_class = models.ForeignKey(
+        NounClass,
+        on_delete=models.SET_NULL,
+        related_name="lemmas",
+        null=True,
+        blank=True,
+    )
     dialects = models.JSONField(default=list, blank=True)
     comparative_bantu_marker = models.BooleanField(default=False)
     review_state = models.CharField(
@@ -79,6 +163,12 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
     def __str__(self):
         pos = f" {self.part_of_speech_code}" if self.part_of_speech_code else ""
         return f"{self.headword}{pos}"
+
+    def clean(self):
+        if self.noun_class_id and self.headword_kind != self.HeadwordKind.NOUN:
+            raise ValidationError(
+                {"noun_class": "Only noun lemmas can be linked to a noun class."}
+            )
 
     def save(self, *args, **kwargs):
         self.normalized_headword = self.headword.removeprefix("-").strip()

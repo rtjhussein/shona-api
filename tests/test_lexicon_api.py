@@ -109,6 +109,7 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
             "headword_kind": Lemma.HeadwordKind.VERB_STEM,
             "part_of_speech_code": "vi",
             "part_of_speech_label": "intransitive verb",
+            "noun_class": None,
             "dialects": ["K", "Ko", "M", "Z"],
             "comparative_bantu_marker": False,
             "phonology_inventory_version": "shona-core-v1",
