@@ -1,0 +1,1726 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Shona API",
+    "version": "2026.05.0",
+    "summary": "Public API for reviewed Shona lexical and language data.",
+    "description": "The Shona API exposes reviewed lexical records, exact search, active figurative-language records, and bounded morphology v1 analysis/generation. Protected endpoints accept API keys through the Authorization header using the Api-Key scheme or through the X-API-Key header."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System"
+    },
+    {
+      "name": "Lexicon"
+    },
+    {
+      "name": "Figurative language"
+    },
+    {
+      "name": "Morphology"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Check service health.",
+        "operationId": "getHealth",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service health state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/search": {
+      "get": {
+        "tags": [
+          "Lexicon"
+        ],
+        "summary": "Search reviewed lemmas and forms.",
+        "operationId": "searchLexicon",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "buda"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/SearchData"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or empty search query.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/lemmas/{public_id}": {
+      "get": {
+        "tags": [
+          "Lexicon"
+        ],
+        "summary": "Read one lexical entry by public ID.",
+        "operationId": "getLemma",
+        "parameters": [
+          {
+            "name": "public_id",
+            "in": "path",
+            "required": true,
+            "description": "Lemma public ID.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "lemma_abc123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lemma detail.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/LemmaReadData"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No lemma exists for that public ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/figurative-expressions/tsumo": {
+      "get": {
+        "tags": [
+          "Figurative language"
+        ],
+        "summary": "List active reviewed tsumo records.",
+        "operationId": "listTsumo",
+        "responses": {
+          "200": {
+            "description": "Tsumo list.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FigurativeExpressionListData"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/figurative-expressions/tsumo/{public_id}": {
+      "get": {
+        "tags": [
+          "Figurative language"
+        ],
+        "summary": "Read one active reviewed tsumo record.",
+        "operationId": "getTsumo",
+        "parameters": [
+          {
+            "name": "public_id",
+            "in": "path",
+            "required": true,
+            "description": "Tsumo public ID.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "figexpr_abc123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tsumo detail.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FigurativeExpression"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No tsumo exists for that public ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/figurative-expressions/madimikira": {
+      "get": {
+        "tags": [
+          "Figurative language"
+        ],
+        "summary": "List active reviewed madimikira records.",
+        "operationId": "listMadimikira",
+        "responses": {
+          "200": {
+            "description": "Madimikira list.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FigurativeExpressionListData"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/figurative-expressions/madimikira/{public_id}": {
+      "get": {
+        "tags": [
+          "Figurative language"
+        ],
+        "summary": "Read one active reviewed madimikira record.",
+        "operationId": "getMadimikira",
+        "parameters": [
+          {
+            "name": "public_id",
+            "in": "path",
+            "required": true,
+            "description": "Madimikira public ID.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "figexpr_abc123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Madimikira detail.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/FigurativeExpression"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No madimikira exists for that public ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/analyze": {
+      "post": {
+        "tags": [
+          "Morphology"
+        ],
+        "summary": "Analyze a supported v1 Shona form.",
+        "operationId": "analyzeForm",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              },
+              "example": {
+                "text": "ndinobuda"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Morphological analysis.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/AnalyzeData"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Text is missing or not a string.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The form is outside v1 support.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/generate": {
+      "post": {
+        "tags": [
+          "Morphology"
+        ],
+        "summary": "Generate a supported v1 Shona verb form.",
+        "operationId": "generateForm",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRequest"
+              },
+              "example": {
+                "lemma_public_id": "lemma_abc123",
+                "features": {
+                  "generation_type": "verb_form",
+                  "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular"
+                  },
+                  "tense_aspect": "present",
+                  "polarity": "positive"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated form.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/GenerateData"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Required generation input is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Requested features are outside v1 support.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "API key rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Allowed requests per minute for the API key."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Remaining requests in the current window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window resets."
+              },
+              "X-RateLimit-Plan": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Plan attached to the API key."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Use the form: Api-Key shona_sk_..."
+      },
+      "XApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Alternative API key header."
+      }
+    },
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "version": {
+            "type": "string",
+            "example": "0.1.0"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ]
+      },
+      "SuccessEnvelope": {
+        "type": "object",
+        "properties": {
+          "api_version": {
+            "type": "string",
+            "example": "v1"
+          },
+          "data_release": {
+            "type": "string",
+            "example": "2026.05.0"
+          },
+          "rule_set_version": {
+            "type": "string",
+            "example": "morphology-rules-v2"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-12T12:00:00Z"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "api_version",
+          "data_release",
+          "rule_set_version",
+          "generated_at",
+          "data"
+        ]
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "api_version": {
+            "type": "string",
+            "example": "v1"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "LEMMA_NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              },
+              "detail": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "detail"
+            ]
+          }
+        },
+        "required": [
+          "api_version",
+          "error"
+        ]
+      },
+      "SearchData": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/NormalizedQuery"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            }
+          },
+          "zero_result": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "query",
+          "count",
+          "results"
+        ]
+      },
+      "SearchResult": {
+        "type": "object",
+        "properties": {
+          "result_type": {
+            "type": "string",
+            "enum": [
+              "lemma",
+              "form"
+            ]
+          },
+          "match_type": {
+            "type": "string",
+            "example": "exact_lemma"
+          },
+          "lemma": {
+            "$ref": "#/components/schemas/LemmaCore"
+          },
+          "form": {
+            "$ref": "#/components/schemas/Form"
+          }
+        },
+        "required": [
+          "result_type",
+          "match_type",
+          "lemma"
+        ]
+      },
+      "LemmaReadData": {
+        "type": "object",
+        "properties": {
+          "lemma": {
+            "$ref": "#/components/schemas/LemmaCore"
+          },
+          "senses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sense"
+            }
+          },
+          "tone_records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToneRecord"
+            }
+          },
+          "forms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Form"
+            }
+          }
+        },
+        "required": [
+          "lemma",
+          "senses",
+          "tone_records",
+          "forms"
+        ]
+      },
+      "LemmaCore": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "headword": {
+            "type": "string"
+          },
+          "normalized_headword": {
+            "type": "string"
+          },
+          "headword_kind": {
+            "type": "string"
+          },
+          "part_of_speech_code": {
+            "type": "string"
+          },
+          "part_of_speech_label": {
+            "type": "string"
+          },
+          "noun_class": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NounClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dialects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "learner_level": {
+            "type": "string"
+          },
+          "curriculum_stage": {
+            "type": "string"
+          },
+          "review_state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_id",
+          "headword",
+          "normalized_headword",
+          "headword_kind",
+          "part_of_speech_code",
+          "part_of_speech_label",
+          "noun_class"
+        ],
+        "additionalProperties": true
+      },
+      "NounClass": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "class_number": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "nominal_prefix": {
+            "type": "string"
+          },
+          "default_plural_class_number": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "public_id",
+          "class_number",
+          "label"
+        ],
+        "additionalProperties": true
+      },
+      "Sense": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "definition": {
+            "type": "string"
+          },
+          "dialects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grammar": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examples": {
+            "type": "array",
+            "items": true
+          },
+          "cross_references": {
+            "type": "array",
+            "items": true
+          }
+        },
+        "required": [
+          "public_id",
+          "number",
+          "definition"
+        ],
+        "additionalProperties": true
+      },
+      "ToneRecord": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "notation_system": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "form_public_id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "public_id",
+          "pattern",
+          "notation_system"
+        ],
+        "additionalProperties": true
+      },
+      "Form": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "form_text": {
+            "type": "string"
+          },
+          "normalized_form": {
+            "type": "string"
+          },
+          "form_kind": {
+            "type": "string"
+          },
+          "dialects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grammar": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sense_public_id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "public_id",
+          "form_text",
+          "normalized_form",
+          "form_kind"
+        ],
+        "additionalProperties": true
+      },
+      "FigurativeExpressionListData": {
+        "type": "object",
+        "properties": {
+          "subtype": {
+            "type": "string",
+            "enum": [
+              "tsumo",
+              "madimikira"
+            ]
+          },
+          "count": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FigurativeExpression"
+            }
+          }
+        },
+        "required": [
+          "subtype",
+          "count",
+          "results"
+        ]
+      },
+      "FigurativeExpression": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "subtype": {
+            "type": "string"
+          },
+          "subtype_readiness": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "normalized_text": {
+            "type": "string"
+          },
+          "meaning": {
+            "type": "string"
+          },
+          "english_rendering": {
+            "type": "string"
+          },
+          "usage_note": {
+            "type": "string"
+          },
+          "cultural_themes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "linked_lemmas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LemmaCore"
+            }
+          },
+          "review_status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_id",
+          "subtype",
+          "subtype_readiness",
+          "text",
+          "normalized_text",
+          "meaning",
+          "linked_lemmas",
+          "review_status"
+        ],
+        "additionalProperties": true
+      },
+      "NormalizedQuery": {
+        "type": "object",
+        "properties": {
+          "raw": {
+            "type": "string"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "normalizer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "raw",
+          "normalized",
+          "normalizer"
+        ]
+      },
+      "AnalyzeRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "example": "ndinobuda"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "AnalyzeData": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/NormalizedQuery"
+          },
+          "analyzer_version": {
+            "type": "string"
+          },
+          "rule_set_version": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "analyses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "query",
+          "analyzer_version",
+          "rule_set_version",
+          "count",
+          "analyses"
+        ]
+      },
+      "GenerateRequest": {
+        "type": "object",
+        "properties": {
+          "lemma_public_id": {
+            "type": "string"
+          },
+          "features": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "lemma_public_id",
+          "features"
+        ]
+      },
+      "GenerateData": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "generator_version": {
+            "type": "string"
+          },
+          "rule_set_version": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "generated": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "input",
+          "generator_version",
+          "rule_set_version",
+          "confidence",
+          "generated",
+          "warnings",
+          "metadata"
+        ]
+      }
+    }
+  }
+}

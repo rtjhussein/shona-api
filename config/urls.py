@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 
+from shona_api.api_docs.views import OpenAPISpecView
 from shona_api.health.views import HealthView
 from shona_api.figurative_language.views import (
     MadimikiraDetailView,
@@ -17,6 +18,7 @@ urlpatterns = [
     path("", DictionarySearchView.as_view(), name="dictionary-search"),
     path("admin/", admin.site.urls),
     path("dictionary/", DictionarySearchView.as_view(), name="dictionary-search-alias"),
+    path("openapi.json", OpenAPISpecView.as_view(), name="openapi-spec"),
     path(
         "dictionary/entries/<str:public_id>/",
         DictionaryEntryView.as_view(),

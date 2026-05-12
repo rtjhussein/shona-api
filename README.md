@@ -16,6 +16,10 @@ python manage.py runserver
 
 The health endpoint is available at `GET /health`.
 
+Developer quickstart and endpoint documentation are available in
+`docs/developer_quickstart.md`. The OpenAPI spec is published at
+`GET /openapi.json` and committed at `docs/openapi.json`.
+
 Local development expects Postgres and Redis to be available. Redis is used as
 the configured Django cache backend and Celery broker/result backend.
 

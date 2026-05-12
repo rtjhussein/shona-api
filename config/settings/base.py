@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "shona_api.api_docs",
     "shona_api.api_auth",
     "shona_api.editorial",
     "shona_api.extraction",
