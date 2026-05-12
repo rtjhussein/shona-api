@@ -101,3 +101,15 @@ class LemmaReadSerializer(serializers.Serializer):
             ).data,
             "forms": FormSerializer(lemma.forms.all(), many=True).data,
         }
+
+
+class SearchResultSerializer(serializers.Serializer):
+    def to_representation(self, result):
+        payload = {
+            "result_type": result["result_type"],
+            "match_type": result["match_type"],
+            "lemma": LemmaCoreSerializer(result["lemma"]).data,
+        }
+        if result["form"] is not None:
+            payload["form"] = FormSerializer(result["form"]).data
+        return payload

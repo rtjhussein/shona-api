@@ -219,3 +219,89 @@ def test_lemma_read_endpoint_rejects_invalid_api_key(client, current_release, ca
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid API key."
+
+
+@pytest.mark.django_db
+def test_search_endpoint_returns_exact_lemma_match(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, *_ = canonical_lemma
+
+    response = client.get(
+        "/v1/search",
+        {"q": " -BUDA "},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["api_version"] == "v1"
+    assert body["data_release"] == current_release.version
+    assert body["rule_set_version"] == current_release.rule_set_version
+    assert body["data"]["query"] == {
+        "raw": " -BUDA ",
+        "normalized": "buda",
+        "normalizer": "shona-orthography-normalizer-v1",
+    }
+    assert body["data"]["count"] == 1
+    assert body["data"]["results"][0]["result_type"] == "lemma"
+    assert body["data"]["results"][0]["match_type"] == "exact_lemma"
+    assert body["data"]["results"][0]["lemma"]["public_id"] == lemma.public_id
+
+
+@pytest.mark.django_db
+def test_search_endpoint_returns_exact_form_match(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, _, _, form = canonical_lemma
+
+    response = client.get(
+        "/v1/search",
+        {"q": "mbudo"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    assert body["data"]["results"][0]["result_type"] == "form"
+    assert body["data"]["results"][0]["match_type"] == "exact_form"
+    assert body["data"]["results"][0]["lemma"]["public_id"] == lemma.public_id
+    assert body["data"]["results"][0]["form"]["public_id"] == form.public_id
+
+
+@pytest.mark.django_db
+def test_search_endpoint_returns_structured_zero_result(client, api_key, current_release):
+    response = client.get(
+        "/v1/search",
+        {"q": "zvisipo"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 0
+    assert body["data"]["results"] == []
+    assert body["data"]["zero_result"] == {
+        "code": "NO_MATCH",
+        "message": "No reviewed lemma or form matched the query.",
+    }
+
+
+@pytest.mark.django_db
+def test_search_endpoint_requires_non_empty_query(client, api_key, current_release):
+    response = client.get(
+        "/v1/search",
+        {"q": "   "},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "api_version": "v1",
+        "error": {
+            "code": "SEARCH_QUERY_REQUIRED",
+            "message": "Search requires a non-empty 'q' query parameter.",
+            "detail": None,
+        },
+    }
