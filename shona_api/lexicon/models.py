@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from shona_api.editorial.models import ReviewState
@@ -123,6 +124,24 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
         IDEOPHONE = "ideophone", "Ideophone"
         UNKNOWN = "unknown", "Unknown"
 
+    class LearnerLevel(models.TextChoices):
+        BEGINNER = "beginner", "Beginner"
+        INTERMEDIATE = "intermediate", "Intermediate"
+        ADVANCED = "advanced", "Advanced"
+        UNKNOWN = "unknown", "Unknown"
+
+    class CurriculumStage(models.TextChoices):
+        FORMS_1_2 = "forms_1_2", "Forms 1-2"
+        FORMS_3_4 = "forms_3_4", "Forms 3-4"
+        GENERAL_SECONDARY = "general_secondary", "General secondary"
+        UNKNOWN = "unknown", "Unknown"
+
+    class FrequencyTier(models.TextChoices):
+        HIGH = "high", "High"
+        MEDIUM = "medium", "Medium"
+        LOW = "low", "Low"
+        UNKNOWN = "unknown", "Unknown"
+
     public_id_prefix = "lemma"
 
     headword = models.CharField(max_length=160)
@@ -144,6 +163,47 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
     )
     dialects = models.JSONField(default=list, blank=True)
     comparative_bantu_marker = models.BooleanField(default=False)
+    learner_level = models.CharField(
+        max_length=32,
+        choices=LearnerLevel.choices,
+        default=LearnerLevel.UNKNOWN,
+        db_index=True,
+    )
+    curriculum_stage = models.CharField(
+        max_length=32,
+        choices=CurriculumStage.choices,
+        default=CurriculumStage.UNKNOWN,
+        db_index=True,
+    )
+    curriculum_domains = models.JSONField(default=list, blank=True)
+    learning_functions = models.JSONField(default=list, blank=True)
+    communication_contexts = models.JSONField(default=list, blank=True)
+    register_tags = models.JSONField(default=list, blank=True)
+    learner_source_links = models.JSONField(default=list, blank=True)
+    first_appearance_source_key = models.CharField(
+        max_length=80,
+        blank=True,
+        db_index=True,
+    )
+    first_appearance_locator = models.CharField(max_length=255, blank=True)
+    first_appearance_unit = models.CharField(max_length=120, blank=True, db_index=True)
+    first_appearance_lesson = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    first_appearance_page = models.CharField(max_length=80, blank=True)
+    frequency_tier = models.CharField(
+        max_length=32,
+        choices=FrequencyTier.choices,
+        default=FrequencyTier.UNKNOWN,
+        db_index=True,
+    )
+    frequency_score = models.FloatField(
+        default=0.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
+        help_text="Transparent learner-priority score from 0.0 to 1.0.",
+    )
     review_state = models.CharField(
         max_length=32,
         choices=ReviewState.choices,
@@ -158,6 +218,8 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
         indexes = [
             models.Index(fields=("normalized_headword", "part_of_speech_code")),
             models.Index(fields=("review_state", "headword_kind")),
+            models.Index(fields=("learner_level", "frequency_tier")),
+            models.Index(fields=("first_appearance_source_key", "first_appearance_lesson")),
         ]
 
     def __str__(self):
@@ -165,10 +227,20 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
         return f"{self.headword}{pos}"
 
     def clean(self):
+        errors = {}
         if self.noun_class_id and self.headword_kind != self.HeadwordKind.NOUN:
-            raise ValidationError(
-                {"noun_class": "Only noun lemmas can be linked to a noun class."}
-            )
+            errors["noun_class"] = "Only noun lemmas can be linked to a noun class."
+        for field_name in (
+            "curriculum_domains",
+            "learning_functions",
+            "communication_contexts",
+            "register_tags",
+            "learner_source_links",
+        ):
+            if not isinstance(getattr(self, field_name), list):
+                errors[field_name] = "Learner metadata field must be a list."
+        if errors:
+            raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         self.normalized_headword = self.headword.removeprefix("-").strip()

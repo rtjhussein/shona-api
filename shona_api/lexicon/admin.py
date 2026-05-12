@@ -54,10 +54,21 @@ class LemmaAdmin(admin.ModelAdmin):
         "headword_kind",
         "noun_class",
         "part_of_speech_code",
+        "learner_level",
+        "frequency_tier",
         "review_state",
         "updated_at",
     )
-    list_filter = ("headword_kind", "noun_class", "part_of_speech_code", "review_state")
+    list_filter = (
+        "headword_kind",
+        "noun_class",
+        "part_of_speech_code",
+        "learner_level",
+        "curriculum_stage",
+        "frequency_tier",
+        "first_appearance_source_key",
+        "review_state",
+    )
     search_fields = (
         "headword",
         "normalized_headword",
