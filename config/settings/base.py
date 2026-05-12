@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "shona_api.editorial",
     "shona_api.health",
     "shona_api.infra",
+    "shona_api.lexicon",
     "shona_api.observability",
     "shona_api.releases",
     "shona_api.records",
