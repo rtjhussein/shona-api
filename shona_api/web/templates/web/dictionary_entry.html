@@ -4,40 +4,28 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Shona Dictionary</title>
+    <title>Shona Dictionary Entry</title>
     <link rel="stylesheet" href="{% static 'web/dictionary-search.css' %}">
-    <script src="{% static 'web/dictionary-search.js' %}" defer></script>
+    <script src="{% static 'web/dictionary-entry.js' %}" defer></script>
   </head>
   <body>
     <main
-      class="dictionary-shell"
-      data-search-endpoint="{{ search_endpoint }}"
-      data-entry-url-template="{{ entry_url_template }}"
+      class="dictionary-shell entry-shell"
+      data-lemma-public-id="{{ lemma_public_id }}"
+      data-lemma-endpoint="{{ lemma_endpoint }}"
+      data-tsumo-endpoint="{{ tsumo_endpoint }}"
+      data-madimikira-endpoint="{{ madimikira_endpoint }}"
       data-api-key-storage="shona-api.reference-web.api-key"
     >
-      <section class="search-panel" aria-labelledby="dictionary-title">
+      <section class="search-panel entry-panel" aria-labelledby="dictionary-title">
+        <div class="entry-nav">
+          <a class="text-link" href="{{ search_url }}">Search</a>
+        </div>
         <div class="masthead">
           <p class="eyebrow">Reference Web Dictionary</p>
           <h1 id="dictionary-title">Shona Dictionary</h1>
-          <p class="lede">Search reviewed Shona lemmas and forms from the public API.</p>
+          <p class="lede">Entry record <span class="mono">{{ lemma_public_id }}</span></p>
         </div>
-
-        <form class="search-form" data-search-form>
-          <label class="field-label" for="dictionary-query">Search</label>
-          <div class="search-row">
-            <input
-              id="dictionary-query"
-              class="search-input"
-              name="q"
-              type="search"
-              autocomplete="off"
-              spellcheck="false"
-              placeholder="buda, mbudo..."
-              data-query-input
-            >
-            <button class="search-button" type="submit">Search</button>
-          </div>
-        </form>
 
         <details class="api-key-panel" data-api-key-panel>
           <summary>API access</summary>
@@ -58,11 +46,18 @@
         </details>
       </section>
 
-      <section class="results-panel" aria-live="polite" aria-busy="false" data-results-region>
-        <div class="state-card state-card--idle" data-state-card>
-          <h2>Ready</h2>
-          <p>Enter a Shona lemma or form to begin.</p>
+      <section class="results-panel entry-results" aria-live="polite" aria-busy="false">
+        <div data-entry-region>
+          <div class="state-card">
+            <h2>Loading</h2>
+            <p>Fetching the public lemma API.</p>
+          </div>
         </div>
+        <div data-related-region></div>
+        <details class="raw-json-panel" data-json-panel hidden>
+          <summary>Raw JSON</summary>
+          <pre class="raw-json mono" data-json-output></pre>
+        </details>
       </section>
     </main>
   </body>
