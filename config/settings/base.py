@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "shona_api.editorial",
     "shona_api.health",
+    "shona_api.releases",
     "shona_api.records",
     "shona_api.sources",
 ]
