@@ -1,0 +1,68 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shona Dictionary</title>
+    <link rel="stylesheet" href="{% static 'web/dictionary-search.css' %}">
+    <script src="{% static 'web/dictionary-search.js' %}" defer></script>
+  </head>
+  <body>
+    <main
+      class="dictionary-shell"
+      data-search-endpoint="{{ search_endpoint }}"
+      data-api-key-storage="shona-api.reference-web.api-key"
+    >
+      <section class="search-panel" aria-labelledby="dictionary-title">
+        <div class="masthead">
+          <p class="eyebrow">Reference Web Dictionary</p>
+          <h1 id="dictionary-title">Shona Dictionary</h1>
+          <p class="lede">Search reviewed Shona lemmas and forms from the public API.</p>
+        </div>
+
+        <form class="search-form" data-search-form>
+          <label class="field-label" for="dictionary-query">Search</label>
+          <div class="search-row">
+            <input
+              id="dictionary-query"
+              class="search-input"
+              name="q"
+              type="search"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="buda, mbudo..."
+              data-query-input
+            >
+            <button class="search-button" type="submit">Search</button>
+          </div>
+        </form>
+
+        <details class="api-key-panel" data-api-key-panel>
+          <summary>API access</summary>
+          <label class="field-label" for="api-key">API key</label>
+          <div class="api-key-row">
+            <input
+              id="api-key"
+              class="api-key-input"
+              name="api-key"
+              type="password"
+              autocomplete="off"
+              placeholder="shona_sk_..."
+              data-api-key-input
+            >
+            <button class="secondary-button" type="button" data-save-key>Save</button>
+            <button class="ghost-button" type="button" data-clear-key>Clear</button>
+          </div>
+        </details>
+      </section>
+
+      <section class="results-panel" aria-live="polite" aria-busy="false" data-results-region>
+        <div class="state-card state-card--idle" data-state-card>
+          <h2>Ready</h2>
+          <p>Enter a Shona lemma or form to begin.</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
