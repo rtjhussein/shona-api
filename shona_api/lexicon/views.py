@@ -1,13 +1,16 @@
 from django.http import Http404
+from django.db.models import Prefetch
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from shona_api.editorial.models import ReviewState
 from shona_api.releases.services import get_current_release_metadata
 
-from .models import Lemma
-from .serializers import LemmaReadSerializer
+from .models import Form, Lemma
+from .search import SEARCH_NORMALIZER_VERSION, normalize_search_query
+from .serializers import LemmaReadSerializer, SearchResultSerializer
 
 
 def build_success_envelope(*, data, release_metadata):
@@ -68,3 +71,105 @@ class LemmaReadView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         return super().handle_exception(exc)
+
+
+class SearchView(APIView):
+    public_review_states = (
+        ReviewState.APPROVED,
+        ReviewState.PUBLISHED,
+    )
+
+    def get(self, request):
+        raw_query = request.query_params.get("q", "")
+        normalized_query = normalize_search_query(raw_query)
+        if not normalized_query:
+            return Response(
+                build_error_envelope(
+                    code="SEARCH_QUERY_REQUIRED",
+                    message="Search requires a non-empty 'q' query parameter.",
+                ),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        results = self._search(normalized_query)
+        release_metadata = get_current_release_metadata()
+        return Response(
+            build_success_envelope(
+                data=self._build_search_payload(
+                    raw_query=raw_query,
+                    normalized_query=normalized_query,
+                    results=results,
+                ),
+                release_metadata=release_metadata,
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    def _search(self, normalized_query):
+        lemma_results = [
+            {
+                "result_type": "lemma",
+                "match_type": "exact_lemma",
+                "lemma": lemma,
+                "form": None,
+            }
+            for lemma in self._lemma_queryset().filter(
+                normalized_headword=normalized_query,
+            )[:20]
+        ]
+        remaining_limit = max(20 - len(lemma_results), 0)
+        form_results = [
+            {
+                "result_type": "form",
+                "match_type": "exact_form",
+                "lemma": form.lemma,
+                "form": form,
+            }
+            for form in self._form_queryset().filter(
+                normalized_form=normalized_query,
+            )[:remaining_limit]
+        ]
+        return lemma_results + form_results
+
+    def _lemma_queryset(self):
+        return Lemma.objects.filter(
+            review_state__in=self.public_review_states,
+        ).prefetch_related(
+            "senses",
+            "tone_records__form",
+            "forms__sense",
+        )
+
+    def _form_queryset(self):
+        return (
+            Form.objects.filter(
+                review_state__in=self.public_review_states,
+                lemma__review_state__in=self.public_review_states,
+            )
+            .select_related("lemma", "sense")
+            .prefetch_related(
+                Prefetch(
+                    "lemma__forms",
+                    queryset=Form.objects.select_related("sense"),
+                ),
+                "lemma__senses",
+                "lemma__tone_records__form",
+            )
+        )
+
+    def _build_search_payload(self, *, raw_query, normalized_query, results):
+        payload = {
+            "query": {
+                "raw": raw_query,
+                "normalized": normalized_query,
+                "normalizer": SEARCH_NORMALIZER_VERSION,
+            },
+            "count": len(results),
+            "results": SearchResultSerializer(results, many=True).data,
+        }
+        if not results:
+            payload["zero_result"] = {
+                "code": "NO_MATCH",
+                "message": "No reviewed lemma or form matched the query.",
+            }
+        return payload
