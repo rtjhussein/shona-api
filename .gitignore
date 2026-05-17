@@ -12,3 +12,5 @@ build/
 *.egg-info/
 staticfiles/
 key_documents/
+local_batches/
+local_source_cache/

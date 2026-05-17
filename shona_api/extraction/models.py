@@ -79,6 +79,12 @@ class ExtractionUnit(models.Model):
         db_index=True,
     )
     provenance = models.JSONField(default=dict, blank=True)
+    batch_id = models.CharField(
+        max_length=120,
+        blank=True,
+        db_index=True,
+        help_text="Identifier for the import batch that created this unit.",
+    )
     canonical_record_content_type = models.ForeignKey(
         ContentType,
         on_delete=models.SET_NULL,

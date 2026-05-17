@@ -1,0 +1,212 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data Progress</title>
+    <link rel="stylesheet" href="{% static 'web/data-progress.css' %}">
+    <script src="{% static 'web/data-progress.js' %}" defer></script>
+  </head>
+  <body>
+    <main class="progress-shell">
+      <header class="mission-header">
+        <div class="mission-copy">
+          <p class="eyebrow">Internal Data Population</p>
+          <h1>Shona API Progress</h1>
+          <p class="mission-note">
+            Lexical backbone pilot, source-backed review, and publication readiness.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="true">
+            <span data-theme-label>Dark</span>
+          </button>
+          <a class="action-link" href="{% url 'admin:index' %}">Admin</a>
+        </div>
+      </header>
+
+      <section class="mission-grid" aria-label="Mission status">
+        <article class="mission-panel current-batch-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Current batch</p>
+              {% if snapshot.active_batch %}
+                <h2>{{ snapshot.active_batch.batch_id }}</h2>
+              {% else %}
+                <h2>No active batch</h2>
+              {% endif %}
+            </div>
+            {% if snapshot.active_batch %}
+              <span class="status-chip status-warning">{{ snapshot.active_batch.needs_review_count }} need review</span>
+            {% else %}
+              <span class="status-chip">waiting</span>
+            {% endif %}
+          </div>
+
+          {% if snapshot.active_batch %}
+            <div class="batch-scoreboard">
+              <div>
+                <span class="metric-label">Imported</span>
+                <strong>{{ snapshot.active_batch.total }}</strong>
+              </div>
+              <div>
+                <span class="metric-label">Parsed</span>
+                <strong>{{ snapshot.active_batch.parsed_count }}</strong>
+              </div>
+              <div>
+                <span class="metric-label">Approved</span>
+                <strong>{{ snapshot.active_batch.approved_count }}</strong>
+              </div>
+              <div>
+                <span class="metric-label">Published</span>
+                <strong>{{ snapshot.active_batch.published_count }}</strong>
+              </div>
+            </div>
+
+            <div class="pipeline" aria-label="Current batch pipeline">
+              {% for step in snapshot.active_batch.pipeline %}
+                <div class="pipeline-step pipeline-{{ step.tone }}">
+                  <div class="pipeline-topline">
+                    <span>{{ step.label }}</span>
+                    <strong>{{ step.count }}</strong>
+                  </div>
+                  <div class="progress-track">
+                    <span style="--value: {{ step.percent }}%"></span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="batch-actions" aria-label="Review actions">
+              <a class="primary-action" href="/admin/extraction/extractionunit/?q={{ snapshot.active_batch.batch_id|urlencode }}&review_state__exact=needs_review">
+                Review candidates
+              </a>
+              <a class="secondary-action" href="/admin/extraction/extractionunit/?q={{ snapshot.active_batch.batch_id|urlencode }}&review_state__exact=approved">
+                Approved queue
+              </a>
+            </div>
+          {% else %}
+            <p class="empty-note">Import a Hannan batch to activate this dashboard.</p>
+          {% endif %}
+        </article>
+
+        <aside class="mission-panel review-panel">
+          <p class="eyebrow">Needs human attention</p>
+          {% if snapshot.active_batch %}
+            <strong class="attention-number">{{ snapshot.active_batch.needs_review_count }}</strong>
+            <p>candidate entries are waiting for editorial review.</p>
+            <dl class="compact-stats">
+              <div><dt>Approved to publish</dt><dd>{{ snapshot.active_batch.approved_unpublished_count }}</dd></div>
+              <div><dt>Parser failures</dt><dd>{{ snapshot.active_batch.failed_count }}</dd></div>
+              <div><dt>Uncertain parses</dt><dd>{{ snapshot.active_batch.uncertain_count }}</dd></div>
+            </dl>
+          {% else %}
+            <strong class="attention-number">0</strong>
+            <p>No active review queue yet.</p>
+          {% endif %}
+        </aside>
+      </section>
+
+      <section class="target-row" aria-label="MVP targets">
+        <article class="target-card">
+          <span class="metric-label">Published lemmas</span>
+          <strong>{{ snapshot.targets.published_lemmas.current }} / {{ snapshot.targets.published_lemmas.target }}</strong>
+          <div class="progress-track target-track">
+            <span style="--value: {{ snapshot.targets.published_lemmas.percent }}%"></span>
+          </div>
+          <p>{{ snapshot.targets.published_lemmas.remaining }} remaining</p>
+        </article>
+        <article class="target-card">
+          <span class="metric-label">Public tsumo</span>
+          <strong>{{ snapshot.targets.public_tsumo.current }} / {{ snapshot.targets.public_tsumo.target }}</strong>
+          <div class="progress-track target-track">
+            <span style="--value: {{ snapshot.targets.public_tsumo.percent }}%"></span>
+          </div>
+          <p>{{ snapshot.targets.public_tsumo.remaining }} remaining</p>
+        </article>
+        <article class="target-card">
+          <span class="metric-label">Source coverage</span>
+          <strong>{{ snapshot.sources.count }}</strong>
+          <p>registered source records</p>
+        </article>
+        <article class="target-card">
+          <span class="metric-label">Tracked batches</span>
+          <strong>{{ snapshot.batches.count }}</strong>
+          <p>{% if snapshot.batches.active %}active: {{ snapshot.batches.active }}{% else %}none active{% endif %}</p>
+        </article>
+      </section>
+
+      <section class="detail-grid">
+        <article class="mission-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Canonical records</p>
+              <h2>Published data</h2>
+            </div>
+          </div>
+          <dl class="stat-list">
+            <div><dt>Total lemmas</dt><dd>{{ snapshot.canonical.total_lemmas }}</dd></div>
+            <div><dt>Published lemmas</dt><dd>{{ snapshot.canonical.published_lemmas }}</dd></div>
+            <div><dt>Published senses</dt><dd>{{ snapshot.canonical.published_senses }}</dd></div>
+            <div><dt>Published forms</dt><dd>{{ snapshot.canonical.published_forms }}</dd></div>
+            <div><dt>Published tone records</dt><dd>{{ snapshot.canonical.published_tone_records }}</dd></div>
+            <div><dt>Published noun classes</dt><dd>{{ snapshot.canonical.published_noun_classes }}</dd></div>
+          </dl>
+        </article>
+
+        <article class="mission-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Release</p>
+              <h2>Public readiness</h2>
+            </div>
+          </div>
+          {% if snapshot.release %}
+            <dl class="stat-list">
+              <div><dt>Data release</dt><dd>{{ snapshot.release.version }}</dd></div>
+              <div><dt>Rule set</dt><dd>{{ snapshot.release.rule_set_version }}</dd></div>
+              <div><dt>Label</dt><dd>{{ snapshot.release.label }}</dd></div>
+            </dl>
+          {% else %}
+            <p class="empty-note">No current data release is configured.</p>
+          {% endif %}
+          <hr>
+          <dl class="stat-list">
+            <div><dt>Total figurative records</dt><dd>{{ snapshot.figurative_language.total }}</dd></div>
+            <div><dt>Public tsumo</dt><dd>{{ snapshot.figurative_language.public_tsumo }}</dd></div>
+            <div><dt>Public madimikira</dt><dd>{{ snapshot.figurative_language.public_madimikira }}</dd></div>
+          </dl>
+        </article>
+      </section>
+
+      <section class="mission-panel source-panel" aria-label="Source coverage">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Source matrix</p>
+            <h2>Evidence coverage</h2>
+          </div>
+        </div>
+        <div class="source-table">
+          <div class="source-row source-head">
+            <span>Source</span>
+            <span>Status</span>
+            <span>Candidates</span>
+            <span>Published lemmas</span>
+          </div>
+          {% for source in snapshot.sources.coverage %}
+            <div class="source-row">
+              <span>
+                <strong>{{ source.source_key }}</strong>
+                <small>{{ source.title }}</small>
+              </span>
+              <span>{{ source.status }}</span>
+              <span>{{ source.extraction_count }}</span>
+              <span>{{ source.published_lemmas }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

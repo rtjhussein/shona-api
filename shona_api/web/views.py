@@ -1,5 +1,8 @@
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse
 from django.views.generic import TemplateView
+
+from .progress import build_data_progress_snapshot
 
 
 class DictionarySearchView(TemplateView):
@@ -29,4 +32,18 @@ class DictionaryEntryView(TemplateView):
         context["search_url"] = reverse("dictionary-search")
         context["tsumo_endpoint"] = reverse("tsumo-list")
         context["madimikira_endpoint"] = reverse("madimikira-list")
+        return context
+
+
+class DataProgressView(UserPassesTestMixin, TemplateView):
+    template_name = "web/data_progress.html"
+    login_url = "/admin/login/"
+
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["snapshot"] = build_data_progress_snapshot()
         return context

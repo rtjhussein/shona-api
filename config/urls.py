@@ -11,13 +11,14 @@ from shona_api.figurative_language.views import (
 )
 from shona_api.lexicon.views import LemmaReadView, SearchView
 from shona_api.morphology.views import AnalyzeView, GenerateView
-from shona_api.web.views import DictionaryEntryView, DictionarySearchView
+from shona_api.web.views import DataProgressView, DictionaryEntryView, DictionarySearchView
 
 
 urlpatterns = [
     path("", DictionarySearchView.as_view(), name="dictionary-search"),
     path("admin/", admin.site.urls),
     path("dictionary/", DictionarySearchView.as_view(), name="dictionary-search-alias"),
+    path("data-progress/", DataProgressView.as_view(), name="data-progress"),
     path("openapi.json", OpenAPISpecView.as_view(), name="openapi-spec"),
     path(
         "dictionary/entries/<str:public_id>/",
