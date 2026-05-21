@@ -81,23 +81,41 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
         )
 
     candidates = _candidate_subject_concords()
+    
+    # Build negative candidate overrides (Class 1 & 1a subject concord "u" -> "a")
+    neg_candidates = []
+    for candidate in candidates:
+        neg_cand = dict(candidate)
+        if neg_cand.get("slot_type") == "noun_class" and neg_cand.get("class_number") in ("1", "1a"):
+            neg_cand["surface"] = "a"
+        neg_candidates.append(neg_cand)
+    # Sort negative candidates by surface length descending
+    neg_candidates.sort(key=lambda candidate: len(candidate["surface"]), reverse=True)
+
     analyses = [
         analysis
         for candidate in candidates
         if (analysis := _analyze_present_positive(normalized, candidate)) is not None
     ]
+    
+    analyses.extend([
+        analysis
+        for candidate in neg_candidates
+        if (analysis := _analyze_present_negative(normalized, candidate)) is not None
+    ])
+
     if not analyses:
         raise AnalysisFailure(
             code="ANALYSIS_UNSUPPORTED",
             message=(
                 "No supported v1 analysis matched the input. Supported v1 forms "
-                "are positive present verb forms using subject concord + 'no' + "
-                "a reviewed verb-stem lemma."
+                "are positive present verb forms (subject concord + 'no' + verb_stem) "
+                "and negative present verb forms (ha- + subject concord + verb_stem ending in -e)."
             ),
             detail={
                 "normalized": normalized,
-                "supported_shape": "subject_concord + no + verb_stem",
-                "supported_rule_ids": [SUPPORTED_RULE_ID],
+                "supported_shape": "subject_concord + no + verb_stem / ha + subject_concord + verb_stem_ending_in_e",
+                "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001"],
             },
         )
 
@@ -125,42 +143,92 @@ def generate_form(
     _validate_supported_generation_features(features)
     subject_candidate = _resolve_generation_subject(features["subject"])
 
-    form = (
-        f"{subject_candidate['surface']}"
-        f"{SUPPORTED_TENSE_ASPECT_MARKER}"
-        f"{lemma.normalized_headword}"
-    )
-    generated = {
-        "generation_type": "verb_form",
-        "form": form,
-        "normalized": normalize_search_query(form),
-        "confidence": subject_candidate["confidence"],
-        "rule_id": SUPPORTED_RULE_ID,
-        "lemma": _lemma_payload(lemma),
-        "slots": {
-            "subject": _subject_slot(subject_candidate),
-            "tense_aspect": {
-                "surface": SUPPORTED_TENSE_ASPECT_MARKER,
-                "value": "present",
-                "label": "positive present marker",
+    polarity = features.get("polarity", "positive")
+    if polarity == "negative":
+        # Standard negative Class 1 override:
+        if subject_candidate.get("slot_type") == "noun_class" and subject_candidate.get("class_number") in ("1", "1a"):
+            subject_candidate["surface"] = "a"
+
+        sc = subject_candidate["surface"]
+        stem_val = lemma.normalized_headword
+        if stem_val.endswith("a"):
+            stem_mutated = stem_val[:-1] + "e"
+        else:
+            stem_mutated = stem_val + "e"
+        
+        # Apply coalescence/contraction rule at concord-stem boundary
+        if sc.endswith("a") and stem_mutated.startswith("a"):
+            sc_surface = sc[:-1]
+        else:
+            sc_surface = sc
+
+        form = f"ha{sc_surface}{stem_mutated}"
+
+        generated = {
+            "generation_type": "verb_form",
+            "form": form,
+            "normalized": normalize_search_query(form),
+            "confidence": subject_candidate["confidence"],
+            "rule_id": "fortune.verbal.negation.001",
+            "lemma": _lemma_payload(lemma),
+            "slots": {
+                "subject": _subject_slot(subject_candidate),
+                "tense_aspect": None,
+                "polarity": {
+                    "surface": "ha",
+                    "value": "negative",
+                    "label": "present negative marker",
+                },
+                "object": None,
+                "verb_stem": {
+                    "surface": stem_mutated,
+                    "lemma_public_id": lemma.public_id,
+                },
+                "final_vowel": {
+                    "surface": "e",
+                    "value": "e",
+                },
             },
-            "polarity": {
-                "surface": "",
-                "value": "positive",
-                "label": "No negative marker generated in supported v1 pattern.",
+            "phonology": compute_phonology_fields(form),
+        }
+    else:
+        form = (
+            f"{subject_candidate['surface']}"
+            f"{SUPPORTED_TENSE_ASPECT_MARKER}"
+            f"{lemma.normalized_headword}"
+        )
+        generated = {
+            "generation_type": "verb_form",
+            "form": form,
+            "normalized": normalize_search_query(form),
+            "confidence": subject_candidate["confidence"],
+            "rule_id": SUPPORTED_RULE_ID,
+            "lemma": _lemma_payload(lemma),
+            "slots": {
+                "subject": _subject_slot(subject_candidate),
+                "tense_aspect": {
+                    "surface": SUPPORTED_TENSE_ASPECT_MARKER,
+                    "value": "present",
+                    "label": "positive present marker",
+                },
+                "polarity": {
+                    "surface": "",
+                    "value": "positive",
+                    "label": "No negative marker generated in supported v1 pattern.",
+                },
+                "object": None,
+                "verb_stem": {
+                    "surface": lemma.normalized_headword,
+                    "lemma_public_id": lemma.public_id,
+                },
+                "final_vowel": {
+                    "surface": lemma.normalized_headword[-1],
+                    "value": lemma.normalized_headword[-1],
+                },
             },
-            "object": None,
-            "verb_stem": {
-                "surface": lemma.normalized_headword,
-                "lemma_public_id": lemma.public_id,
-            },
-            "final_vowel": {
-                "surface": lemma.normalized_headword[-1],
-                "value": lemma.normalized_headword[-1],
-            },
-        },
-        "phonology": compute_phonology_fields(form),
-    }
+            "phonology": compute_phonology_fields(form),
+        }
+
     return {
         "input": {
             "lemma_public_id": lemma_public_id,
@@ -175,18 +243,26 @@ def generate_form(
                 "code": "GENERATION_PARTIAL_RULE_SET",
                 "message": (
                     "v1 generation supports only single-token positive present verb forms."
+                    if polarity == "positive" else
+                    "v1 generation supports only single-token negative present verb forms."
                 ),
             },
             {
                 "code": "TONE_NOT_GENERATED",
                 "message": (
                     "Tone, object markers, negative forms, and extensions are not generated."
+                    if polarity == "positive" else
+                    "Tone, object markers, and extensions are not generated."
                 ),
             },
         ],
         "metadata": {
-            "supported_shape": "subject_concord + no + verb_stem",
-            "supported_rule_ids": [SUPPORTED_RULE_ID],
+            "supported_shape": (
+                "subject_concord + no + verb_stem"
+                if polarity == "positive" else
+                "ha + subject_concord + verb_stem_ending_in_e"
+            ),
+            "supported_rule_ids": [generated["rule_id"]],
             "normalizer": SEARCH_NORMALIZER_VERSION,
         },
     }
@@ -273,6 +349,73 @@ def _analyze_present_positive(
     }
 
 
+def _analyze_present_negative(
+    normalized: str, subject_candidate: dict[str, object]
+) -> dict[str, object] | None:
+    if not normalized.startswith("ha"):
+        return None
+    rest = normalized.removeprefix("ha")
+    sc_surface = subject_candidate["surface"]
+    if not rest.startswith(sc_surface):
+        return None
+
+    # Let's check stem candidates
+    # Possibility 1: No coalescence
+    stem_candidates = []
+    stem_1 = rest.removeprefix(sc_surface)
+    if stem_1:
+        stem_candidates.append((stem_1, False))
+
+    # Possibility 2: Coalescence (only possible if sc_surface ends in "a")
+    if sc_surface.endswith("a"):
+        stem_2 = "a" + rest.removeprefix(sc_surface)
+        stem_candidates.append((stem_2, True))
+
+    for stem, coalesced in stem_candidates:
+        if not stem.endswith("e"):
+            continue
+        # Mutate "e" back to "a" for database lookup
+        normalized_stem = stem[:-1] + "a"
+        lemma = _get_reviewed_verb_stem(normalized_stem)
+        if lemma is not None:
+            phonology = compute_phonology_fields(normalized)
+            return {
+                "analysis_type": "verb_form",
+                "confidence": subject_candidate["confidence"],
+                "rule_id": "fortune.verbal.negation.001",
+                "lemma": {
+                    "public_id": lemma.public_id,
+                    "headword": lemma.headword,
+                    "normalized_headword": lemma.normalized_headword,
+                    "part_of_speech_code": lemma.part_of_speech_code,
+                },
+                "slots": {
+                    "subject": _subject_slot(subject_candidate),
+                    "tense_aspect": None,
+                    "polarity": {
+                        "surface": "ha",
+                        "value": "negative",
+                        "label": "present negative marker",
+                    },
+                    "object": None,
+                    "verb_stem": {
+                        "surface": stem,
+                        "lemma_public_id": lemma.public_id,
+                    },
+                    "final_vowel": {
+                        "surface": "e",
+                        "value": "e",
+                    },
+                },
+                "phonology": phonology,
+                "limitations": [
+                    "v1 supports only single-token negative present verb forms.",
+                    "Object markers, positive forms, extensions, and tone are not analyzed.",
+                ],
+            }
+    return None
+
+
 def _get_reviewed_verb_stem(normalized_stem: str) -> Lemma | None:
     return (
         Lemma.objects.filter(
@@ -344,11 +487,11 @@ def _validate_supported_generation_features(features: dict[str, object]) -> None
             received=features.get("tense_aspect"),
             supported=["present"],
         )
-    if features.get("polarity") != "positive":
+    if features.get("polarity") not in ("positive", "negative"):
         raise _unsupported_generation(
             field="polarity",
             received=features.get("polarity"),
-            supported=["positive"],
+            supported=["positive", "negative"],
         )
     if features.get("object") not in (None, ""):
         raise _unsupported_generation(
@@ -422,8 +565,8 @@ def _unsupported_generation(*, field: str, received, supported) -> GenerationFai
             "field": field,
             "received": received,
             "supported": supported,
-            "supported_shape": "subject_concord + no + verb_stem",
-            "supported_rule_ids": [SUPPORTED_RULE_ID],
+            "supported_shape": "subject_concord + no + verb_stem / ha + subject_concord + verb_stem_ending_in_e",
+            "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001"],
         },
     )
 

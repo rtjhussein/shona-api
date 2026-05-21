@@ -177,7 +177,7 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
 ):
     response = client.post(
         "/v1/analyze",
-        {"text": "handibude"},
+        {"text": "handibuda"},
         content_type="application/json",
         HTTP_AUTHORIZATION=f"Api-Key {api_key}",
     )
@@ -187,9 +187,9 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
     assert body["api_version"] == "v1"
     assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
     assert body["error"]["detail"] == {
-        "normalized": "handibude",
-        "supported_shape": "subject_concord + no + verb_stem",
-        "supported_rule_ids": ["fortune.verbal.slots.001"],
+        "normalized": "handibuda",
+        "supported_shape": "subject_concord + no + verb_stem / ha + subject_concord + verb_stem_ending_in_e",
+        "supported_rule_ids": ["fortune.verbal.slots.001", "fortune.verbal.negation.001"],
     }
 
 
@@ -359,6 +359,227 @@ def test_generate_endpoint_returns_structured_unsupported_failure(
         "field": "tense_aspect",
         "received": "past",
         "supported": ["present"],
-        "supported_shape": "subject_concord + no + verb_stem",
-        "supported_rule_ids": ["fortune.verbal.slots.001"],
+        "supported_shape": "subject_concord + no + verb_stem / ha + subject_concord + verb_stem_ending_in_e",
+        "supported_rule_ids": ["fortune.verbal.slots.001", "fortune.verbal.negation.001"],
     }
+
+
+@pytest.fixture
+def vowel_verb_lemma(current_release):
+    return Lemma.objects.create(
+        headword="-ambura",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vt",
+        part_of_speech_label="transitive verb",
+        provenance={
+            "source_key": "source_hannan",
+            "entry_locator": "fixture:ambura",
+        },
+        review_state=ReviewState.APPROVED,
+    )
+
+
+@pytest.mark.django_db
+def test_analyze_endpoint_returns_bounded_negative_present_verb_analysis(
+    client, api_key, current_release, verb_lemma, vowel_verb_lemma
+):
+    # 1. Regular person subject
+    response = client.post(
+        "/v1/analyze",
+        {"text": "handibude"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    analysis = body["data"]["analyses"][0]
+    assert analysis["analysis_type"] == "verb_form"
+    assert analysis["rule_id"] == "fortune.verbal.negation.001"
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["subject"] == {
+        "surface": "ndi",
+        "type": "person",
+        "label": "1st person singular subject concord",
+        "person": "first",
+        "number": "singular",
+    }
+    assert analysis["slots"]["polarity"] == {
+        "surface": "ha",
+        "value": "negative",
+        "label": "present negative marker",
+    }
+    assert analysis["slots"]["tense_aspect"] is None
+    assert analysis["slots"]["verb_stem"] == {
+        "surface": "bude",
+        "lemma_public_id": verb_lemma.public_id,
+    }
+    assert analysis["slots"]["final_vowel"] == {
+        "surface": "e",
+        "value": "e",
+    }
+
+    # 2. Class 2 subject (regular consonant)
+    noun_class_2 = NounClass.objects.create(
+        class_number="2",
+        display_order=2,
+        label="Class 2",
+        nominal_prefix="va",
+        subject_concord="va",
+        review_state=ReviewState.APPROVED,
+    )
+    response = client.post(
+        "/v1/analyze",
+        {"text": "havabude"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["slots"]["subject"]["surface"] == "va"
+    assert analysis["slots"]["verb_stem"]["surface"] == "bude"
+
+    # 3. Class 2 subject with vowel stem (coalescence)
+    response = client.post(
+        "/v1/analyze",
+        {"text": "havambure"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["slots"]["subject"]["surface"] == "va"
+    assert analysis["slots"]["verb_stem"]["surface"] == "ambure"
+    assert analysis["lemma"]["public_id"] == vowel_verb_lemma.public_id
+
+    # 4. Class 1 override
+    noun_class_1 = NounClass.objects.create(
+        class_number="1",
+        display_order=1,
+        label="Class 1",
+        nominal_prefix="mu",
+        subject_concord="u",
+        review_state=ReviewState.APPROVED,
+    )
+    response = client.post(
+        "/v1/analyze",
+        {"text": "haabude"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["slots"]["subject"]["surface"] == "a"
+    assert analysis["slots"]["subject"]["class_number"] == "1"
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_returns_bounded_negative_present_verb_form(
+    client, api_key, current_release, verb_lemma, vowel_verb_lemma
+):
+    # 1. 1st person singular -> handibude
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular",
+                },
+                "tense_aspect": "present",
+                "polarity": "negative",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    generated = body["data"]["generated"]
+    assert generated["form"] == "handibude"
+    assert generated["rule_id"] == "fortune.verbal.negation.001"
+    assert generated["slots"]["subject"]["surface"] == "ndi"
+    assert generated["slots"]["polarity"]["value"] == "negative"
+    assert generated["slots"]["tense_aspect"] is None
+
+    # 2. Class 2 -> havabude
+    noun_class_2 = NounClass.objects.create(
+        class_number="2",
+        display_order=2,
+        label="Class 2",
+        nominal_prefix="va",
+        subject_concord="va",
+        review_state=ReviewState.APPROVED,
+    )
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "noun_class",
+                    "class_number": "2",
+                },
+                "tense_aspect": "present",
+                "polarity": "negative",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["generated"]["form"] == "havabude"
+
+    # 3. Class 2 + vowel stem -> havambure
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": vowel_verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "noun_class",
+                    "class_number": "2",
+                },
+                "tense_aspect": "present",
+                "polarity": "negative",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["generated"]["form"] == "havambure"
+
+    # 4. Class 1 -> haabude
+    noun_class_1 = NounClass.objects.create(
+        class_number="1",
+        display_order=1,
+        label="Class 1",
+        nominal_prefix="mu",
+        subject_concord="u",
+        review_state=ReviewState.APPROVED,
+    )
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "noun_class",
+                    "class_number": "1",
+                },
+                "tense_aspect": "present",
+                "polarity": "negative",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["generated"]["form"] == "haabude"
