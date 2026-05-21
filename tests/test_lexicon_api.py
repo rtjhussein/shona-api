@@ -308,6 +308,17 @@ def test_search_endpoint_returns_structured_zero_result(client, api_key, current
     assert body["data"]["zero_result"] == {
         "code": "NO_MATCH",
         "message": "No reviewed lemma or form matched the query.",
+        "morphology_enrichment": {
+            "status": "unsupported",
+            "code": "ANALYSIS_UNSUPPORTED",
+            "message": (
+                "No supported v1 analysis matched the input. Supported v1 forms "
+                "are positive present verb forms (subject concord + 'no' + "
+                "[object_concord] + verb_stem) and negative present verb forms "
+                "(ha- + subject concord + [object_concord] + verb_stem ending "
+                "in -e)."
+            ),
+        },
     }
 
 
@@ -359,6 +370,12 @@ def test_search_endpoint_returns_morphology_analysis_on_verb_forms(
 
     assert response.status_code == 200
     body = response.json()
+    assert body["data"]["count"] == 0
+    assert "zero_result" not in body["data"]
+    assert body["data"]["morphology_enrichment"] == {
+        "status": "matched",
+        "count": 1,
+    }
     assert "morphology" in body["data"]
     morph = body["data"]["morphology"]
     assert morph["count"] > 0
@@ -369,4 +386,52 @@ def test_search_endpoint_returns_morphology_analysis_on_verb_forms(
     assert analysis["lemma_details"]["public_id"] == lemma.public_id
     assert len(analysis["lemma_details"]["senses"]) == 1
     assert analysis["lemma_details"]["senses"][0]["definition"] == "Come out."
+
+
+@pytest.mark.django_db
+def test_search_endpoint_records_morphology_enrichment_failures(
+    client, api_key, current_release, monkeypatch
+):
+    metrics = []
+
+    def fail_analysis(raw_text, *, rule_set_version):
+        raise RuntimeError("synthetic analyzer failure")
+
+    def capture_metric(name, value=1, tags=None):
+        metrics.append({"name": name, "value": value, "tags": tags or {}})
+
+    monkeypatch.setattr(
+        "shona_api.morphology.services.analyze_text",
+        fail_analysis,
+    )
+    monkeypatch.setattr("shona_api.lexicon.views.record_metric", capture_metric)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "ndinobuda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "morphology" not in body["data"]
+    assert body["data"]["zero_result"] == {
+        "code": "NO_MATCH",
+        "message": "No reviewed lemma or form matched the query.",
+        "morphology_enrichment": {
+            "status": "failed",
+            "code": "MORPHOLOGY_ENRICHMENT_FAILED",
+            "message": (
+                "Morphology enrichment failed; exact lexical search results "
+                "are still returned."
+            ),
+        },
+    }
+    assert metrics == [
+        {
+            "name": "search.morphology_enrichment.failed",
+            "value": 1,
+            "tags": {"error_type": "RuntimeError"},
+        }
+    ]
 
