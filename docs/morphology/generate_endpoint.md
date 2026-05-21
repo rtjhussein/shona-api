@@ -1,9 +1,7 @@
 # Morphology Generate Endpoint v1
 
 `POST /v1/generate` generates bounded morphology forms from structured feature
-input. v1 is intentionally narrow: it supports single-token positive present
-verb forms built from a reviewed verb-stem lemma, a supported subject concord,
-the `no` present marker, and the lemma stem.
+input. 
 
 ## Request
 
@@ -17,6 +15,11 @@ the `no` present marker, and the lemma stem.
       "person": "first",
       "number": "singular"
     },
+    "object": {
+      "type": "person",
+      "person": "second",
+      "number": "singular"
+    },
     "tense_aspect": "present",
     "polarity": "positive"
   }
@@ -26,10 +29,21 @@ the `no` present marker, and the lemma stem.
 The `features` value must be an object. Free-text descriptions are rejected with
 `GENERATION_FEATURES_REQUIRED`.
 
-Supported subjects:
+### Supported Features:
 
-- person subjects: first/second person, singular/plural
-- noun-class subjects: reviewed noun classes with a stored `subject_concord`
+1. **Subjects**:
+   - Person subjects: first/second person, singular/plural.
+   - Noun-class subjects: reviewed noun classes with a stored `subject_concord`.
+
+2. **Polarity**:
+   - `positive`: Generates positive present verb forms (`ndi-no-buda` -> `ndinobuda`) under rule ID `fortune.verbal.slots.001`.
+   - `negative`: Generates negative present verb forms mutating the final vowel from `-a` to `-e` with prefix `ha-` (`ha-ndi-bude` -> `handibude`) under rule ID `fortune.verbal.negation.001`.
+
+3. **Object Markers (Extension 2)**:
+   - Supports `features.object` block for both person and noun-class object markers (`ndi-no-ku-da` -> `ndinokuda` / `ha-ndi-ku-de` -> `handikude`) under rule ID `fortune.concord.object.001`.
+
+4. **Phonological Coalescence**:
+   - Automatically collapses duplicate `a` vowels at subject-concord, object-concord, or stem boundaries (e.g. `va` + `ambura` -> `vambura`).
 
 ## Response
 
@@ -49,9 +63,8 @@ shape.
 
 ## Current Limits
 
-- no negative forms
 - no past/future or advanced tense/aspect generation
-- no object markers
-- no extensions
+- no extensions (e.g. passive, causative, etc. except stem-final mutations)
 - no tone modeling
 - no async or batch generation
+

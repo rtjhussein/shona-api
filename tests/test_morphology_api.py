@@ -188,8 +188,8 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
     assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
     assert body["error"]["detail"] == {
         "normalized": "handibuda",
-        "supported_shape": "subject_concord + no + verb_stem / ha + subject_concord + verb_stem_ending_in_e",
-        "supported_rule_ids": ["fortune.verbal.slots.001", "fortune.verbal.negation.001"],
+        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+        "supported_rule_ids": ["fortune.verbal.slots.001", "fortune.verbal.negation.001", "fortune.concord.object.001"],
     }
 
 
@@ -359,8 +359,8 @@ def test_generate_endpoint_returns_structured_unsupported_failure(
         "field": "tense_aspect",
         "received": "past",
         "supported": ["present"],
-        "supported_shape": "subject_concord + no + verb_stem / ha + subject_concord + verb_stem_ending_in_e",
-        "supported_rule_ids": ["fortune.verbal.slots.001", "fortune.verbal.negation.001"],
+        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+        "supported_rule_ids": ["fortune.verbal.slots.001", "fortune.verbal.negation.001", "fortune.concord.object.001"],
     }
 
 
@@ -583,3 +583,235 @@ def test_generate_endpoint_returns_bounded_negative_present_verb_form(
     )
     assert response.status_code == 200
     assert response.json()["data"]["generated"]["form"] == "haabude"
+
+
+@pytest.mark.django_db
+def test_analyze_endpoint_returns_present_verb_form_with_object_concord(
+    client, api_key, current_release, verb_lemma, vowel_verb_lemma
+):
+    # 1. Positive present with person subject and person object (ndinokuda)
+    da_lemma = Lemma.objects.create(
+        headword="-da",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vt",
+        part_of_speech_label="transitive verb",
+        provenance={"source_key": "source_hannan", "entry_locator": "fixture:da"},
+        review_state=ReviewState.APPROVED,
+    )
+
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinokuda"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    analysis = body["data"]["analyses"][0]
+    assert analysis["rule_id"] == "fortune.concord.object.001"
+    assert analysis["lemma"]["public_id"] == da_lemma.public_id
+    assert analysis["slots"]["subject"]["surface"] == "ndi"
+    assert analysis["slots"]["object"] == {
+        "surface": "ku",
+        "type": "person",
+        "label": "2nd person singular object concord",
+        "person": "second",
+        "number": "singular",
+    }
+    assert analysis["slots"]["verb_stem"]["surface"] == "da"
+
+    # 2. Negative present with person subject and person object (handikude)
+    response = client.post(
+        "/v1/analyze",
+        {"text": "handikude"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["rule_id"] == "fortune.concord.object.001"
+    assert analysis["slots"]["polarity"]["value"] == "negative"
+    assert analysis["slots"]["object"]["surface"] == "ku"
+    assert analysis["slots"]["verb_stem"]["surface"] == "de"
+
+    # 3. Class 2 subject, Class 2 object, vowel stem with coalescence (vanovambura)
+    noun_class_2 = NounClass.objects.filter(class_number="2").first()
+    if not noun_class_2:
+        noun_class_2 = NounClass.objects.create(
+            class_number="2",
+            display_order=2,
+            label="Class 2",
+            nominal_prefix="va",
+            subject_concord="va",
+            object_concord="va",
+            review_state=ReviewState.APPROVED,
+        )
+    else:
+        noun_class_2.object_concord = "va"
+        noun_class_2.save()
+
+    response = client.post(
+        "/v1/analyze",
+        {"text": "vanovambura"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["slots"]["subject"]["surface"] == "va"
+    assert analysis["slots"]["object"]["surface"] == "va"
+    assert analysis["slots"]["verb_stem"]["surface"] == "ambura"
+
+    # 4. Negative present with coalescence (havavambure)
+    response = client.post(
+        "/v1/analyze",
+        {"text": "havavambure"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["slots"]["subject"]["surface"] == "va"
+    assert analysis["slots"]["object"]["surface"] == "va"
+    assert analysis["slots"]["verb_stem"]["surface"] == "ambure"
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_returns_present_verb_form_with_object_concord(
+    client, api_key, current_release, vowel_verb_lemma
+):
+    da_lemma = Lemma.objects.create(
+        headword="-da",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vt",
+        part_of_speech_label="transitive verb",
+        provenance={"source_key": "source_hannan", "entry_locator": "fixture:da"},
+        review_state=ReviewState.APPROVED,
+    )
+
+    # 1. Generate Positive Present with person object (ndinokuda)
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": da_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular",
+                },
+                "object": {
+                    "type": "person",
+                    "person": "second",
+                    "number": "singular",
+                },
+                "tense_aspect": "present",
+                "polarity": "positive",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    generated = body["data"]["generated"]
+    assert generated["form"] == "ndinokuda"
+    assert generated["rule_id"] == "fortune.concord.object.001"
+    assert generated["slots"]["object"]["surface"] == "ku"
+
+    # 2. Generate Negative Present with person object (handikude)
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": da_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular",
+                },
+                "object": {
+                    "type": "person",
+                    "person": "second",
+                    "number": "singular",
+                },
+                "tense_aspect": "present",
+                "polarity": "negative",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    generated = response.json()["data"]["generated"]
+    assert generated["form"] == "handikude"
+    assert generated["rule_id"] == "fortune.concord.object.001"
+    assert generated["slots"]["object"]["surface"] == "ku"
+
+    # 3. Generate Positive Present Class 2 subject, Class 2 object, vowel stem with coalescence (vanovambura)
+    noun_class_2 = NounClass.objects.filter(class_number="2").first()
+    if not noun_class_2:
+        NounClass.objects.create(
+            class_number="2",
+            display_order=2,
+            label="Class 2",
+            nominal_prefix="va",
+            subject_concord="va",
+            object_concord="va",
+            review_state=ReviewState.APPROVED,
+        )
+    else:
+        noun_class_2.object_concord = "va"
+        noun_class_2.save()
+
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": vowel_verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "noun_class",
+                    "class_number": "2",
+                },
+                "object": {
+                    "type": "noun_class",
+                    "class_number": "2",
+                },
+                "tense_aspect": "present",
+                "polarity": "positive",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["generated"]["form"] == "vanovambura"
+
+    # 4. Generate Negative Present Class 2 subject, Class 2 object, vowel stem with coalescence (havavambure)
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": vowel_verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "noun_class",
+                    "class_number": "2",
+                },
+                "object": {
+                    "type": "noun_class",
+                    "class_number": "2",
+                },
+                "tense_aspect": "present",
+                "polarity": "negative",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["generated"]["form"] == "havavambure"
