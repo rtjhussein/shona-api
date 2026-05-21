@@ -73,6 +73,7 @@ def build_openapi_spec():
                         "400": error_response("Missing or empty search query."),
                         "401": auth_error_response(),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -91,6 +92,7 @@ def build_openapi_spec():
                         "401": auth_error_response(),
                         "404": error_response("No lemma exists for that public ID."),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -107,6 +109,7 @@ def build_openapi_spec():
                         ),
                         "401": auth_error_response(),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -125,6 +128,7 @@ def build_openapi_spec():
                         "401": auth_error_response(),
                         "404": error_response("No tsumo exists for that public ID."),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -141,6 +145,7 @@ def build_openapi_spec():
                         ),
                         "401": auth_error_response(),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -161,6 +166,7 @@ def build_openapi_spec():
                         "401": auth_error_response(),
                         "404": error_response("No madimikira exists for that public ID."),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -183,6 +189,7 @@ def build_openapi_spec():
                         "401": auth_error_response(),
                         "422": error_response("The form is outside v1 support."),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -217,6 +224,7 @@ def build_openapi_spec():
                         "401": auth_error_response(),
                         "422": error_response("Requested features are outside v1 support."),
                         "429": rate_limit_response(),
+                        "503": current_release_response(),
                     },
                     "security": [{"ApiKeyAuth": []}],
                 }
@@ -300,6 +308,10 @@ def rate_limit_response():
     response = error_response("API key rate limit exceeded.")
     response["headers"] = rate_limit_headers()
     return response
+
+
+def current_release_response():
+    return error_response("Current data release is not configured.")
 
 
 def rate_limit_headers():

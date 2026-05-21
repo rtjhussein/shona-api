@@ -3,6 +3,17 @@ from dataclasses import dataclass
 from .models import DataRelease
 
 
+CURRENT_RELEASE_SETUP_COMMAND = (
+    'python manage.py ensure_current_release --version 2026.05.local '
+    '--label "Local development release" --rule-set-version morphology-rules-v2'
+)
+CURRENT_RELEASE_NOT_CONFIGURED_CODE = "CURRENT_RELEASE_NOT_CONFIGURED"
+CURRENT_RELEASE_NOT_CONFIGURED_MESSAGE = (
+    "No current data release is configured. Create or activate a DataRelease "
+    "before serving protected language endpoints."
+)
+
+
 class CurrentReleaseNotFound(RuntimeError):
     pass
 
@@ -26,6 +37,10 @@ def get_current_release_metadata() -> dict[str, str]:
         "release_version": release.version,
         "rule_set_version": release.rule_set_version,
     }
+
+
+def get_current_release_setup_detail() -> dict[str, str]:
+    return {"setup_command": CURRENT_RELEASE_SETUP_COMMAND}
 
 
 def ensure_current_release_available() -> PublishGuardResult:
