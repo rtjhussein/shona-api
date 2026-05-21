@@ -1,10 +1,17 @@
 import pytest
+import json
 from django.core.cache import caches
+from pathlib import Path
 
 from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Lemma, NounClass
 from shona_api.releases.models import DataRelease
+
+
+REAL_DATA_CORPUS_PATH = (
+    Path(__file__).parent / "fixtures" / "morphology" / "real_data_present_verbs.json"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +43,186 @@ def api_key():
         rate_limit_per_minute=5,
     )
     return raw_key
+
+
+@pytest.fixture
+def corpus_api_key():
+    _, raw_key = APIKey.objects.create_key(
+        name="Morphology real-data corpus client",
+        plan=APIKey.Plan.DEVELOPER,
+        rate_limit_per_minute=60,
+    )
+    return raw_key
+
+
+@pytest.fixture
+def real_data_present_verb_corpus(current_release):
+    records = json.loads(REAL_DATA_CORPUS_PATH.read_text(encoding="utf-8"))
+    lemmas = {}
+    for record in records:
+        lemma = Lemma.objects.create(
+            headword=record["headword"],
+            headword_kind=Lemma.HeadwordKind.VERB_STEM,
+            part_of_speech_code=record["part_of_speech_code"],
+            part_of_speech_label=record["part_of_speech_label"],
+            provenance={
+                "source_key": "source_hannan",
+                "source_location_reference": record["source_locator"],
+                "regression_corpus": "real_data_present_verbs",
+            },
+            review_state=ReviewState.PUBLISHED,
+        )
+        lemmas[record["id"]] = lemma
+    return records, lemmas
+
+
+@pytest.fixture
+def class_2_for_real_data_corpus(current_release):
+    return NounClass.objects.create(
+        class_number="2",
+        display_order=2,
+        label="Class 2",
+        nominal_prefix="va",
+        subject_concord="va",
+        object_concord="va",
+        review_state=ReviewState.PUBLISHED,
+    )
+
+
+@pytest.mark.django_db
+def test_real_data_present_verb_corpus_analyzes_supported_forms(
+    client,
+    corpus_api_key,
+    current_release,
+    real_data_present_verb_corpus,
+    class_2_for_real_data_corpus,
+):
+    records, lemmas = real_data_present_verb_corpus
+
+    for record in records:
+        lemma = lemmas[record["id"]]
+        for case in record["supported_cases"]:
+            response = client.post(
+                "/v1/analyze",
+                {"text": case["text"]},
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+            )
+
+            assert response.status_code == 200, case
+            body = response.json()
+            assert body["data"]["rule_set_version"] == current_release.rule_set_version
+            assert body["data"]["count"] >= 1
+            analysis = body["data"]["analyses"][0]
+            assert analysis["rule_id"] == case["rule_id"]
+            assert analysis["lemma"]["public_id"] == lemma.public_id
+            assert analysis["slots"]["verb_stem"]["lemma_public_id"] == lemma.public_id
+            if "object_surface" in case:
+                assert analysis["slots"]["object"]["surface"] == case["object_surface"]
+            if "subject_surface" in case:
+                assert analysis["slots"]["subject"]["surface"] == case["subject_surface"]
+            if "verb_stem_surface" in case:
+                assert (
+                    analysis["slots"]["verb_stem"]["surface"]
+                    == case["verb_stem_surface"]
+                )
+
+
+@pytest.mark.django_db
+def test_real_data_present_verb_corpus_generates_supported_forms(
+    client,
+    corpus_api_key,
+    current_release,
+    real_data_present_verb_corpus,
+    class_2_for_real_data_corpus,
+):
+    records, lemmas = real_data_present_verb_corpus
+    feature_by_case = {
+        "positive_person_subject": {
+            "generation_type": "verb_form",
+            "subject": {"type": "person", "person": "first", "number": "singular"},
+            "tense_aspect": "present",
+            "polarity": "positive",
+        },
+        "negative_person_subject": {
+            "generation_type": "verb_form",
+            "subject": {"type": "person", "person": "first", "number": "singular"},
+            "tense_aspect": "present",
+            "polarity": "negative",
+        },
+        "positive_person_object": {
+            "generation_type": "verb_form",
+            "subject": {"type": "person", "person": "first", "number": "singular"},
+            "object": {"type": "person", "person": "second", "number": "singular"},
+            "tense_aspect": "present",
+            "polarity": "positive",
+        },
+        "negative_person_object": {
+            "generation_type": "verb_form",
+            "subject": {"type": "person", "person": "first", "number": "singular"},
+            "object": {"type": "person", "person": "second", "number": "singular"},
+            "tense_aspect": "present",
+            "polarity": "negative",
+        },
+        "positive_class_object_coalescence": {
+            "generation_type": "verb_form",
+            "subject": {"type": "noun_class", "class_number": "2"},
+            "object": {"type": "noun_class", "class_number": "2"},
+            "tense_aspect": "present",
+            "polarity": "positive",
+        },
+        "negative_class_object_coalescence": {
+            "generation_type": "verb_form",
+            "subject": {"type": "noun_class", "class_number": "2"},
+            "object": {"type": "noun_class", "class_number": "2"},
+            "tense_aspect": "present",
+            "polarity": "negative",
+        },
+        "positive_third_person_object": {
+            "generation_type": "verb_form",
+            "subject": {"type": "person", "person": "first", "number": "singular"},
+            "object": {"type": "person", "person": "third", "number": "singular"},
+            "tense_aspect": "present",
+            "polarity": "positive",
+        },
+    }
+
+    for record in records:
+        lemma = lemmas[record["id"]]
+        for case in record["supported_cases"]:
+            response = client.post(
+                "/v1/generate",
+                {
+                    "lemma_public_id": lemma.public_id,
+                    "features": feature_by_case[case["name"]],
+                },
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+            )
+
+            assert response.status_code == 200, case
+            body = response.json()
+            generated = body["data"]["generated"]
+            assert body["data"]["rule_set_version"] == current_release.rule_set_version
+            assert generated["form"] == case["text"]
+            assert generated["rule_id"] == case["rule_id"]
+            assert generated["lemma"]["public_id"] == lemma.public_id
+            if "object_surface" in case:
+                assert generated["slots"]["object"]["surface"] == case["object_surface"]
+
+
+def test_real_data_present_verb_corpus_documents_future_unsupported_forms():
+    records = json.loads(REAL_DATA_CORPUS_PATH.read_text(encoding="utf-8"))
+
+    unsupported_forms = [
+        item
+        for record in records
+        for item in record["unsupported_observed_forms"]
+    ]
+
+    assert unsupported_forms
+    assert {"form": "badanudzwa", "reason": "passive or extension-like surface outside present v1 support"} in unsupported_forms
+    assert {"form": "kuambura", "reason": "infinitive/nominal form outside analyze/generate v1"} in unsupported_forms
 
 
 @pytest.fixture

@@ -1,0 +1,99 @@
+[
+  {
+    "id": "hannan_badanudza",
+    "headword": "-badanudza",
+    "normalized_headword": "badanudza",
+    "part_of_speech_code": "vt",
+    "part_of_speech_label": "transitive verb",
+    "source_locator": "hannan:page_004:entry_004:badanudza",
+    "supported_cases": [
+      {
+        "name": "positive_person_subject",
+        "text": "ndinobadanudza",
+        "rule_id": "fortune.verbal.slots.001"
+      },
+      {
+        "name": "negative_person_subject",
+        "text": "handibadanudze",
+        "rule_id": "fortune.verbal.negation.001"
+      },
+      {
+        "name": "positive_person_object",
+        "text": "ndinokubadanudza",
+        "rule_id": "fortune.concord.object.001",
+        "object_surface": "ku"
+      },
+      {
+        "name": "negative_person_object",
+        "text": "handikubadanudze",
+        "rule_id": "fortune.concord.object.001",
+        "object_surface": "ku"
+      }
+    ],
+    "unsupported_observed_forms": [
+      {
+        "form": "badanudzwa",
+        "reason": "passive or extension-like surface outside present v1 support"
+      }
+    ]
+  },
+  {
+    "id": "hannan_badanuka",
+    "headword": "-badanuka",
+    "normalized_headword": "badanuka",
+    "part_of_speech_code": "vi",
+    "part_of_speech_label": "intransitive verb",
+    "source_locator": "hannan:page_004:entry_005:badanuka",
+    "supported_cases": [
+      {
+        "name": "positive_person_subject",
+        "text": "ndinobadanuka",
+        "rule_id": "fortune.verbal.slots.001"
+      },
+      {
+        "name": "negative_person_subject",
+        "text": "handibadanuke",
+        "rule_id": "fortune.verbal.negation.001"
+      }
+    ],
+    "unsupported_observed_forms": []
+  },
+  {
+    "id": "hannan_ambura",
+    "headword": "-ambura",
+    "normalized_headword": "ambura",
+    "part_of_speech_code": "vt",
+    "part_of_speech_label": "transitive verb",
+    "source_locator": "hannan:fixture:ambura",
+    "supported_cases": [
+      {
+        "name": "positive_class_object_coalescence",
+        "text": "vanovambura",
+        "rule_id": "fortune.concord.object.001",
+        "subject_surface": "va",
+        "object_surface": "va",
+        "verb_stem_surface": "ambura"
+      },
+      {
+        "name": "negative_class_object_coalescence",
+        "text": "havavambure",
+        "rule_id": "fortune.concord.object.001",
+        "subject_surface": "va",
+        "object_surface": "va",
+        "verb_stem_surface": "ambure"
+      },
+      {
+        "name": "positive_third_person_object",
+        "text": "ndinomuambura",
+        "rule_id": "fortune.concord.object.001",
+        "object_surface": "mu"
+      }
+    ],
+    "unsupported_observed_forms": [
+      {
+        "form": "kuambura",
+        "reason": "infinitive/nominal form outside analyze/generate v1"
+      }
+    ]
+  }
+]
