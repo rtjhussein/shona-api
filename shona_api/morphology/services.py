@@ -93,6 +93,22 @@ PERSON_OBJECT_CONCORDS = (
     {
         "surface": "mu",
         "slot_type": "person",
+        "person": "third",
+        "number": "singular",
+        "label": "3rd person singular object concord",
+        "confidence": 0.84,
+    },
+    {
+        "surface": "va",
+        "slot_type": "person",
+        "person": "third",
+        "number": "plural",
+        "label": "3rd person plural object concord",
+        "confidence": 0.84,
+    },
+    {
+        "surface": "mu",
+        "slot_type": "person",
         "person": "second",
         "number": "plural",
         "label": "2nd person plural object concord",

@@ -815,3 +815,89 @@ def test_generate_endpoint_returns_present_verb_form_with_object_concord(
     )
     assert response.status_code == 200
     assert response.json()["data"]["generated"]["form"] == "havavambure"
+
+
+@pytest.mark.django_db
+def test_extension_3_primary_object_concords_analysis_and_generation(
+    client, api_key, current_release, vowel_verb_lemma
+):
+    # 1. Analysis of ndinomuambura
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinomuambura"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    analysis = body["data"]["analyses"][0]
+    assert analysis["rule_id"] == "fortune.concord.object.001"
+    assert analysis["lemma"]["public_id"] == vowel_verb_lemma.public_id
+    assert analysis["slots"]["subject"]["surface"] == "ndi"
+    assert analysis["slots"]["object"] == {
+        "surface": "mu",
+        "type": "person",
+        "label": "3rd person singular object concord",
+        "person": "third",
+        "number": "singular",
+    }
+    assert analysis["slots"]["verb_stem"]["surface"] == "ambura"
+
+    # 2. Generation of ndinomuambura
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": vowel_verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular",
+                },
+                "object": {
+                    "type": "person",
+                    "person": "third",
+                    "number": "singular",
+                },
+                "tense_aspect": "present",
+                "polarity": "positive",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    generated = response.json()["data"]["generated"]
+    assert generated["form"] == "ndinomuambura"
+    assert generated["slots"]["object"]["surface"] == "mu"
+
+    # 3. Generation of ndinovaambura
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": vowel_verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {
+                    "type": "person",
+                    "person": "first",
+                    "number": "singular",
+                },
+                "object": {
+                    "type": "person",
+                    "person": "third",
+                    "number": "plural",
+                },
+                "tense_aspect": "present",
+                "polarity": "positive",
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    generated = response.json()["data"]["generated"]
+    assert generated["form"] == "ndinovambura"
+    assert generated["slots"]["object"]["surface"] == "va"
