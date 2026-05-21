@@ -158,10 +158,16 @@ class LemmaReadSerializer(serializers.Serializer):
 
 class SearchResultSerializer(serializers.Serializer):
     def to_representation(self, result):
+        lemma = result["lemma"]
+        lemma_data = LemmaCoreSerializer(lemma).data
+        lemma_data["senses"] = SenseSerializer(lemma.senses.all(), many=True).data
+        lemma_data["tone_records"] = ToneRecordSerializer(lemma.tone_records.all(), many=True).data
+        lemma_data["forms"] = FormSerializer(lemma.forms.all(), many=True).data
+
         payload = {
             "result_type": result["result_type"],
             "match_type": result["match_type"],
-            "lemma": LemmaCoreSerializer(result["lemma"]).data,
+            "lemma": lemma_data,
         }
         if result["form"] is not None:
             payload["form"] = FormSerializer(result["form"]).data

@@ -94,12 +94,40 @@ class SearchView(APIView):
 
         results = self._search(normalized_query)
         release_metadata = get_current_release_metadata()
+
+        morphology_analysis = None
+        try:
+            from shona_api.morphology.services import analyze_text
+            from .serializers import LemmaCoreSerializer, SenseSerializer, ToneRecordSerializer, FormSerializer
+
+            morphology_analysis = analyze_text(
+                raw_query,
+                rule_set_version=release_metadata["rule_set_version"],
+            )
+            for analysis in morphology_analysis.get("analyses", []):
+                lemma_id = analysis["lemma"]["public_id"]
+                lemma_obj = (
+                    Lemma.objects.filter(public_id=lemma_id)
+                    .select_related("noun_class", "noun_class__default_plural_class")
+                    .prefetch_related("senses", "tone_records__form", "forms__sense")
+                    .first()
+                )
+                if lemma_obj:
+                    lemma_data = LemmaCoreSerializer(lemma_obj).data
+                    lemma_data["senses"] = SenseSerializer(lemma_obj.senses.all(), many=True).data
+                    lemma_data["tone_records"] = ToneRecordSerializer(lemma_obj.tone_records.all(), many=True).data
+                    lemma_data["forms"] = FormSerializer(lemma_obj.forms.all(), many=True).data
+                    analysis["lemma_details"] = lemma_data
+        except Exception:
+            pass
+
         return Response(
             build_success_envelope(
                 data=self._build_search_payload(
                     raw_query=raw_query,
                     normalized_query=normalized_query,
                     results=results,
+                    morphology_analysis=morphology_analysis,
                 ),
                 release_metadata=release_metadata,
             ),
@@ -166,7 +194,7 @@ class SearchView(APIView):
             )
         )
 
-    def _build_search_payload(self, *, raw_query, normalized_query, results):
+    def _build_search_payload(self, *, raw_query, normalized_query, results, morphology_analysis=None):
         payload = {
             "query": {
                 "raw": raw_query,
@@ -176,7 +204,9 @@ class SearchView(APIView):
             "count": len(results),
             "results": SearchResultSerializer(results, many=True).data,
         }
-        if not results:
+        if morphology_analysis:
+            payload["morphology"] = morphology_analysis
+        if not results and not morphology_analysis:
             payload["zero_result"] = {
                 "code": "NO_MATCH",
                 "message": "No reviewed lemma or form matched the query.",

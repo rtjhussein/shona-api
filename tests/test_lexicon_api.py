@@ -342,3 +342,31 @@ def test_search_endpoint_requires_non_empty_query(client, api_key, current_relea
             "detail": None,
         },
     }
+
+
+@pytest.mark.django_db
+def test_search_endpoint_returns_morphology_analysis_on_verb_forms(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, *_ = canonical_lemma
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "ndinobuda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "morphology" in body["data"]
+    morph = body["data"]["morphology"]
+    assert morph["count"] > 0
+    analysis = morph["analyses"][0]
+    assert analysis["analysis_type"] == "verb_form"
+    assert analysis["lemma"]["public_id"] == lemma.public_id
+    assert "lemma_details" in analysis
+    assert analysis["lemma_details"]["public_id"] == lemma.public_id
+    assert len(analysis["lemma_details"]["senses"]) == 1
+    assert analysis["lemma_details"]["senses"][0]["definition"] == "Come out."
+

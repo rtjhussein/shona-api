@@ -5,6 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Shona Dictionary</title>
+    <!-- Google Fonts for premium modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'web/dictionary-search.css' %}">
     <script src="{% static 'web/dictionary-search.js' %}" defer></script>
   </head>
@@ -20,7 +24,7 @@
         <div class="masthead">
           <p class="eyebrow">Reference Web Dictionary</p>
           <h1 id="dictionary-title">Shona Dictionary</h1>
-          <p class="lede">Search reviewed Shona lemmas and forms from the public API.</p>
+          <p class="lede">Search reviewed Shona lemmas, forms, and verbal inflections from the public API.</p>
         </div>
 
         <form class="search-form" data-search-form>
@@ -33,7 +37,7 @@
               type="search"
               autocomplete="off"
               spellcheck="false"
-              placeholder="buda, mbudo..."
+              placeholder="e.g., buda, mbudo, vanobuda, havabude..."
               data-query-input
             >
             <button class="search-button" type="submit">Search</button>
@@ -63,12 +67,24 @@
         </details>
       </section>
 
-      <section class="results-panel" aria-live="polite" aria-busy="false" data-results-region>
-        <div class="state-card state-card--idle" data-state-card>
-          <h2>Ready</h2>
-          <p>Enter a Shona lemma or form to begin.</p>
-        </div>
-      </section>
+      <!-- Interactive Two-Pane Dashboard Layout -->
+      <div class="dashboard-layout">
+        <!-- Left Pane: Search statistics, Morphological Breakdowns, and Results list -->
+        <section class="results-panel" aria-live="polite" aria-busy="false" data-results-region>
+          <div class="state-card state-card--idle" data-state-card>
+            <h2>Ready to Explore</h2>
+            <p>Enter a Shona lemma (like <strong>-buda</strong>), a derived form (like <strong>mbudo</strong>), or a full verb form (like <strong>vanobuda</strong>) to see its morphological breakdown and lexical details instantly.</p>
+          </div>
+        </section>
+
+        <!-- Right Pane: Rich interactive active detail panel -->
+        <section class="details-panel" data-details-region>
+          <div class="state-card state-card--empty">
+            <h2>Lexical Details</h2>
+            <p>Select a search result to view its full dictionary entries, noun classes, and tone rules here.</p>
+          </div>
+        </section>
+      </div>
     </main>
   </body>
 </html>
