@@ -90,11 +90,13 @@ def test_extraction_unit_admin_exposes_review_queue_filters():
     model_admin = ExtractionUnitAdmin(ExtractionUnit, admin.site)
 
     assert model_admin.list_display == (
-        "source",
+        "display_headword",
         "source_location_reference",
+        "batch_id",
         "parser_name",
         "parser_status",
         "review_state",
+        "publication_state",
         "confidence",
         "created_at",
     )
@@ -103,11 +105,29 @@ def test_extraction_unit_admin_exposes_review_queue_filters():
         "parser_status",
         "source",
         "parser_name",
+        "batch_id",
         "created_at",
     )
     assert model_admin.search_fields == (
+        "parser_output__headword",
         "source__source_key",
         "source_location_reference",
+        "batch_id",
         "raw_text",
         "parser_output",
     )
+
+
+@pytest.mark.django_db
+def test_extraction_unit_admin_uses_headword_as_clickable_label(hannan_source):
+    unit = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output=parse_hannan_entry("-buda [H] vi Come out."),
+        confidence=0.95,
+    )
+    model_admin = ExtractionUnitAdmin(ExtractionUnit, admin.site)
+
+    assert model_admin.list_display_links == ("display_headword",)
+    assert model_admin.display_headword(unit) == "-buda"

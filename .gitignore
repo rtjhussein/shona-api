@@ -14,3 +14,4 @@ staticfiles/
 key_documents/
 local_batches/
 local_source_cache/
+.local_gemini.env

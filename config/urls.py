@@ -11,7 +11,16 @@ from shona_api.figurative_language.views import (
 )
 from shona_api.lexicon.views import LemmaReadView, SearchView
 from shona_api.morphology.views import AnalyzeView, GenerateView
-from shona_api.web.views import DataProgressView, DictionaryEntryView, DictionarySearchView
+from shona_api.web.views import (
+    CreateLocalAPIKeyView,
+    DataProgressView,
+    DictionaryEntryView,
+    DictionarySearchView,
+    IngestionDashboardView,
+    IngestionRunStatusView,
+    SaveGeminiKeyView,
+    StartIngestionRunView,
+)
 
 
 urlpatterns = [
@@ -19,6 +28,31 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("dictionary/", DictionarySearchView.as_view(), name="dictionary-search-alias"),
     path("data-progress/", DataProgressView.as_view(), name="data-progress"),
+    path(
+        "data-progress/ingestion/",
+        IngestionDashboardView.as_view(),
+        name="ingestion-dashboard",
+    ),
+    path(
+        "data-progress/ingestion/gemini-key/",
+        SaveGeminiKeyView.as_view(),
+        name="ingestion-gemini-key-save",
+    ),
+    path(
+        "data-progress/ingestion/runs/start/",
+        StartIngestionRunView.as_view(),
+        name="ingestion-run-start",
+    ),
+    path(
+        "data-progress/ingestion/runs/<int:pk>/",
+        IngestionRunStatusView.as_view(),
+        name="ingestion-run-status",
+    ),
+    path(
+        "data-progress/local-api-key/",
+        CreateLocalAPIKeyView.as_view(),
+        name="local-api-key-create",
+    ),
     path("openapi.json", OpenAPISpecView.as_view(), name="openapi-spec"),
     path(
         "dictionary/entries/<str:public_id>/",

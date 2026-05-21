@@ -1,0 +1,173 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hannan Ingestion</title>
+    <link rel="stylesheet" href="{% static 'web/ingestion-dashboard.css' %}">
+    <script src="{% static 'web/ingestion-dashboard.js' %}" defer></script>
+  </head>
+  <body>
+    <main
+      class="ingestion-shell"
+      data-start-endpoint="{{ start_endpoint }}"
+      data-save-key-endpoint="{{ save_key_endpoint }}"
+      data-status-url-template="{{ status_url_template }}"
+    >
+      <header class="console-header">
+        <div>
+          <p class="eyebrow">Gemini extraction unit</p>
+          <h1>Hannan Ingestion</h1>
+          <p class="header-note">Run page extraction, import candidates, and optionally publish trusted Gemini output.</p>
+        </div>
+        <nav class="header-actions" aria-label="Dashboard navigation">
+          <a href="{% url 'data-progress' %}">Progress</a>
+          <a href="{% url 'admin:index' %}">Admin</a>
+          <a href="{% url 'dictionary-search' %}">Search</a>
+        </nav>
+      </header>
+
+      <section class="readiness-strip" aria-label="Pipeline readiness">
+        <div class="{% if readiness.gemini_key_configured %}ready{% else %}blocked{% endif %}">
+          <span>Gemini key</span>
+          <strong>{% if readiness.gemini_key_configured %}Configured{% else %}Missing{% endif %}</strong>
+          {% if readiness.gemini_key_source %}<small>{{ readiness.gemini_key_source }}</small>{% endif %}
+        </div>
+        <div class="{% if readiness.parser_repo_exists %}ready{% else %}blocked{% endif %}">
+          <span>Parser repo</span>
+          <strong>{% if readiness.parser_repo_exists %}Found{% else %}Missing{% endif %}</strong>
+          <small>{{ readiness.parser_repo_path }}</small>
+        </div>
+        <div class="{% if readiness.pdf_exists %}ready{% else %}blocked{% endif %}">
+          <span>Hannan PDF</span>
+          <strong>{% if readiness.pdf_exists %}Found{% else %}Missing{% endif %}</strong>
+          <small>{{ readiness.pdf_path }}</small>
+        </div>
+        <div class="{% if readiness.extract_script_exists and readiness.compile_script_exists %}ready{% else %}blocked{% endif %}">
+          <span>Parser scripts</span>
+          <strong>{% if readiness.extract_script_exists and readiness.compile_script_exists %}Ready{% else %}Missing{% endif %}</strong>
+          <small>{{ readiness.output_dir }}</small>
+        </div>
+      </section>
+
+      <section class="work-grid">
+        <article class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Start a run</p>
+              <h2>Extraction controls</h2>
+            </div>
+          </div>
+          <form class="run-form" data-run-form>
+            {% csrf_token %}
+            <label>
+              <span>Batch ID</span>
+              <input name="batch_id" type="text" placeholder="GEMINI-20260521-A">
+            </label>
+            <div class="two-col">
+              <label>
+                <span>Start PDF page</span>
+                <input name="start_page" type="number" min="1" required>
+              </label>
+              <label>
+                <span>End PDF page</span>
+                <input name="end_page" type="number" min="1">
+              </label>
+            </div>
+            <div class="switch-list">
+              <label><input name="overwrite_pages" type="checkbox"> Re-extract existing page JSON</label>
+              <label><input name="dry_run" type="checkbox"> Dry-run import only</label>
+              <label><input name="auto_publish" type="checkbox"> Auto-approve and publish parseable Gemini units</label>
+            </div>
+            <button class="primary-button" type="submit">Start ingestion</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Gemini access</p>
+              <h2>Local key</h2>
+            </div>
+          </div>
+          <form class="key-form" data-key-form>
+            {% csrf_token %}
+            <label>
+              <span>Gemini API key</span>
+              <input name="gemini_api_key" type="password" autocomplete="off" placeholder="Paste key for local env file">
+            </label>
+            <button class="secondary-button" type="submit">Save key</button>
+          </form>
+          <p class="fine-print">Saved to the ignored local env file for this machine; the UI never displays it back.</p>
+        </article>
+      </section>
+
+      <section class="panel run-status" aria-live="polite" data-run-status>
+        {% if latest_run %}
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Latest run</p>
+              <h2>{{ latest_run.batch_id }}</h2>
+            </div>
+            <span class="status-pill status-{{ latest_run.status }}">{{ latest_run.status }}</span>
+          </div>
+          <div class="metric-grid">
+            <div><span>Pages</span><strong>{{ latest_run.page_label }}</strong></div>
+            <div><span>Imported</span><strong>{{ latest_run.imported_count }}</strong></div>
+            <div><span>Duplicates</span><strong>{{ latest_run.duplicate_count }}</strong></div>
+            <div><span>Publishable</span><strong>{{ latest_run.publishable_count }}</strong></div>
+            <div><span>Published</span><strong>{{ latest_run.published_count }}</strong></div>
+            <div><span>Publish failures</span><strong>{{ latest_run.failed_publish_count }}</strong></div>
+          </div>
+          <div class="run-actions">
+            <a href="{% url 'admin:extraction_extractionunit_changelist' %}?batch_id__exact={{ latest_run.batch_id|urlencode }}&review_state__exact=needs_review">Review queue</a>
+            <a href="{% url 'dictionary-search' %}">Search dictionary</a>
+          </div>
+          {% if latest_run.error_message %}<p class="error-note">{{ latest_run.error_message }}</p>{% endif %}
+          <pre class="log-box">{{ latest_run.log_text|default:"Waiting for output..." }}</pre>
+        {% else %}
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Current run</p>
+              <h2>No active run</h2>
+            </div>
+          </div>
+          <p class="empty-note">Start an ingestion run to see logs and counts here.</p>
+        {% endif %}
+      </section>
+      {% if latest_run and latest_run.status == "running" %}
+        {{ latest_run.pk|json_script:"latest-running-run-id" }}
+      {% endif %}
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Recent runs</p>
+            <h2>Pipeline history</h2>
+          </div>
+        </div>
+        <div class="run-table">
+          <div class="run-row run-head">
+            <span>Batch</span>
+            <span>Status</span>
+            <span>Pages</span>
+            <span>Imported</span>
+            <span>Published</span>
+          </div>
+          {% for run in latest_runs %}
+            <div class="run-row">
+              <span>{{ run.batch_id }}</span>
+              <span>{{ run.status }}</span>
+              <span>{{ run.page_label }}</span>
+              <span>{{ run.imported_count }}</span>
+              <span>{{ run.published_count }}</span>
+            </div>
+          {% empty %}
+            <p class="empty-note">No ingestion runs yet.</p>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

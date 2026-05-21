@@ -11,9 +11,11 @@
   const apiKeyInput = shell.querySelector("[data-api-key-input]");
   const saveKeyButton = shell.querySelector("[data-save-key]");
   const clearKeyButton = shell.querySelector("[data-clear-key]");
+  const createLocalKeyButton = shell.querySelector("[data-create-local-key]");
   const searchEndpoint = shell.dataset.searchEndpoint;
   const entryUrlTemplate = shell.dataset.entryUrlTemplate;
   const apiKeyStorage = shell.dataset.apiKeyStorage;
+  const localApiKeyEndpoint = shell.dataset.localApiKeyEndpoint;
 
   const savedKey = window.localStorage.getItem(apiKeyStorage);
   if (savedKey) {
@@ -33,6 +35,10 @@
     window.localStorage.removeItem(apiKeyStorage);
     renderState("Cleared", "API key removed from this browser.");
   });
+
+  if (createLocalKeyButton) {
+    createLocalKeyButton.addEventListener("click", createLocalKey);
+  }
 
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -72,7 +78,7 @@
           Accept: "application/json",
         },
       });
-      const payload = await response.json();
+      const payload = await parseJsonResponse(response);
 
       if (!response.ok) {
         renderApiError(response.status, payload);
@@ -81,12 +87,47 @@
 
       renderResults(payload.data);
     } catch (error) {
+      let message = "The dictionary API could not be reached. Check that the Django server is running.";
+      if (error && error.message === "INVALID_JSON") {
+        message = error.status >= 500
+          ? `The dictionary API crashed with HTTP ${error.status}. ${error.body || ""}`.trim()
+          : `The dictionary API returned a non-JSON HTTP ${error.status} response.`;
+      }
       renderError(
         "Search unavailable",
-        "The dictionary API could not be reached. Check the server and try again."
+        message
       );
     } finally {
       resultsRegion.setAttribute("aria-busy", "false");
+    }
+  }
+
+  async function createLocalKey() {
+    if (!localApiKeyEndpoint) {
+      renderError("Key helper unavailable", "The local API key endpoint is not configured.");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.set("name", "Reference web local key");
+      const response = await window.fetch(localApiKeyEndpoint, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken(),
+          Accept: "application/json",
+        },
+        body: formData,
+      });
+      const payload = await parseJsonResponse(response);
+      if (!response.ok || !payload.ok) {
+        renderError("Could not create key", payload.error || "The server rejected the request.");
+        return;
+      }
+      apiKeyInput.value = payload.raw_key;
+      window.localStorage.setItem(apiKeyStorage, payload.raw_key);
+      renderState("Local key created", "A new local API key was saved for this browser.");
+    } catch (error) {
+      renderError("Could not create key", "The dashboard server could not be reached.");
     }
   }
 
@@ -99,11 +140,37 @@
       renderError("API key rejected", message || "Check the API key and try again.");
       return;
     }
+    if (status === 429) {
+      renderError("Rate limit reached", message || "Wait a moment and try again.");
+      return;
+    }
 
     renderError(
       apiError.code || "Search error",
       message || "The public API returned an error."
     );
+  }
+
+  async function parseJsonResponse(response) {
+    try {
+      return await response.json();
+    } catch (error) {
+      let text = "";
+      try {
+        text = await response.text();
+      } catch (textError) {
+        text = "";
+      }
+      const invalidJson = new Error("INVALID_JSON");
+      invalidJson.status = response.status;
+      invalidJson.body = text.slice(0, 240);
+      throw invalidJson;
+    }
+  }
+
+  function csrfToken() {
+    const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : "";
   }
 
   function renderResults(data) {

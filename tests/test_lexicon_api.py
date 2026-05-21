@@ -84,6 +84,12 @@ def canonical_lemma(current_release):
     return lemma, sense, tone, form
 
 
+def publish_canonical_bundle(canonical_lemma):
+    for record in canonical_lemma:
+        record.review_state = ReviewState.PUBLISHED
+        record.save(update_fields=("review_state",))
+
+
 @pytest.mark.django_db
 def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
     client, api_key, current_release, canonical_lemma
@@ -241,6 +247,7 @@ def test_search_endpoint_returns_exact_lemma_match(
     client, api_key, current_release, canonical_lemma
 ):
     lemma, *_ = canonical_lemma
+    publish_canonical_bundle(canonical_lemma)
 
     response = client.get(
         "/v1/search",
@@ -269,6 +276,7 @@ def test_search_endpoint_returns_exact_form_match(
     client, api_key, current_release, canonical_lemma
 ):
     lemma, _, _, form = canonical_lemma
+    publish_canonical_bundle(canonical_lemma)
 
     response = client.get(
         "/v1/search",
@@ -301,6 +309,20 @@ def test_search_endpoint_returns_structured_zero_result(client, api_key, current
         "code": "NO_MATCH",
         "message": "No reviewed lemma or form matched the query.",
     }
+
+
+@pytest.mark.django_db
+def test_search_endpoint_hides_approved_unpublished_records(
+    client, api_key, current_release, canonical_lemma
+):
+    response = client.get(
+        "/v1/search",
+        {"q": "-buda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["count"] == 0
 
 
 @pytest.mark.django_db

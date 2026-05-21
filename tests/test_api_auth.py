@@ -2,10 +2,12 @@ import pytest
 from django.core.cache import caches
 from django.core.management import call_command
 from django.urls import path
+from redis.exceptions import ConnectionError as RedisConnectionError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from shona_api.api_auth.models import APIKey
+from shona_api.api_auth.throttles import APIKeyRateThrottle
 
 
 class ProtectedEchoView(APIView):
@@ -110,6 +112,18 @@ def test_api_key_rate_limit_blocks_requests_after_plan_limit(client):
     assert throttled.headers["X-RateLimit-Remaining"] == "0"
     assert int(throttled.headers["X-RateLimit-Reset"]) > 0
     assert int(throttled.headers["Retry-After"]) > 0
+
+
+def test_api_key_rate_throttle_falls_back_when_cache_is_unavailable(monkeypatch):
+    class BrokenCache:
+        def add(self, *args, **kwargs):
+            raise RedisConnectionError("redis unavailable")
+
+    monkeypatch.setattr("shona_api.api_auth.throttles.caches", {"default": BrokenCache()})
+
+    throttle = APIKeyRateThrottle()
+
+    assert throttle._cache() is throttle.fallback_cache
 
 
 @pytest.mark.django_db

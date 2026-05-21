@@ -38,6 +38,9 @@ python manage.py import_hannan_segments path\to\approved_segments.jsonl --batch-
 python manage.py import_hannan_segments path\to\approved_segments.jsonl --batch-id SEG-2026-001
 ```
 
+For the Gemini visual-OCR workflow and staff UI, see
+`docs/data_population/hannan_ingestion_dashboard.md`.
+
 Only after API review approves imported segments should structural conversion run:
 
 ```powershell

@@ -14,6 +14,7 @@
       data-search-endpoint="{{ search_endpoint }}"
       data-entry-url-template="{{ entry_url_template }}"
       data-api-key-storage="shona-api.reference-web.api-key"
+      data-local-api-key-endpoint="{{ local_api_key_endpoint }}"
     >
       <section class="search-panel" aria-labelledby="dictionary-title">
         <div class="masthead">
@@ -41,6 +42,7 @@
 
         <details class="api-key-panel" data-api-key-panel>
           <summary>API access</summary>
+          {% csrf_token %}
           <label class="field-label" for="api-key">API key</label>
           <div class="api-key-row">
             <input
@@ -54,6 +56,9 @@
             >
             <button class="secondary-button" type="button" data-save-key>Save</button>
             <button class="ghost-button" type="button" data-clear-key>Clear</button>
+            {% if request.user.is_staff %}
+              <button class="secondary-button" type="button" data-create-local-key>Create local key</button>
+            {% endif %}
           </div>
         </details>
       </section>

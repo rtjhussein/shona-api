@@ -2,12 +2,17 @@ import math
 import time
 
 from django.core.cache import caches
+from django.core.cache.backends.base import InvalidCacheBackendError
+from django.core.cache.backends.locmem import LocMemCache
+from django_redis.exceptions import ConnectionInterrupted
+from redis.exceptions import RedisError
 from rest_framework.throttling import BaseThrottle
 
 
 class APIKeyRateThrottle(BaseThrottle):
     cache_alias = "default"
     window_seconds = 60
+    fallback_cache = LocMemCache("api-key-rate-fallback", {})
 
     def allow_request(self, request, view):
         api_key = getattr(request, "auth", None)
@@ -19,7 +24,7 @@ class APIKeyRateThrottle(BaseThrottle):
         window_id = int(now // self.window_seconds)
         reset_at = int((window_id + 1) * self.window_seconds)
         cache_key = f"api-auth:rate:{api_key.prefix}:{window_id}"
-        cache = caches[self.cache_alias]
+        cache = self._cache()
 
         cache.add(cache_key, 0, timeout=self.window_seconds + 1)
         request_count = cache.incr(cache_key)
@@ -39,3 +44,11 @@ class APIKeyRateThrottle(BaseThrottle):
 
     def wait(self):
         return math.ceil(getattr(self, "wait_seconds", 0))
+
+    def _cache(self):
+        try:
+            cache = caches[self.cache_alias]
+            cache.add("__api_auth_rate_probe__", 0, timeout=1)
+            return cache
+        except (ConnectionInterrupted, InvalidCacheBackendError, RedisError, OSError):
+            return self.fallback_cache

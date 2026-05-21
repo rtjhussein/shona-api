@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -129,3 +130,70 @@ class ExtractionUnit(models.Model):
 
     def __str__(self):
         return f"{self.source_key} {self.source_location_reference}"
+
+
+class IngestionRun(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        RUNNING = "running", "Running"
+        SUCCEEDED = "succeeded", "Succeeded"
+        FAILED = "failed", "Failed"
+
+    batch_id = models.CharField(max_length=120, db_index=True)
+    start_page = models.PositiveIntegerField()
+    end_page = models.PositiveIntegerField()
+    parser_repo_path = models.CharField(max_length=500)
+    pdf_path = models.CharField(max_length=500)
+    output_dir = models.CharField(max_length=500)
+    jsonl_path = models.CharField(max_length=500, blank=True)
+    status = models.CharField(
+        max_length=32,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
+    dry_run = models.BooleanField(default=False)
+    overwrite_pages = models.BooleanField(default=False)
+    auto_publish = models.BooleanField(default=False)
+    imported_count = models.PositiveIntegerField(default=0)
+    duplicate_count = models.PositiveIntegerField(default=0)
+    publishable_count = models.PositiveIntegerField(default=0)
+    published_count = models.PositiveIntegerField(default=0)
+    failed_publish_count = models.PositiveIntegerField(default=0)
+    log_text = models.TextField(blank=True)
+    error_message = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hannan_ingestion_runs",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(
+                fields=("status", "created_at"),
+                name="ingrun_status_created_idx",
+            ),
+            models.Index(
+                fields=("batch_id", "created_at"),
+                name="ingrun_batch_created_idx",
+            ),
+        ]
+
+    @property
+    def page_label(self):
+        if self.start_page == self.end_page:
+            return f"PDF page {self.start_page}"
+        return f"PDF pages {self.start_page}-{self.end_page}"
+
+    def append_log(self, message):
+        self.log_text = f"{self.log_text}{message.rstrip()}\n"
+
+    def __str__(self):
+        return f"{self.batch_id} ({self.status})"

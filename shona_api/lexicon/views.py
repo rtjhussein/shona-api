@@ -78,10 +78,7 @@ class LemmaReadView(APIView):
 
 
 class SearchView(APIView):
-    public_review_states = (
-        ReviewState.APPROVED,
-        ReviewState.PUBLISHED,
-    )
+    public_review_states = (ReviewState.PUBLISHED,)
 
     def get(self, request):
         raw_query = request.query_params.get("q", "")
