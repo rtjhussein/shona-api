@@ -9,8 +9,14 @@ future backlog items.
 ```powershell
 python -m pip install -e ".[dev]"
 python manage.py migrate
+python manage.py ensure_current_release --version 2026.05.local --label "Local development release" --rule-set-version morphology-rules-v2
 python manage.py runserver
 ```
+
+Protected language endpoints require exactly one current `DataRelease` so the
+response envelope can expose `data_release` and `rule_set_version`. If no
+current release exists, the API returns `CURRENT_RELEASE_NOT_CONFIGURED` with
+the setup command above in `error.detail.setup_command`.
 
 The OpenAPI spec is published at:
 

@@ -4,8 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from shona_api.editorial.models import ReviewState
-from shona_api.lexicon.views import build_error_envelope, build_success_envelope
-from shona_api.releases.services import get_current_release_metadata
+from shona_api.lexicon.views import (
+    build_current_release_missing_response,
+    build_error_envelope,
+    build_success_envelope,
+)
+from shona_api.releases.services import CurrentReleaseNotFound, get_current_release_metadata
 
 from .models import FigurativeExpression
 from .serializers import FigurativeExpressionSerializer
@@ -42,6 +46,11 @@ class FigurativeExpressionSubtypeMixin:
 
 class FigurativeExpressionSubtypeListView(FigurativeExpressionSubtypeMixin, APIView):
     def get(self, request):
+        try:
+            release_metadata = self.get_release_metadata()
+        except CurrentReleaseNotFound:
+            return build_current_release_missing_response()
+
         expressions = list(self.get_queryset())
         serializer = FigurativeExpressionSerializer(expressions, many=True)
         return Response(
@@ -51,7 +60,7 @@ class FigurativeExpressionSubtypeListView(FigurativeExpressionSubtypeMixin, APIV
                     "count": len(expressions),
                     "results": serializer.data,
                 },
-                release_metadata=self.get_release_metadata(),
+                release_metadata=release_metadata,
             ),
             status=status.HTTP_200_OK,
         )
@@ -59,12 +68,17 @@ class FigurativeExpressionSubtypeListView(FigurativeExpressionSubtypeMixin, APIV
 
 class FigurativeExpressionSubtypeDetailView(FigurativeExpressionSubtypeMixin, APIView):
     def get(self, request, public_id):
+        try:
+            release_metadata = self.get_release_metadata()
+        except CurrentReleaseNotFound:
+            return build_current_release_missing_response()
+
         expression = self._get_expression(public_id)
         serializer = FigurativeExpressionSerializer(expression)
         return Response(
             build_success_envelope(
                 data=serializer.data,
-                release_metadata=self.get_release_metadata(),
+                release_metadata=release_metadata,
             ),
             status=status.HTTP_200_OK,
         )

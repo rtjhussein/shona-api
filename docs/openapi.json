@@ -175,6 +175,16 @@
                 "description": "Plan attached to the API key."
               }
             }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -310,6 +320,16 @@
                 "description": "Plan attached to the API key."
               }
             }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -421,6 +441,16 @@
                   "type": "string"
                 },
                 "description": "Plan attached to the API key."
+              }
+            }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
               }
             }
           }
@@ -558,6 +588,16 @@
                 "description": "Plan attached to the API key."
               }
             }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -669,6 +709,16 @@
                   "type": "string"
                 },
                 "description": "Plan attached to the API key."
+              }
+            }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
               }
             }
           }
@@ -804,6 +854,16 @@
                   "type": "string"
                 },
                 "description": "Plan attached to the API key."
+              }
+            }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
               }
             }
           }
@@ -950,6 +1010,16 @@
                   "type": "string"
                 },
                 "description": "Plan attached to the API key."
+              }
+            }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
               }
             }
           }
@@ -1106,6 +1176,16 @@
                   "type": "string"
                 },
                 "description": "Plan attached to the API key."
+              }
+            }
+          },
+          "503": {
+            "description": "Current data release is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
               }
             }
           }

@@ -6,7 +6,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from shona_api.editorial.models import ReviewState
-from shona_api.releases.services import get_current_release_metadata
+from shona_api.releases.services import (
+    CURRENT_RELEASE_NOT_CONFIGURED_CODE,
+    CURRENT_RELEASE_NOT_CONFIGURED_MESSAGE,
+    CurrentReleaseNotFound,
+    get_current_release_metadata,
+    get_current_release_setup_detail,
+)
 
 from .models import Form, Lemma
 from .search import SEARCH_NORMALIZER_VERSION, normalize_search_query
@@ -34,11 +40,26 @@ def build_error_envelope(*, code, message, detail=None):
     }
 
 
+def build_current_release_missing_response():
+    return Response(
+        build_error_envelope(
+            code=CURRENT_RELEASE_NOT_CONFIGURED_CODE,
+            message=CURRENT_RELEASE_NOT_CONFIGURED_MESSAGE,
+            detail=get_current_release_setup_detail(),
+        ),
+        status=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
+
+
 class LemmaReadView(APIView):
     def get(self, request, public_id):
+        try:
+            release_metadata = get_current_release_metadata()
+        except CurrentReleaseNotFound:
+            return build_current_release_missing_response()
+
         lemma = self._get_lemma(public_id)
         serializer = LemmaReadSerializer(lemma)
-        release_metadata = get_current_release_metadata()
         return Response(
             build_success_envelope(
                 data=serializer.data,
@@ -92,8 +113,12 @@ class SearchView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        try:
+            release_metadata = get_current_release_metadata()
+        except CurrentReleaseNotFound:
+            return build_current_release_missing_response()
+
         results = self._search(normalized_query)
-        release_metadata = get_current_release_metadata()
 
         morphology_analysis = None
         try:
