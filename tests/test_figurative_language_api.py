@@ -1,5 +1,7 @@
 import pytest
 from django.core.cache import caches
+from django.core.management import call_command
+from django.core.management.base import CommandError
 
 from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
@@ -167,3 +169,82 @@ def test_tsumo_endpoints_use_existing_api_key_auth(client, current_release):
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Authentication credentials were not provided."
+
+
+@pytest.mark.django_db
+def test_seed_figurative_expressions_command_exposes_reviewed_public_records(
+    client, api_key, current_release
+):
+    linked_lemma = Lemma.objects.create(
+        headword="ruoko",
+        headword_kind=Lemma.HeadwordKind.NOUN,
+        part_of_speech_code="n",
+        part_of_speech_label="noun",
+        review_state=ReviewState.APPROVED,
+    )
+
+    call_command("seed_figurative_expressions")
+
+    tsumo_response = client.get(
+        "/v1/figurative-expressions/tsumo",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    madimikira_response = client.get(
+        "/v1/figurative-expressions/madimikira",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert tsumo_response.status_code == 200
+    tsumo_body = tsumo_response.json()
+    assert tsumo_body["data"]["count"] == 1
+    tsumo = tsumo_body["data"]["results"][0]
+    assert tsumo["text"] == "Kandiro kanoenda kunobva kamwe."
+    assert tsumo["subtype"] == FigurativeExpression.Subtype.TSUMO
+    assert tsumo["subtype_readiness"] == FigurativeExpression.SubtypeReadiness.ACTIVE
+    assert tsumo["review_status"] == ReviewState.APPROVED
+    assert tsumo["source_notes"] == [
+        {
+            "source_key": "source_tsumo_tsika",
+            "role": "reviewed_theme_enrichment",
+            "locator": "local_review:fig-seed-001",
+        }
+    ]
+    assert tsumo["provenance"] == {
+        "source_keys": ["source_tsumo_tsika"],
+        "review_note": "Reviewed starter proverb seed for FIG-SEED-001.",
+        "confidence": "reviewed",
+    }
+
+    assert madimikira_response.status_code == 200
+    madimikira_body = madimikira_response.json()
+    assert madimikira_body["data"]["count"] == 1
+    madimikira = madimikira_body["data"]["results"][0]
+    assert madimikira["text"] == "kupa ruoko"
+    assert madimikira["subtype"] == FigurativeExpression.Subtype.MADIMIKIRA
+    assert madimikira["linked_lemmas"][0]["public_id"] == linked_lemma.public_id
+    assert madimikira["source_notes"] == [
+        {
+            "source_key": "source_shona_yedu",
+            "role": "reviewed_candidate",
+            "locator": "local_review:fig-seed-001",
+        }
+    ]
+
+
+@pytest.mark.django_db
+def test_seed_figurative_expressions_command_is_idempotent():
+    call_command("seed_figurative_expressions")
+    call_command("seed_figurative_expressions")
+
+    assert FigurativeExpression.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_seed_figurative_expressions_missing_fixture_raises_error():
+    with pytest.raises(CommandError) as exc_info:
+        call_command(
+            "seed_figurative_expressions",
+            fixture="missing_figurative_fixture.json",
+        )
+
+    assert "Fixture file not found at:" in str(exc_info.value)
