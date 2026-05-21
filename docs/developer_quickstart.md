@@ -74,7 +74,11 @@ curl.exe "http://127.0.0.1:8000/v1/search?q=buda" `
 Search currently supports exact lemma and exact form lookup using the v1
 orthography normalizer. Empty searches return `SEARCH_QUERY_REQUIRED`.
 Zero-result searches return a successful envelope with `count: 0` and a
-`zero_result` object.
+`zero_result` object. When search can analyze a supported inflected verb form,
+the response also includes `morphology` and `morphology_enrichment`. Unsupported
+or failed morphology enrichment keeps the search response successful and records
+the fallback under `zero_result.morphology_enrichment` when there are no exact
+matches.
 
 ## 4. Read a lexical entry
 

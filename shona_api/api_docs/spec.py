@@ -408,9 +408,27 @@ def schemas():
                     "type": "array",
                     "items": {"$ref": "#/components/schemas/SearchResult"},
                 },
+                "morphology": {"$ref": "#/components/schemas/AnalyzeData"},
+                "morphology_enrichment": {
+                    "$ref": "#/components/schemas/MorphologyEnrichmentStatus"
+                },
                 "zero_result": json_object,
             },
             "required": ["query", "count", "results"],
+        },
+        "MorphologyEnrichmentStatus": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": ["matched", "unsupported", "failed"],
+                },
+                "count": {"type": "integer"},
+                "code": {"type": "string"},
+                "message": {"type": "string"},
+            },
+            "required": ["status"],
+            "additionalProperties": True,
         },
         "SearchResult": {
             "type": "object",
