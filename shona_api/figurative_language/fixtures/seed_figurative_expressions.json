@@ -1,0 +1,60 @@
+[
+  {
+    "expression_text": "Kandiro kanoenda kunobva kamwe.",
+    "subtype": "tsumo",
+    "subtype_readiness": "active",
+    "idiomatic_meaning": "Reciprocity sustains relationships.",
+    "english_rendering": "One good turn deserves another.",
+    "usage_note": "Use for mutual help or reciprocal obligation.",
+    "cultural_themes": ["reciprocity", "community"],
+    "pedagogy_notes": [
+      {
+        "audience": "general",
+        "note": "Starter proverb selected for a small reviewed public seed."
+      }
+    ],
+    "source_notes": [
+      {
+        "source_key": "source_tsumo_tsika",
+        "role": "reviewed_theme_enrichment",
+        "locator": "local_review:fig-seed-001"
+      }
+    ],
+    "provenance": {
+      "source_keys": ["source_tsumo_tsika"],
+      "review_note": "Reviewed starter proverb seed for FIG-SEED-001.",
+      "confidence": "reviewed"
+    },
+    "review_state": "approved",
+    "linked_lemma_headwords": []
+  },
+  {
+    "expression_text": "kupa ruoko",
+    "subtype": "madimikira",
+    "subtype_readiness": "active",
+    "idiomatic_meaning": "To help or assist someone.",
+    "english_rendering": "Give a hand.",
+    "usage_note": "Use for practical help, not only literal hand movement.",
+    "cultural_themes": ["helpfulness", "community"],
+    "pedagogy_notes": [
+      {
+        "audience": "general",
+        "note": "Starter idiom selected because the linked lemma is obvious."
+      }
+    ],
+    "source_notes": [
+      {
+        "source_key": "source_shona_yedu",
+        "role": "reviewed_candidate",
+        "locator": "local_review:fig-seed-001"
+      }
+    ],
+    "provenance": {
+      "source_keys": ["source_shona_yedu"],
+      "review_note": "Reviewed starter idiom seed for FIG-SEED-001.",
+      "confidence": "reviewed"
+    },
+    "review_state": "approved",
+    "linked_lemma_headwords": ["ruoko"]
+  }
+]

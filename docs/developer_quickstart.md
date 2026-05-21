@@ -104,6 +104,12 @@ Missing lemma IDs return `LEMMA_NOT_FOUND`.
 The current public figurative-language subtypes are `tsumo` and `madimikira`.
 Only active reviewed records are returned.
 
+Seed the small reviewed starter set with:
+
+```powershell
+python manage.py seed_figurative_expressions
+```
+
 ```http
 GET /v1/figurative-expressions/tsumo
 GET /v1/figurative-expressions/tsumo/{public_id}
