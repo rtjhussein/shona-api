@@ -165,6 +165,7 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
             {
                 "public_id": tone.public_id,
                 "pattern": "H-L",
+                "dialects": [],
                 "notation_system": ToneRecord.NotationSystem.HANNAN_BRACKET,
                 "note": "",
                 "form_public_id": form.public_id,

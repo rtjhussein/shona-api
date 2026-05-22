@@ -1,10 +1,13 @@
 import pytest
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.test import RequestFactory
 
 from shona_api.editorial.models import ReviewState
-from shona_api.extraction.admin import ExtractionUnitAdmin
+from shona_api.extraction.admin import ExtractionUnitAdmin, ExtractionUnitAdminForm
 from shona_api.extraction.models import ExtractionUnit
+from shona_api.lexicon.models import Lemma
 from shona_api.parsers.hannan import parse_hannan_entry
 from shona_api.sources.models import Source
 
@@ -131,3 +134,237 @@ def test_extraction_unit_admin_uses_headword_as_clickable_label(hannan_source):
 
     assert model_admin.list_display_links == ("display_headword",)
     assert model_admin.display_headword(unit) == "-buda"
+
+
+@pytest.mark.django_db
+def test_extraction_unit_admin_publication_labels(hannan_source):
+    model_admin = ExtractionUnitAdmin(ExtractionUnit, admin.site)
+    approved = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output=parse_hannan_entry("-buda [H] vi Come out."),
+        confidence=0.95,
+        review_state=ReviewState.APPROVED,
+    )
+
+
+@pytest.fixture
+def staff_user():
+    return get_user_model().objects.create_user(
+        username="staff",
+        password="pass",
+        is_staff=True,
+    )
+    invalid_published = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.43:entry:-bata",
+        raw_text="-bata [H] vt Hold.",
+        parser_output=parse_hannan_entry("-bata [H] vt Hold."),
+        confidence=0.95,
+        review_state=ReviewState.PUBLISHED,
+    )
+    linked = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.44:entry:-bika",
+        raw_text="-bika [H] vt Cook.",
+        parser_output=parse_hannan_entry("-bika [H] vt Cook."),
+        confidence=0.95,
+        review_state=ReviewState.PUBLISHED,
+    )
+    lemma = Lemma.objects.create(headword="-bika", review_state=ReviewState.PUBLISHED)
+    linked.canonical_record = lemma
+    linked.save()
+
+    assert model_admin.publication_state(approved) == "Needs publication"
+    assert model_admin.publication_state(invalid_published) == "Invalid published state"
+    assert model_admin.publication_state(linked) == "Published to dictionary"
+
+
+@pytest.mark.django_db
+def test_extraction_unit_admin_form_rejects_unlinked_manual_published_state(
+    hannan_source,
+):
+    unit = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output=parse_hannan_entry("-buda [H] vi Come out."),
+        confidence=0.95,
+    )
+
+    form = ExtractionUnitAdminForm(
+        data={
+            "source": hannan_source.pk,
+            "source_location_reference": unit.source_location_reference,
+            "raw_text": unit.raw_text,
+            "parser_output": unit.parser_output,
+            "parser_name": unit.parser_name,
+            "parser_status": unit.parser_status,
+            "confidence": unit.confidence,
+            "review_state": ReviewState.PUBLISHED,
+            "provenance": unit.provenance,
+            "batch_id": unit.batch_id,
+            "canonical_record_content_type": "",
+            "canonical_record_object_id": "",
+        },
+        instance=unit,
+    )
+
+    assert not form.is_valid()
+    assert "Use the publish action" in str(form.errors)
+
+
+@pytest.mark.django_db
+def test_extraction_unit_admin_action_publishes_approved_units(
+    hannan_source,
+    staff_user,
+):
+    unit = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output=parse_hannan_entry("-buda [H] vi Come out."),
+        confidence=0.95,
+        review_state=ReviewState.APPROVED,
+    )
+    request = RequestFactory().post("/admin/extraction/extractionunit/")
+    request.user = staff_user
+    model_admin = ExtractionUnitAdmin(ExtractionUnit, admin.site)
+    model_admin.message_user = lambda *args, **kwargs: None
+
+    model_admin.publish_selected_units(request, ExtractionUnit.objects.filter(pk=unit.pk))
+    unit.refresh_from_db()
+
+    assert unit.review_state == ReviewState.PUBLISHED
+    assert unit.canonical_record == Lemma.objects.get(headword="-buda")
+
+
+@pytest.mark.django_db
+def test_deleting_published_extraction_unit_deletes_its_published_lemma(
+    hannan_source,
+    staff_user,
+):
+    unit = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output=parse_hannan_entry("-buda [H] vi Come out."),
+        confidence=0.95,
+        review_state=ReviewState.APPROVED,
+    )
+    request = RequestFactory().post("/admin/extraction/extractionunit/")
+    request.user = staff_user
+    model_admin = ExtractionUnitAdmin(ExtractionUnit, admin.site)
+    model_admin.message_user = lambda *args, **kwargs: None
+    model_admin.publish_selected_units(request, ExtractionUnit.objects.filter(pk=unit.pk))
+    unit.refresh_from_db()
+    lemma_pk = unit.canonical_record_object_id
+
+    unit.delete()
+
+    assert not ExtractionUnit.objects.filter(pk=unit.pk).exists()
+    assert not Lemma.objects.filter(pk=lemma_pk).exists()
+
+
+@pytest.mark.django_db
+def test_bulk_deleting_published_extraction_units_deletes_their_published_lemmas(
+    hannan_source,
+    staff_user,
+):
+    units = []
+    for headword in ["-buda", "-bata"]:
+        units.append(
+            ExtractionUnit.objects.create_from_parser_output(
+                source=hannan_source,
+                source_location_reference=f"hannan_dictionary.pdf:p.42:entry:{headword}",
+                raw_text=f"{headword} [H] vt Hold.",
+                parser_output=parse_hannan_entry(f"{headword} [H] vt Hold."),
+                confidence=0.95,
+                review_state=ReviewState.APPROVED,
+            )
+        )
+    request = RequestFactory().post("/admin/extraction/extractionunit/")
+    request.user = staff_user
+    model_admin = ExtractionUnitAdmin(ExtractionUnit, admin.site)
+    model_admin.message_user = lambda *args, **kwargs: None
+    model_admin.publish_selected_units(
+        request,
+        ExtractionUnit.objects.filter(pk__in=[unit.pk for unit in units]),
+    )
+    lemma_pks = list(
+        ExtractionUnit.objects.filter(pk__in=[unit.pk for unit in units]).values_list(
+            "canonical_record_object_id",
+            flat=True,
+        )
+    )
+
+    ExtractionUnit.objects.filter(pk__in=[unit.pk for unit in units]).delete()
+
+    assert not ExtractionUnit.objects.filter(pk__in=[unit.pk for unit in units]).exists()
+    assert not Lemma.objects.filter(pk__in=lemma_pks).exists()
+
+
+@pytest.mark.django_db
+def test_deleting_one_extraction_unit_keeps_shared_canonical_lemma(hannan_source):
+    lemma = Lemma.objects.create(
+        headword="-buda",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        review_state=ReviewState.PUBLISHED,
+    )
+    content_type = ContentType.objects.get_for_model(Lemma)
+    first = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output={"headword": "-buda"},
+        parser_name="hannan-v1-fixture-parser",
+        parser_status=ExtractionUnit.ParserStatus.PARSED,
+        confidence=0.95,
+        review_state=ReviewState.PUBLISHED,
+        canonical_record_content_type=content_type,
+        canonical_record_object_id=str(lemma.pk),
+    )
+    second = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.43:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output={"headword": "-buda"},
+        parser_name="hannan-v1-fixture-parser",
+        parser_status=ExtractionUnit.ParserStatus.PARSED,
+        confidence=0.95,
+        review_state=ReviewState.PUBLISHED,
+        canonical_record_content_type=content_type,
+        canonical_record_object_id=str(lemma.pk),
+    )
+
+    first.delete()
+
+    assert not ExtractionUnit.objects.filter(pk=first.pk).exists()
+    assert ExtractionUnit.objects.filter(pk=second.pk).exists()
+    assert Lemma.objects.filter(pk=lemma.pk).exists()
+
+
+@pytest.mark.django_db
+def test_extraction_unit_admin_action_repairs_legacy_published_unlinked_unit(
+    hannan_source,
+    staff_user,
+):
+    unit = ExtractionUnit.objects.create_from_parser_output(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out.",
+        parser_output=parse_hannan_entry("-buda [H] vi Come out."),
+        confidence=0.95,
+        review_state=ReviewState.PUBLISHED,
+    )
+    request = RequestFactory().post("/admin/extraction/extractionunit/")
+    request.user = staff_user
+    model_admin = ExtractionUnitAdmin(ExtractionUnit, admin.site)
+    model_admin.message_user = lambda *args, **kwargs: None
+
+    model_admin.publish_selected_units(request, ExtractionUnit.objects.filter(pk=unit.pk))
+    unit.refresh_from_db()
+
+    assert unit.review_state == ReviewState.PUBLISHED
+    assert unit.canonical_record == Lemma.objects.get(headword="-buda")

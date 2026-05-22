@@ -127,6 +127,12 @@ h2 {
   color: var(--muted);
 }
 
+.compact-button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
 .readiness-strip,
 .work-grid,
 .metric-grid,
@@ -136,7 +142,7 @@ h2 {
 }
 
 .readiness-strip {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 16px;
 }
 
@@ -234,6 +240,137 @@ input[type="password"] {
   background: var(--surface-2);
 }
 
+.path-picker-row {
+  display: flex;
+  gap: 10px;
+}
+
+.path-picker-row input {
+  min-width: 0;
+}
+
+.jsonl-picker {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface-2);
+}
+
+.jsonl-picker-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.jsonl-picker-head span,
+.jsonl-file-button strong {
+  display: block;
+}
+
+.jsonl-picker-head span {
+  color: var(--soft);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.jsonl-picker-head small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jsonl-file-list {
+  display: grid;
+  gap: 8px;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.jsonl-file-button {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.jsonl-file-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jsonl-file-title strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jsonl-status-pill {
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.jsonl-status-not_imported {
+  color: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 50%, var(--line));
+  background: color-mix(in srgb, var(--amber) 10%, var(--surface));
+}
+
+.jsonl-status-imported {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 50%, var(--line));
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+}
+
+.jsonl-status-failed {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 50%, var(--line));
+  background: color-mix(in srgb, var(--red) 10%, var(--surface));
+}
+
+.jsonl-status-running,
+.jsonl-status-pending {
+  color: var(--blue);
+  border-color: color-mix(in srgb, var(--blue) 50%, var(--line));
+  background: color-mix(in srgb, var(--blue) 10%, var(--surface));
+}
+
+.jsonl-status-dry_run {
+  color: var(--muted);
+}
+
+.jsonl-file-button:hover,
+.jsonl-file-button:focus {
+  border-color: color-mix(in srgb, var(--green) 50%, var(--line));
+}
+
+.jsonl-file-meta,
+.jsonl-import-detail {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.jsonl-import-detail {
+  color: var(--soft);
+}
+
 .switch-list {
   display: grid;
   gap: 8px;
@@ -244,6 +381,34 @@ input[type="password"] {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.form-feedback {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  line-height: 1.45;
+}
+
+.form-feedback-working {
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 10%, var(--surface));
+}
+
+.form-feedback-success {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+}
+
+.form-feedback-error {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, var(--surface));
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: wait;
+  opacity: 0.68;
 }
 
 .run-status {
@@ -311,7 +476,7 @@ input[type="password"] {
 
 .run-row {
   display: grid;
-  grid-template-columns: minmax(180px, 1.1fr) minmax(110px, 0.6fr) minmax(130px, 0.8fr) minmax(90px, 0.45fr) minmax(90px, 0.45fr);
+  grid-template-columns: minmax(180px, 1.1fr) minmax(110px, 0.6fr) minmax(130px, 0.8fr) minmax(90px, 0.45fr) minmax(90px, 0.45fr) minmax(90px, 0.45fr);
   gap: 12px;
   align-items: center;
   border: 1px solid var(--line);
@@ -321,6 +486,22 @@ input[type="password"] {
 
 .run-head {
   background: var(--surface);
+}
+
+.log-details {
+  margin-top: 16px;
+}
+
+.log-details summary {
+  width: fit-content;
+  min-height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 7px 12px;
+  color: var(--muted);
+  background: var(--surface);
+  cursor: pointer;
+  font-weight: 800;
 }
 
 @media (max-width: 980px) {
@@ -346,8 +527,15 @@ input[type="password"] {
   }
 
   .two-col,
+  .path-picker-row,
+  .jsonl-picker-head,
   .metric-grid,
   .run-row {
     grid-template-columns: 1fr;
+  }
+
+  .path-picker-row,
+  .jsonl-picker-head {
+    display: grid;
   }
 }

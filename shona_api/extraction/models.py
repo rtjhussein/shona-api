@@ -3,8 +3,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 from shona_api.editorial.models import ReviewState
+from shona_api.lexicon.models import Lemma
 from shona_api.sources.models import Source
 
 
@@ -133,19 +136,31 @@ class ExtractionUnit(models.Model):
 
 
 class IngestionRun(models.Model):
+    class RunKind(models.TextChoices):
+        GEMINI_PIPELINE = "gemini_pipeline", "Gemini pipeline"
+        PRECOMPILED_JSONL = "precompiled_jsonl", "Precompiled JSONL"
+
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
         RUNNING = "running", "Running"
         SUCCEEDED = "succeeded", "Succeeded"
         FAILED = "failed", "Failed"
 
+    run_kind = models.CharField(
+        max_length=32,
+        choices=RunKind.choices,
+        default=RunKind.GEMINI_PIPELINE,
+        db_index=True,
+    )
     batch_id = models.CharField(max_length=120, db_index=True)
     start_page = models.PositiveIntegerField()
     end_page = models.PositiveIntegerField()
     parser_repo_path = models.CharField(max_length=500)
     pdf_path = models.CharField(max_length=500)
     output_dir = models.CharField(max_length=500)
+    source_jsonl_path = models.CharField(max_length=500, blank=True)
     jsonl_path = models.CharField(max_length=500, blank=True)
+    import_parser_name = models.CharField(max_length=120, blank=True)
     status = models.CharField(
         max_length=32,
         choices=Status.choices,
@@ -154,6 +169,8 @@ class IngestionRun(models.Model):
     )
     dry_run = models.BooleanField(default=False)
     overwrite_pages = models.BooleanField(default=False)
+    skip_duplicates = models.BooleanField(default=True)
+    auto_approve = models.BooleanField(default=False)
     auto_publish = models.BooleanField(default=False)
     imported_count = models.PositiveIntegerField(default=0)
     duplicate_count = models.PositiveIntegerField(default=0)
@@ -188,6 +205,14 @@ class IngestionRun(models.Model):
 
     @property
     def page_label(self):
+        if self.run_kind == self.RunKind.PRECOMPILED_JSONL:
+            if self.source_jsonl_path:
+                jsonl_name = self.source_jsonl_path.replace("\\", "/").rsplit(
+                    "/",
+                    1,
+                )[-1]
+                return f"JSONL {jsonl_name}"
+            return "Precompiled JSONL"
         if self.start_page == self.end_page:
             return f"PDF page {self.start_page}"
         return f"PDF pages {self.start_page}-{self.end_page}"
@@ -197,3 +222,23 @@ class IngestionRun(models.Model):
 
     def __str__(self):
         return f"{self.batch_id} ({self.status})"
+
+
+@receiver(post_delete, sender=ExtractionUnit)
+def delete_extraction_unit_lemma(sender, instance, using, **kwargs):
+    if not instance.canonical_record_content_type_id:
+        return
+    if not instance.canonical_record_object_id:
+        return
+    if instance.canonical_record_content_type.model_class() is not Lemma:
+        return
+    if (
+        ExtractionUnit.objects.using(using)
+        .filter(
+            canonical_record_content_type=instance.canonical_record_content_type,
+            canonical_record_object_id=instance.canonical_record_object_id,
+        )
+        .exists()
+    ):
+        return
+    Lemma.objects.using(using).filter(pk=instance.canonical_record_object_id).delete()

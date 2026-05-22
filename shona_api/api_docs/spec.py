@@ -523,6 +523,7 @@ def schemas():
             "properties": {
                 "public_id": {"type": "string"},
                 "pattern": {"type": "string"},
+                "dialects": {"type": "array", "items": {"type": "string"}},
                 "notation_system": {"type": "string"},
                 "note": {"type": "string"},
                 "form_public_id": {

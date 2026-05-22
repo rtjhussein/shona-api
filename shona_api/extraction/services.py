@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from django.db import transaction
+from django.db.models import Q
 
 from shona_api.editorial.models import (
     AuditLog,
@@ -10,8 +11,10 @@ from shona_api.editorial.models import (
     EditorialDecisionRecord,
     ReviewState,
 )
-from shona_api.lexicon.models import Form, Lemma, Sense, ToneRecord
+from shona_api.figurative_language.models import FigurativeExpression
+from shona_api.lexicon.models import Form, Lemma, NounClass, Sense, ToneRecord
 
+from .gpt_jsonl import build_tone_record_payloads, validate_publishable_parser_output
 from .models import ExtractionUnit
 
 
@@ -26,6 +29,7 @@ class PublishedExtractionBundle:
     senses: list[Sense]
     tone_records: list[ToneRecord]
     forms: list[Form]
+    figurative_expressions: list[FigurativeExpression]
     editorial_decision: EditorialDecision
     audit_log: AuditLog
 
@@ -49,6 +53,9 @@ def publish_reviewed_extraction_unit(
         raise ExtractionUnitPublishError(
             "Extraction units with parser errors cannot be published."
         )
+    publish_validation_errors = validate_publishable_parser_output(parser_output)
+    if publish_validation_errors:
+        raise ExtractionUnitPublishError(publish_validation_errors[0])
     if extraction_unit.canonical_record_content_type_id or extraction_unit.canonical_record_object_id:
         raise ExtractionUnitPublishError("This extraction unit has already been published.")
 
@@ -71,6 +78,9 @@ def publish_reviewed_extraction_unit(
             raise ExtractionUnitPublishError(
                 "Extraction units with parser errors cannot be published."
             )
+        publish_validation_errors = validate_publishable_parser_output(parser_output)
+        if publish_validation_errors:
+            raise ExtractionUnitPublishError(publish_validation_errors[0])
         if extraction_unit.canonical_record_content_type_id or extraction_unit.canonical_record_object_id:
             raise ExtractionUnitPublishError(
                 "This extraction unit has already been published."
@@ -83,6 +93,7 @@ def publish_reviewed_extraction_unit(
             headword_kind=_map_headword_kind(parser_output.get("headword_kind")),
             part_of_speech_code=_parser_pos_code(parser_output),
             part_of_speech_label=_parser_pos_label(parser_output),
+            noun_class=_parser_noun_class(parser_output),
             dialects=list(parser_output.get("dialects") or []),
             comparative_bantu_marker=bool(
                 parser_output.get("comparative_bantu_marker", False)
@@ -119,43 +130,66 @@ def publish_reviewed_extraction_unit(
             for sense_data in parser_output.get("senses") or []
         ]
 
-        tone_records = []
-        tone_pattern = parser_output.get("tone_pattern")
-        if tone_pattern:
+        tone_records = [
+            ToneRecord.objects.create(
+                lemma=lemma,
+                pattern=tone_data["pattern"],
+                dialects=list(tone_data.get("dialects") or []),
+                notation_system=ToneRecord.NotationSystem.HANNAN_BRACKET,
+                note="Published from reviewed extraction unit.",
+                provenance=_record_provenance(
+                    provenance,
+                    "tone_record",
+                    tone_pattern=tone_data["pattern"],
+                    dialects=list(tone_data.get("dialects") or []),
+                ),
+                review_state=ReviewState.PUBLISHED,
+            )
+            for tone_data in build_tone_record_payloads(parser_output)
+        ]
+        if not tone_records and parser_output.get("tone_pattern"):
+            tone_pattern = parser_output["tone_pattern"]
             tone_records.append(
                 ToneRecord.objects.create(
                     lemma=lemma,
                     pattern=tone_pattern,
+                    dialects=list(parser_output.get("dialects") or []),
                     notation_system=ToneRecord.NotationSystem.HANNAN_BRACKET,
                     note="Published from reviewed extraction unit.",
                     provenance=_record_provenance(
                         provenance,
                         "tone_record",
                         tone_pattern=tone_pattern,
+                        dialects=list(parser_output.get("dialects") or []),
                     ),
                     review_state=ReviewState.PUBLISHED,
                 )
             )
 
-        forms = []
-        for derived_form_group in parser_output.get("derived_forms") or []:
-            for form_text in derived_form_group.get("forms", []):
-                forms.append(
-                    Form.objects.create(
-                        lemma=lemma,
-                        form_text=form_text,
-                        form_kind=Form.FormKind.DERIVED,
-                        dialects=list(parser_output.get("dialects") or []),
-                        grammar=list(_parser_entry_grammar(parser_output)),
-                        provenance=_record_provenance(
-                            provenance,
-                            "form",
-                            form_text=form_text,
-                            form_kind=Form.FormKind.DERIVED,
-                        ),
-                        review_state=ReviewState.PUBLISHED,
-                    )
-                )
+        forms = [
+            Form.objects.create(
+                lemma=lemma,
+                form_text=form_text,
+                form_kind=Form.FormKind.DERIVED,
+                dialects=list(parser_output.get("dialects") or []),
+                grammar=list(_parser_entry_grammar(parser_output)),
+                provenance=_record_provenance(
+                    provenance,
+                    "form",
+                    form_text=form_text,
+                    form_kind=Form.FormKind.DERIVED,
+                ),
+                review_state=ReviewState.PUBLISHED,
+            )
+            for form_text in _iter_derived_form_texts(parser_output)
+        ]
+
+        figurative_expressions = _publish_idiomatic_expressions(
+            extraction_unit=extraction_unit,
+            lemma=lemma,
+            parser_output=parser_output,
+            provenance=provenance,
+        )
 
         decision = EditorialDecision.objects.create(
             decision_type=EditorialDecision.DecisionType.PUBLISH,
@@ -174,7 +208,7 @@ def publish_reviewed_extraction_unit(
             lemma,
             relationship=EditorialDecisionRecord.Relationship.PRIMARY,
         )
-        for record in [*senses, *tone_records, *forms]:
+        for record in [*senses, *tone_records, *forms, *figurative_expressions]:
             decision.record_affected_record(
                 record,
                 relationship=EditorialDecisionRecord.Relationship.CREATED,
@@ -203,6 +237,9 @@ def publish_reviewed_extraction_unit(
                 "sense_public_ids": [sense.public_id for sense in senses],
                 "tone_record_public_ids": [tone.public_id for tone in tone_records],
                 "form_public_ids": [form.public_id for form in forms],
+                "figurative_expression_public_ids": [
+                    expression.public_id for expression in figurative_expressions
+                ],
                 "decision_id": str(decision.pk),
             },
         }
@@ -214,6 +251,7 @@ def publish_reviewed_extraction_unit(
         senses=senses,
         tone_records=tone_records,
         forms=forms,
+        figurative_expressions=figurative_expressions,
         editorial_decision=decision,
         audit_log=audit_log,
     )
@@ -275,6 +313,104 @@ def _parser_entry_grammar(parser_output: dict[str, object]) -> list[str]:
         if isinstance(entry_grammar, list):
             return [grammar for grammar in entry_grammar if isinstance(grammar, str)]
     return []
+
+
+def _parser_noun_class(parser_output: dict[str, object]) -> NounClass | None:
+    if _map_headword_kind(parser_output.get("headword_kind")) != Lemma.HeadwordKind.NOUN:
+        return None
+    noun_payload = parser_output.get("noun")
+    if not isinstance(noun_payload, dict):
+        return None
+    classes = noun_payload.get("classes")
+    if not isinstance(classes, list):
+        return None
+    for class_number in classes:
+        if isinstance(class_number, str) and class_number.strip():
+            return NounClass.objects.filter(class_number=class_number.strip()).first()
+    return None
+
+
+def _iter_derived_form_texts(parser_output: dict[str, object]) -> list[str]:
+    form_texts: list[str] = []
+    for item in parser_output.get("derived_forms") or []:
+        if isinstance(item, str):
+            if item.strip():
+                form_texts.append(item.strip())
+            continue
+        if not isinstance(item, dict):
+            continue
+        for form_text in item.get("forms") or []:
+            if isinstance(form_text, str) and form_text.strip():
+                form_texts.append(form_text.strip())
+    return form_texts
+
+
+def _publish_idiomatic_expressions(
+    *,
+    extraction_unit: ExtractionUnit,
+    lemma: Lemma,
+    parser_output: dict[str, object],
+    provenance: dict[str, object],
+) -> list[FigurativeExpression]:
+    expressions: list[FigurativeExpression] = []
+    for expression_data in parser_output.get("idiomatic_expressions") or []:
+        if not isinstance(expression_data, dict):
+            continue
+        expression_text = _clean_parser_string(expression_data.get("expression_text"))
+        meaning = _clean_parser_string(expression_data.get("idiomatic_meaning"))
+        english_rendering = _clean_parser_string(expression_data.get("english_rendering"))
+        if not expression_text or not (meaning or english_rendering):
+            continue
+
+        expression = FigurativeExpression.objects.create(
+            expression_text=expression_text,
+            subtype=FigurativeExpression.Subtype.MADIMIKIRA,
+            subtype_readiness=FigurativeExpression.SubtypeReadiness.ACTIVE,
+            idiomatic_meaning=meaning,
+            english_rendering=english_rendering,
+            usage_note=_clean_parser_string(expression_data.get("usage_note")),
+            source_notes=[
+                {
+                    "source_key": extraction_unit.source_key,
+                    "role": "embedded_hannan_idiom",
+                }
+            ],
+            provenance=_record_provenance(
+                provenance,
+                "figurative_expression",
+                subtype=FigurativeExpression.Subtype.MADIMIKIRA,
+                source_sense_number=expression_data.get("source_sense_number"),
+                dialects=list(expression_data.get("dialects") or []),
+                raw_idiom_payload=expression_data,
+            ),
+            review_state=ReviewState.NEEDS_REVIEW,
+        )
+        expression.linked_lemmas.add(lemma, *_resolve_linked_lemmas(expression_data))
+        expressions.append(expression)
+    return expressions
+
+
+def _resolve_linked_lemmas(expression_data: dict[str, object]) -> list[Lemma]:
+    linked_headwords = expression_data.get("linked_headwords")
+    if not isinstance(linked_headwords, list):
+        return []
+    normalized_headwords = {
+        headword.removeprefix("-").strip()
+        for headword in linked_headwords
+        if isinstance(headword, str) and headword.strip()
+    }
+    if not normalized_headwords:
+        return []
+    query = Q()
+    for headword in normalized_headwords:
+        query |= Q(normalized_headword__iexact=headword)
+    return list(Lemma.objects.filter(query))
+
+
+def _clean_parser_string(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    return " ".join(value.split())
 
 
 def _map_headword_kind(parser_headword_kind: object) -> str:

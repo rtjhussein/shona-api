@@ -12,14 +12,14 @@
     <main
       class="ingestion-shell"
       data-start-endpoint="{{ start_endpoint }}"
-      data-save-key-endpoint="{{ save_key_endpoint }}"
+      data-jsonl-list-endpoint="{{ jsonl_list_endpoint }}"
       data-status-url-template="{{ status_url_template }}"
     >
       <header class="console-header">
         <div>
-          <p class="eyebrow">Gemini extraction unit</p>
+          <p class="eyebrow">Extraction unit import</p>
           <h1>Hannan Ingestion</h1>
-          <p class="header-note">Run page extraction, import candidates, and optionally publish trusted Gemini output.</p>
+          <p class="header-note">Import precompiled GPT JSONL, auto-approve parseable extraction units, and watch the run finish here.</p>
         </div>
         <nav class="header-actions" aria-label="Dashboard navigation">
           <a href="{% url 'data-progress' %}">Progress</a>
@@ -29,78 +29,67 @@
       </header>
 
       <section class="readiness-strip" aria-label="Pipeline readiness">
-        <div class="{% if readiness.gemini_key_configured %}ready{% else %}blocked{% endif %}">
-          <span>Gemini key</span>
-          <strong>{% if readiness.gemini_key_configured %}Configured{% else %}Missing{% endif %}</strong>
-          {% if readiness.gemini_key_source %}<small>{{ readiness.gemini_key_source }}</small>{% endif %}
-        </div>
         <div class="{% if readiness.parser_repo_exists %}ready{% else %}blocked{% endif %}">
-          <span>Parser repo</span>
+          <span>Parser tools</span>
           <strong>{% if readiness.parser_repo_exists %}Found{% else %}Missing{% endif %}</strong>
           <small>{{ readiness.parser_repo_path }}</small>
-        </div>
-        <div class="{% if readiness.pdf_exists %}ready{% else %}blocked{% endif %}">
-          <span>Hannan PDF</span>
-          <strong>{% if readiness.pdf_exists %}Found{% else %}Missing{% endif %}</strong>
-          <small>{{ readiness.pdf_path }}</small>
         </div>
         <div class="{% if readiness.extract_script_exists and readiness.compile_script_exists %}ready{% else %}blocked{% endif %}">
           <span>Parser scripts</span>
           <strong>{% if readiness.extract_script_exists and readiness.compile_script_exists %}Ready{% else %}Missing{% endif %}</strong>
           <small>{{ readiness.output_dir }}</small>
         </div>
+        <div class="{% if readiness.latest_jsonl_path %}ready{% else %}blocked{% endif %}">
+          <span>Latest JSONL</span>
+          <strong>{% if readiness.latest_jsonl_path %}Available{% else %}Missing{% endif %}</strong>
+          <small>{{ readiness.latest_jsonl_path|default:readiness.output_dir }}</small>
+        </div>
       </section>
 
-      <section class="work-grid">
-        <article class="panel">
+      <section class="panel jsonl-import-panel">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Start a run</p>
-              <h2>Extraction controls</h2>
+              <p class="eyebrow">One-click JSONL</p>
+              <h2>Import compiled GPT-5.5 output</h2>
             </div>
           </div>
           <form class="run-form" data-run-form>
             {% csrf_token %}
+            <input name="run_kind" type="hidden" value="precompiled_jsonl">
             <label>
               <span>Batch ID</span>
-              <input name="batch_id" type="text" placeholder="GEMINI-20260521-A">
+              <input name="jsonl_batch_id" type="text" placeholder="GPT-5.5-20260522-160329">
             </label>
-            <div class="two-col">
-              <label>
-                <span>Start PDF page</span>
-                <input name="start_page" type="number" min="1" required>
-              </label>
-              <label>
-                <span>End PDF page</span>
-                <input name="end_page" type="number" min="1">
-              </label>
-            </div>
-            <div class="switch-list">
-              <label><input name="overwrite_pages" type="checkbox"> Re-extract existing page JSON</label>
-              <label><input name="dry_run" type="checkbox"> Dry-run import only</label>
-              <label><input name="auto_publish" type="checkbox"> Auto-approve and publish parseable Gemini units</label>
-            </div>
-            <button class="primary-button" type="submit">Start ingestion</button>
-          </form>
-        </article>
-
-        <article class="panel">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Gemini access</p>
-              <h2>Local key</h2>
-            </div>
-          </div>
-          <form class="key-form" data-key-form>
-            {% csrf_token %}
             <label>
-              <span>Gemini API key</span>
-              <input name="gemini_api_key" type="password" autocomplete="off" placeholder="Paste key for local env file">
+              <span>Compiled JSONL path</span>
+              <div class="path-picker-row">
+                <input name="jsonl_path" type="text" value="{{ readiness.latest_jsonl_path }}" placeholder="C:\Users\user\Documents\Projects\shona-api\shona_api\parsers\hannan_llm\llm_extracted_batches\GPT-5.5-20260522-160329.jsonl" required data-jsonl-path-input>
+                <button class="secondary-button compact-button" type="button" data-jsonl-picker-open>Browse JSONL</button>
+              </div>
             </label>
-            <button class="secondary-button" type="submit">Save key</button>
+            <div class="jsonl-picker" hidden data-jsonl-picker>
+              <div class="jsonl-picker-head">
+                <div>
+                  <span>Available JSONL files</span>
+                  <small data-jsonl-folder>{{ readiness.output_dir }}</small>
+                </div>
+                <button class="secondary-button compact-button" type="button" data-jsonl-picker-close>Close</button>
+              </div>
+              <div class="jsonl-file-list" data-jsonl-file-list></div>
+            </div>
+            <label>
+              <span>Parser name</span>
+              <input name="import_parser_name" type="text" value="gpt-5.5-thinking">
+            </label>
+            <div class="switch-list">
+              <label><input name="auto_approve" type="checkbox" checked> Auto-approve parseable extraction units</label>
+              <label><input name="jsonl_skip_duplicates" type="checkbox" checked> Skip duplicate source locators</label>
+              <label><input name="jsonl_auto_publish" type="checkbox"> Also publish approved units into the dictionary</label>
+              <label><input name="jsonl_dry_run" type="checkbox"> Dry-run import only</label>
+            </div>
+            <div class="form-feedback" data-run-feedback hidden></div>
+            <button class="primary-button" type="submit" data-run-submit>Import JSONL</button>
           </form>
-          <p class="fine-print">Saved to the ignored local env file for this machine; the UI never displays it back.</p>
-        </article>
       </section>
 
       <section class="panel run-status" aria-live="polite" data-run-status>
@@ -121,11 +110,14 @@
             <div><span>Publish failures</span><strong>{{ latest_run.failed_publish_count }}</strong></div>
           </div>
           <div class="run-actions">
-            <a href="{% url 'admin:extraction_extractionunit_changelist' %}?batch_id__exact={{ latest_run.batch_id|urlencode }}&review_state__exact=needs_review">Review queue</a>
+            <a href="{% url 'admin:extraction_extractionunit_changelist' %}?batch_id__exact={{ latest_run.batch_id|urlencode }}&review_state__exact={{ latest_run_review_state_filter }}">Review queue</a>
             <a href="{% url 'dictionary-search' %}">Search dictionary</a>
           </div>
           {% if latest_run.error_message %}<p class="error-note">{{ latest_run.error_message }}</p>{% endif %}
-          <pre class="log-box">{{ latest_run.log_text|default:"Waiting for output..." }}</pre>
+          <details class="log-details">
+            <summary>Run log</summary>
+            <pre class="log-box">{{ latest_run.log_text|default:"Waiting for output..." }}</pre>
+          </details>
         {% else %}
           <div class="section-heading">
             <div>
@@ -147,20 +139,22 @@
             <h2>Pipeline history</h2>
           </div>
         </div>
-        <div class="run-table">
+        <div class="run-table" data-run-history>
           <div class="run-row run-head">
             <span>Batch</span>
             <span>Status</span>
             <span>Pages</span>
             <span>Imported</span>
+            <span>Approved</span>
             <span>Published</span>
           </div>
           {% for run in latest_runs %}
-            <div class="run-row">
+            <div class="run-row" data-run-row-id="{{ run.pk }}">
               <span>{{ run.batch_id }}</span>
               <span>{{ run.status }}</span>
               <span>{{ run.page_label }}</span>
               <span>{{ run.imported_count }}</span>
+              <span>{{ run.publishable_count }}</span>
               <span>{{ run.published_count }}</span>
             </div>
           {% empty %}

@@ -1562,6 +1562,12 @@
           "pattern": {
             "type": "string"
           },
+          "dialects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "notation_system": {
             "type": "string"
           },

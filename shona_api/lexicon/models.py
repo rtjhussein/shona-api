@@ -305,6 +305,7 @@ class ToneRecord(CanonicalRecord):
         blank=True,
     )
     pattern = models.CharField(max_length=80)
+    dialects = models.JSONField(default=list, blank=True)
     notation_system = models.CharField(
         max_length=32,
         choices=NotationSystem.choices,

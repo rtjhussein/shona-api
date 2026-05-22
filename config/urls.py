@@ -17,6 +17,7 @@ from shona_api.web.views import (
     DictionaryEntryView,
     DictionarySearchView,
     IngestionDashboardView,
+    JsonlFileListView,
     IngestionRunStatusView,
     SaveGeminiKeyView,
     StartIngestionRunView,
@@ -37,6 +38,11 @@ urlpatterns = [
         "data-progress/ingestion/gemini-key/",
         SaveGeminiKeyView.as_view(),
         name="ingestion-gemini-key-save",
+    ),
+    path(
+        "data-progress/ingestion/jsonl-files/",
+        JsonlFileListView.as_view(),
+        name="ingestion-jsonl-list",
     ),
     path(
         "data-progress/ingestion/runs/start/",

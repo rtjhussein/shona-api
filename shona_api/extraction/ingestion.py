@@ -20,12 +20,13 @@ from .services import ExtractionUnitPublishError, publish_reviewed_extraction_un
 
 
 TRUSTED_GEMINI_PARSER = "gemini-2.5-flash-v1"
+TRUSTED_GPT_5_5_PARSER = "gpt-5.5-thinking"
 LOCAL_GEMINI_ENV_PATH = Path(settings.BASE_DIR) / ".local_gemini.env"
 DEFAULT_PARSER_REPO_PATH = (
-    Path(settings.BASE_DIR).parent / "parsers" / "hannan-parser"
+    Path(settings.BASE_DIR) / "shona_api" / "parsers" / "hannan_llm"
 )
 DEFAULT_PDF_PATH = (
-    DEFAULT_PARSER_REPO_PATH / "Standard Shona Dictionary - Hannan.pdf"
+    DEFAULT_PARSER_REPO_PATH / "source" / "Standard Shona Dictionary - Hannan.pdf"
 )
 DEFAULT_OUTPUT_DIR = DEFAULT_PARSER_REPO_PATH / "llm_extracted_batches"
 
@@ -56,6 +57,15 @@ def resolve_gemini_key() -> str:
 def build_ingestion_readiness() -> dict[str, object]:
     parser_repo = DEFAULT_PARSER_REPO_PATH
     pdf_path = DEFAULT_PDF_PATH
+    output_dir = DEFAULT_OUTPUT_DIR
+    latest_jsonl = ""
+    if output_dir.exists():
+        jsonl_files = sorted(
+            output_dir.glob("*.jsonl"),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+        latest_jsonl = str(jsonl_files[0]) if jsonl_files else ""
     return {
         "gemini_key_configured": bool(resolve_gemini_key()),
         "gemini_key_source": "environment"
@@ -65,9 +75,10 @@ def build_ingestion_readiness() -> dict[str, object]:
         "parser_repo_exists": parser_repo.exists(),
         "pdf_path": str(pdf_path),
         "pdf_exists": pdf_path.exists(),
-        "extract_script_exists": (parser_repo / "parse_page_29_test.py").exists(),
+        "extract_script_exists": (parser_repo / "llm_parser.py").exists(),
         "compile_script_exists": (parser_repo / "compile_llm_batches.py").exists(),
-        "output_dir": str(DEFAULT_OUTPUT_DIR),
+        "output_dir": str(output_dir),
+        "latest_jsonl_path": latest_jsonl,
     }
 
 
@@ -99,13 +110,20 @@ def execute_ingestion_run(run: IngestionRun) -> IngestionRun:
     run.save()
 
     try:
-        _validate_run_inputs(run)
-        jsonl_path = _run_parser_pipeline(run)
+        if run.run_kind == IngestionRun.RunKind.PRECOMPILED_JSONL:
+            _validate_precompiled_jsonl_run(run)
+            jsonl_path = Path(run.source_jsonl_path)
+            run.append_log(f"Using precompiled JSONL: {jsonl_path}")
+        else:
+            _validate_run_inputs(run)
+            jsonl_path = _run_parser_pipeline(run)
         run.jsonl_path = str(jsonl_path)
         run.save(update_fields=("jsonl_path", "log_text"))
         _import_jsonl(run, jsonl_path)
         if run.auto_publish and not run.dry_run:
             _auto_publish_run(run)
+        elif run.auto_approve and not run.dry_run:
+            _auto_approve_run(run)
         run.status = IngestionRun.Status.SUCCEEDED
         run.append_log("Pipeline completed.")
     except Exception as exc:
@@ -129,9 +147,19 @@ def _validate_run_inputs(run: IngestionRun) -> None:
         raise ValueError(f"Parser repo not found: {parser_repo}")
     if not pdf_path.exists():
         raise ValueError(f"Hannan PDF not found: {pdf_path}")
-    for script_name in ("parse_page_29_test.py", "compile_llm_batches.py"):
+    for script_name in ("llm_parser.py", "compile_llm_batches.py"):
         if not (parser_repo / script_name).exists():
             raise ValueError(f"Parser script not found: {script_name}")
+
+
+def _validate_precompiled_jsonl_run(run: IngestionRun) -> None:
+    jsonl_path = Path(run.source_jsonl_path)
+    if not run.source_jsonl_path.strip():
+        raise ValueError("Choose a precompiled JSONL file to import.")
+    if not jsonl_path.exists():
+        raise ValueError(f"JSONL file not found: {jsonl_path}")
+    if jsonl_path.suffix.lower() != ".jsonl":
+        raise ValueError("Precompiled import expects a .jsonl file.")
 
 
 def _run_parser_pipeline(run: IngestionRun) -> Path:
@@ -143,7 +171,7 @@ def _run_parser_pipeline(run: IngestionRun) -> Path:
     extract_cmd = [
         sys.executable,
         "-u",
-        "parse_page_29_test.py",
+        "llm_parser.py",
         "--start-page",
         str(run.start_page),
         "--end-page",
@@ -199,20 +227,34 @@ def _run_subprocess(run: IngestionRun, command: list[str], cwd: Path) -> None:
 
 
 def _import_jsonl(run: IngestionRun, jsonl_path: Path) -> None:
+    parser_name = _parser_name_for_run(run)
     before_count = ExtractionUnit.objects.filter(
         batch_id=run.batch_id,
-        parser_name=TRUSTED_GEMINI_PARSER,
+        parser_name=parser_name,
     ).count()
     stdout = io.StringIO()
     stderr = io.StringIO()
-    call_command(
-        "import_gemini_parsed",
-        str(jsonl_path),
-        batch_id=run.batch_id,
-        dry_run=run.dry_run,
-        stdout=stdout,
-        stderr=stderr,
-    )
+    if run.run_kind == IngestionRun.RunKind.PRECOMPILED_JSONL:
+        call_command(
+            "import_gpt_5_5_parsed",
+            str(jsonl_path),
+            batch_id=run.batch_id,
+            parser_name=parser_name,
+            dry_run=run.dry_run,
+            skip_duplicates=run.skip_duplicates,
+            stdout=stdout,
+            stderr=stderr,
+        )
+    else:
+        call_command(
+            "import_gemini_parsed",
+            str(jsonl_path),
+            batch_id=run.batch_id,
+            dry_run=run.dry_run,
+            skip_duplicates=run.skip_duplicates,
+            stdout=stdout,
+            stderr=stderr,
+        )
     command_output = "\n".join(
         part for part in (stdout.getvalue().strip(), stderr.getvalue().strip()) if part
     )
@@ -221,7 +263,7 @@ def _import_jsonl(run: IngestionRun, jsonl_path: Path) -> None:
 
     after_count = ExtractionUnit.objects.filter(
         batch_id=run.batch_id,
-        parser_name=TRUSTED_GEMINI_PARSER,
+        parser_name=parser_name,
     ).count()
     duplicate_match = re.search(r"skipped (\d+) duplicates", command_output)
     run.imported_count = max(after_count - before_count, 0)
@@ -229,10 +271,24 @@ def _import_jsonl(run: IngestionRun, jsonl_path: Path) -> None:
     run.save(update_fields=("imported_count", "duplicate_count", "log_text"))
 
 
+def _auto_approve_run(run: IngestionRun) -> None:
+    units = ExtractionUnit.objects.filter(
+        batch_id=run.batch_id,
+        parser_name=_parser_name_for_run(run),
+        review_state=ReviewState.NEEDS_REVIEW,
+        canonical_record_object_id="",
+    ).exclude(parser_status=ExtractionUnit.ParserStatus.FAILED)
+
+    approved_count = units.update(review_state=ReviewState.APPROVED)
+    run.publishable_count = approved_count
+    run.append_log(f"Auto-approved {approved_count} parseable extraction unit(s).")
+    run.save(update_fields=("publishable_count", "log_text"))
+
+
 def _auto_publish_run(run: IngestionRun) -> None:
     units = ExtractionUnit.objects.filter(
         batch_id=run.batch_id,
-        parser_name=TRUSTED_GEMINI_PARSER,
+        parser_name=_parser_name_for_run(run),
         review_state=ReviewState.NEEDS_REVIEW,
         canonical_record_object_id="",
     ).exclude(parser_status=ExtractionUnit.ParserStatus.FAILED)
@@ -274,3 +330,9 @@ def _auto_publish_run(run: IngestionRun) -> None:
             "log_text",
         )
     )
+
+
+def _parser_name_for_run(run: IngestionRun) -> str:
+    if run.run_kind == IngestionRun.RunKind.PRECOMPILED_JSONL:
+        return run.import_parser_name.strip() or TRUSTED_GPT_5_5_PARSER
+    return TRUSTED_GEMINI_PARSER

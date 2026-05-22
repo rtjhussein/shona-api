@@ -15,3 +15,14 @@ key_documents/
 local_batches/
 local_source_cache/
 .local_gemini.env
+runserver*.log
+
+# Local Hannan source files and LLM extraction artifacts
+shona_api/parsers/hannan_llm/source/
+shona_api/parsers/hannan_llm/llm_extracted_batches/
+shona_api/parsers/hannan_llm/**/*.pdf
+shona_api/parsers/hannan_llm/**/*.json
+shona_api/parsers/hannan_llm/**/*.jsonl
+shona_api/parsers/hannan_llm/**/*.png
+shona_api/parsers/hannan_llm/**/*.jpg
+shona_api/parsers/hannan_llm/**/*.jpeg

@@ -104,6 +104,7 @@ class ToneRecordSerializer(serializers.ModelSerializer):
         fields = (
             "public_id",
             "pattern",
+            "dialects",
             "notation_system",
             "note",
             "form_public_id",

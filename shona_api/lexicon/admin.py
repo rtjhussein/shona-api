@@ -13,7 +13,7 @@ class SenseInline(admin.TabularInline):
 class ToneRecordInline(admin.TabularInline):
     model = ToneRecord
     extra = 0
-    fields = ("pattern", "notation_system", "form", "review_state")
+    fields = ("pattern", "dialects", "notation_system", "form", "review_state")
     show_change_link = True
 
 
@@ -101,7 +101,14 @@ class SenseAdmin(admin.ModelAdmin):
 
 @admin.register(ToneRecord)
 class ToneRecordAdmin(admin.ModelAdmin):
-    list_display = ("lemma", "pattern", "notation_system", "review_state", "updated_at")
+    list_display = (
+        "lemma",
+        "pattern",
+        "dialects",
+        "notation_system",
+        "review_state",
+        "updated_at",
+    )
     list_filter = ("notation_system", "review_state")
     search_fields = ("lemma__headword", "pattern", "public_id")
     readonly_fields = ("id", "public_id", "created_at", "updated_at")
