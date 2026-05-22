@@ -4,7 +4,7 @@
 [![Django Version](https://img.shields.io/badge/django-%3E%3D%205.2-green.svg)](https://www.djangoproject.com/)
 [![Built with DRF](https://img.shields.io/badge/built%20with-django%20rest%20framework-red.svg)](https://www.django-rest-framework.org/)
 
-A structured, source-grounded, and high-performance lexical engine and platform for the Shona language. This project provides a robust framework to ingest dictionary source material, perform editorial review, and serve canonical lexical data, rule-based morphology analysis, and figurative expressions through a protected public API and web dashboards.
+A structured, source-grounded, and high-performance lexical engine and platform for the Shona language. This project provides a robust framework to ingest dictionary source material, including trusted Hannan GPT JSONL batches, perform editorial review, and serve canonical lexical data, rule-based morphology analysis, and figurative expressions through a protected public API and web dashboards.
 
 ---
 
@@ -13,10 +13,11 @@ A structured, source-grounded, and high-performance lexical engine and platform 
 2. [Architecture & Data Pipeline](#-architecture--data-pipeline)
 3. [Core Subsystems & Django Apps](#-core-subsystems--django-apps)
 4. [Local Setup & Quickstart](#%EF%B8%8F-local-setup--quickstart)
-5. [API Endpoints Reference](#-api-endpoints-reference)
-6. [Linguistic & Parsing Tools](#%EF%B8%8F-linguistic--parsing-tools)
-7. [Running Tests](#-running-tests)
-8. [Configuration Reference](#-configuration-reference)
+5. [Hannan Ingestion Workflows](#hannan-ingestion-workflows)
+6. [API Endpoints Reference](#-api-endpoints-reference)
+7. [Linguistic & Parsing Tools](#%EF%B8%8F-linguistic--parsing-tools)
+8. [Running Tests](#-running-tests)
+9. [Configuration Reference](#-configuration-reference)
 
 ---
 
@@ -45,7 +46,7 @@ flowchart TD
     classDef public fill:#bfb,stroke:#333,stroke-width:2px;
 
     subgraph Ingestion ["1. Ingestion Layer"]
-        S1["Source Materials (Hannan PDF, FSI, etc.)"] --> |"Local Hannan Parser / Gemini PDF Pipeline"| EU["Extraction Units (shona_api.extraction)"]
+        S1["Source Materials (Hannan PDF, FSI, etc.)"] --> |"Local Hannan Parser / Gemini PDF Pipeline / GPT JSONL Import"| EU["Extraction Units (shona_api.extraction)"]
     end
     
     subgraph Editorial ["2. Editorial & Governance"]
@@ -77,14 +78,14 @@ The codebase is organized into domain-specific internal apps under `shona_api/`:
 
 *   **`lexicon`**: Houses the main canonical linguistic models—`NounClass`, `Lemma`, `Sense`, `ToneRecord`, `Form`, and `LearnerMetadata`. Computes phonological metadata on-the-fly and powers the exact search query logic.
 *   **`morphology`**: Governs rule-based grammar processing. Includes a bounded analyzer and generator currently targeting present-tense, single-token verb forms (positive and negative polarities) tied to active rule sets.
-*   **`extraction`**: Coordinates source-document parsing, tracking raw candidate dictionary entries (`ExtractionUnit`), orchestrating batch and Gemini pipeline runs, and performing transactional promotion to the lexicon.
+*   **`extraction`**: Coordinates source-document parsing, tracking raw candidate dictionary entries (`ExtractionUnit`), orchestrating batch, Gemini pipeline, and precompiled GPT JSONL ingestion runs, and performing transactional promotion to the lexicon.
 *   **`editorial`**: Implements governance controls, storing review status (`approved`, `needs_review`, `rejected`), notes, decisions, and detailed audit trails.
 *   **`figurative_language`**: Manages cultural and expressive entries including proverbs (`tsumo`) and idioms (`madimikira`), complete with custom serializations, translations, and themes.
 *   **`releases`**: Manages database versioning via `DataRelease` rows. Most public read endpoints require an active, current release to serve requests.
 *   **`api_auth`**: Provides robust, hashed API keys (`shona_sk_...`), key prefix tracking, plan types, and custom per-key rate-limiting throttles (`APIKeyRateThrottle`) with automated header injection.
 *   **`phonology`**: Core utility layer managing grapheme segmentation, digraph/trigraph parsing, and syllable count/syllabification rules.
 *   **`sources`**: A central registry documenting source files (`hannan_dictionary.pdf`, `fortune_grammatical_constructions.pdf`, etc.), their roles, and authority levels.
-*   **`web`**: A staff and local utility interface featuring a dictionary lookup interface, data progress counters, API key builder, and a Gemini ingestion dashboard.
+*   **`web`**: A staff and local utility interface featuring a dictionary lookup interface, data progress counters, API key builder, and the Hannan ingestion dashboard.
 *   **`api_docs`**: Hand-assembled OpenAPI 3.1 specification serving `/openapi.json`.
 *   **`health`**: An unprotected `/health` status endpoint.
 
@@ -162,6 +163,40 @@ celery -A config worker --loglevel=INFO
 
 ---
 
+## Hannan Ingestion Workflows
+
+The Hannan data pipeline supports two staff-facing ingestion modes from `/data-progress/ingestion/`:
+
+- **Precompiled GPT JSONL import**: Imports a trusted GPT-5.5 JSONL batch directly into `ExtractionUnit` rows. This is the preferred path when a batch has already been structured and reviewed outside the app.
+- **Gemini PDF pipeline**: Runs the local parser/Gemini flow against a selected PDF page range, writes compiled JSONL, then imports the output into the extraction queue.
+
+For precompiled GPT JSONL imports, place `.jsonl` files in:
+
+```text
+shona_api/parsers/hannan_llm/llm_extracted_batches/
+```
+
+Then open `/data-progress/ingestion/`, choose **Import compiled GPT-5.5 output**, select the JSONL file, and keep duplicate skipping enabled unless you intentionally want to import corrected duplicate source references. The dashboard records import status per file, supports dry runs, and can mark imported extraction units as approved or publish them automatically.
+
+The same import path is also available from the terminal:
+
+```powershell
+python manage.py import_gpt_5_5_parsed path\to\file.jsonl --dry-run
+python manage.py import_gpt_5_5_parsed path\to\file.jsonl --batch-id GPT-5.5-THINKING-20260521-183447
+```
+
+Repair tooling is available for malformed or partially structured GPT output:
+
+```powershell
+python manage.py repair_gpt_hannan_structuring path\to\file.jsonl --dry-run
+```
+
+Local Hannan PDFs, page images, generated JSON, generated JSONL, and run logs are intentionally ignored by Git. Keep committed parser code and docs in the repo, but keep source PDFs and generated extraction artifacts local unless they have been deliberately curated for publication.
+
+See `docs/data_population/hannan_ingestion_dashboard.md` and `shona_api/parsers/hannan_llm/README.md` for the operator checklist and parser notes.
+
+---
+
 ## 🔌 API Endpoints Reference
 
 All requests to endpoints (excluding `/health` and `/openapi.json`) require a valid API key passed in the headers:
@@ -216,7 +251,7 @@ python manage.py generate_openapi_spec
 
 ## 🧪 Running Tests
 
-A highly comprehensive suite of **150 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, and rule-based morphology.
+A highly comprehensive suite of **175 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, and rule-based morphology.
 
 To execute tests against the fast-running local test configuration (which defaults to SQLite):
 ```powershell
