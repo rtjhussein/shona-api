@@ -79,7 +79,9 @@ Zero-result searches return a successful envelope with `count: 0` and a
 includes `morphology` and `morphology_enrichment` with linked lemma details.
 Unsupported or failed morphology enrichment keeps the search response
 successful and records the fallback under `zero_result.morphology_enrichment`
-when there are no exact matches.
+when there are no exact matches. Some unsupported surfaces include
+`future_lanes` with rule-card IDs, for example passive or extension-like forms
+point at `fortune.verbal.extensions.001` without claiming v1 support.
 
 ## 4. Read a lexical entry
 
@@ -158,7 +160,9 @@ subject_concord + no + verb_stem
 
 Unsupported forms return `ANALYSIS_UNSUPPORTED` with detail about the supported
 shape. Infinitive generation, infinitive complements, extensions, tone, and
-complex verbal morphology remain outside v1 support.
+complex verbal morphology remain outside v1 support. Passive or extension-like
+surfaces may include a future-lane explanation and rule-card ID in
+`error.detail.future_lanes`.
 
 ## 7. Generate a supported morphology form
 

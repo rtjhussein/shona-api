@@ -435,6 +435,33 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
 
 
 @pytest.mark.django_db
+def test_analyze_endpoint_explains_passive_extension_like_future_lane(
+    client, api_key, current_release
+):
+    response = client.post(
+        "/v1/analyze",
+        {"text": "badanudzwa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
+    assert body["error"]["detail"]["future_lanes"] == [
+        {
+            "code": "passive_or_extension_like",
+            "message": (
+                "This looks like a passive or extension-like verb surface. "
+                "Those forms are a future review lane and are not analyzed in v1."
+            ),
+            "support_status": "not_supported",
+            "rule_card_ids": ["fortune.verbal.extensions.001"],
+        }
+    ]
+
+
+@pytest.mark.django_db
 def test_generate_endpoint_returns_bounded_positive_present_verb_form(
     client, api_key, current_release, verb_lemma
 ):

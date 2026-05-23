@@ -51,3 +51,11 @@ def test_dictionary_search_javascript_renders_infinitive_morphology_slots():
 
     assert "infinitive_prefix" in js_content
     assert "slot-pill--infinitive" in css_content
+
+
+def test_dictionary_search_javascript_renders_unsupported_future_lanes():
+    js_content = SEARCH_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
+
+    assert "future_lanes" in js_content
+    assert "unsupported-lane-list" in css_content

@@ -10,6 +10,7 @@ ANALYZER_VERSION = "shona-morphology-analyzer-v1"
 GENERATOR_VERSION = "shona-morphology-generator-v1"
 SUPPORTED_RULE_ID = "fortune.verbal.slots.001"
 INFINITIVE_RULE_ID = "fortune.verbal.infinitive.001"
+EXTENSIONS_RULE_ID = "fortune.verbal.extensions.001"
 INFINITIVE_SOURCE_LOCATOR = (
     "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, "
     "PDF pages 90-91 (printed pp. 78-79)"
@@ -26,6 +27,18 @@ SUPPORTED_ANALYSIS_RULE_IDS = [
     "fortune.verbal.negation.001",
     "fortune.concord.object.001",
 ]
+EXTENSION_LIKE_SUFFIXES = (
+    "irirwa",
+    "erwa",
+    "irwa",
+    "iswa",
+    "eswa",
+    "idzwa",
+    "udzwa",
+    "dzirwa",
+    "zwa",
+    "wa",
+)
 SUPPORTED_REVIEW_STATES = (
     ReviewState.APPROVED,
     ReviewState.PUBLISHED,
@@ -177,6 +190,14 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
     ])
 
     if not analyses:
+        detail = {
+            "normalized": normalized,
+            "supported_shape": SUPPORTED_ANALYSIS_SHAPE,
+            "supported_rule_ids": SUPPORTED_ANALYSIS_RULE_IDS,
+        }
+        future_lanes = _unsupported_future_lanes(normalized)
+        if future_lanes:
+            detail["future_lanes"] = future_lanes
         raise AnalysisFailure(
             code="ANALYSIS_UNSUPPORTED",
             message=(
@@ -186,11 +207,7 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
                 "[object_concord] + verb_stem), and negative present verb forms "
                 "(ha- + subject concord + [object_concord] + verb_stem ending in -e)."
             ),
-            detail={
-                "normalized": normalized,
-                "supported_shape": SUPPORTED_ANALYSIS_SHAPE,
-                "supported_rule_ids": SUPPORTED_ANALYSIS_RULE_IDS,
-            },
+            detail=detail,
         )
 
     analyses.sort(key=lambda item: item["confidence"], reverse=True)
@@ -462,6 +479,44 @@ def _analyze_ku_infinitive(normalized: str) -> dict[str, object] | None:
             "Infinitive generation is not supported.",
         ],
     }
+
+
+def _unsupported_future_lanes(normalized: str) -> list[dict[str, object]]:
+    lanes = []
+    if normalized.startswith("ku") and len(normalized) > 2:
+        lanes.append(
+            {
+                "code": "ku_infinitive_unmatched_stem",
+                "message": (
+                    "This looks like a ku- infinitive candidate, but no reviewed "
+                    "verb stem matched the remaining surface."
+                ),
+                "support_status": "not_supported",
+                "rule_card_ids": [INFINITIVE_RULE_ID],
+            }
+        )
+    if _looks_passive_or_extension_like(normalized):
+        lanes.append(
+            {
+                "code": "passive_or_extension_like",
+                "message": (
+                    "This looks like a passive or extension-like verb surface. "
+                    "Those forms are a future review lane and are not analyzed in v1."
+                ),
+                "support_status": "not_supported",
+                "rule_card_ids": [EXTENSIONS_RULE_ID],
+            }
+        )
+    return lanes
+
+
+def _looks_passive_or_extension_like(normalized: str) -> bool:
+    if len(normalized) < 5:
+        return False
+    return any(
+        normalized.endswith(suffix)
+        for suffix in EXTENSION_LIKE_SUFFIXES
+    )
 
 
 def _analyze_present_positive(

@@ -57,7 +57,8 @@ def build_openapi_spec():
                     "summary": "Search reviewed lemmas and forms.",
                     "description": (
                         "Search exact reviewed lemmas/forms and attach morphology "
-                        "enrichment for supported forms such as ndinobuda or kubuda."
+                        "enrichment for supported forms such as ndinobuda or kubuda. "
+                        "Unsupported shapes can include future-lane rule-card hints."
                     ),
                     "operationId": "searchLexicon",
                     "parameters": [
@@ -441,6 +442,7 @@ def schemas():
                 "count": {"type": "integer"},
                 "code": {"type": "string"},
                 "message": {"type": "string"},
+                "detail": json_object,
             },
             "required": ["status"],
             "additionalProperties": True,

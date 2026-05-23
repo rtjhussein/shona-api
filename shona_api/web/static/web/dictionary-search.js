@@ -252,11 +252,7 @@
     const hasMorphology = data.morphology && Array.isArray(data.morphology.analyses) && data.morphology.analyses.length > 0;
 
     if (!hasResults && !hasMorphology) {
-      const message =
-        data.zero_result && data.zero_result.message
-          ? data.zero_result.message
-          : "No reviewed lemma or form matched the query.";
-      renderState("No matches", `${message} Query: "${data.query.raw}".`);
+      renderZeroResult(data);
       return;
     }
 
@@ -295,6 +291,43 @@
     }
 
     resultsRegion.innerHTML = morphologyHtml + resultsListHtml;
+  }
+
+  function renderZeroResult(data) {
+    const zeroResult = data.zero_result || {};
+    const enrichment = zeroResult.morphology_enrichment || {};
+    const futureLanes = enrichment.detail && Array.isArray(enrichment.detail.future_lanes)
+      ? enrichment.detail.future_lanes
+      : [];
+    const message = zeroResult.message || "No reviewed lemma or form matched the query.";
+    const laneHtml = futureLanes.length
+      ? `
+        <ul class="unsupported-lane-list">
+          ${futureLanes.map(renderUnsupportedLane).join("")}
+        </ul>
+      `
+      : "";
+
+    resultsRegion.innerHTML = `
+      <div class="state-card state-card--empty" data-state-card>
+        <h2>No matches</h2>
+        <p>${escapeHtml(message)} Query: "${escapeHtml(data.query.raw)}".</p>
+        ${laneHtml}
+      </div>
+    `;
+  }
+
+  function renderUnsupportedLane(lane) {
+    const ruleCards = Array.isArray(lane.rule_card_ids) && lane.rule_card_ids.length
+      ? `<span class="meta-chip mono">${escapeHtml(lane.rule_card_ids.join(", "))}</span>`
+      : "";
+    return `
+      <li>
+        <strong>${escapeHtml(humanize(lane.code))}</strong>
+        <span>${escapeHtml(lane.message || "")}</span>
+        ${ruleCards}
+      </li>
+    `;
   }
 
   function renderMorphologyAnalysis(analysis, query) {
