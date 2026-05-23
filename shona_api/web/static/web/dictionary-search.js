@@ -414,6 +414,7 @@
         defPreview = defPreview.slice(0, 80) + "...";
       }
     }
+    const crossReferences = collectCrossReferences(lemma.senses);
 
     return `
       <li class="result-card" data-lemma-id="${escapeAttribute(lemma.public_id)}">
@@ -431,6 +432,7 @@
           </div>
         </div>
         ${defPreview ? `<p class="result-definition-teaser">${escapeHtml(defPreview)}</p>` : ""}
+        ${renderCrossReferences(crossReferences)}
         ${form ? renderFormMatch(form) : ""}
         <div class="meta-row">
           <span class="meta-chip">${escapeHtml(kind)}</span>
@@ -553,6 +555,7 @@
               <li>
                 <p class="definition-text">${escapeHtml(sense.definition || "")}</p>
                 ${renderExamples(sense.examples)}
+                ${renderCrossReferences(sense.cross_references)}
                 <div class="meta-row mt-2">
                   ${renderArrayChips(sense.grammar)}
                   ${renderArrayChips(sense.dialects)}
@@ -578,6 +581,47 @@
           })
           .join("")}
       </ul>
+    `;
+  }
+
+  function collectCrossReferences(senses) {
+    if (!Array.isArray(senses)) {
+      return [];
+    }
+    return senses.flatMap(function (sense) {
+      return Array.isArray(sense.cross_references) ? sense.cross_references : [];
+    });
+  }
+
+  function renderCrossReferences(references) {
+    if (!Array.isArray(references) || !references.length) {
+      return "";
+    }
+    return `
+      <ul class="xref-list">
+        ${references.map(renderCrossReference).join("")}
+      </ul>
+    `;
+  }
+
+  function renderCrossReference(reference) {
+    const label = `${reference.type || "reference"} ${reference.target || ""}`.trim();
+    const dialects = Array.isArray(reference.dialects) && reference.dialects.length
+      ? `<span class="meta-chip">${escapeHtml(reference.dialects.join(", "))}</span>`
+      : "";
+    const sourceNote = reference.source_note
+      ? `<span class="xref-source">${escapeHtml(reference.source_note)}</span>`
+      : "";
+    const target = reference.target_public_id
+      ? `<a class="xref-link" href="${escapeAttribute(entryUrl(reference.target_public_id))}">${escapeHtml(label)}</a>`
+      : `<span class="xref-unresolved">${escapeHtml(label)}</span><span class="meta-chip">unresolved</span>`;
+
+    return `
+      <li>
+        ${target}
+        ${dialects}
+        ${sourceNote}
+      </li>
     `;
   }
 
@@ -756,6 +800,10 @@
         <p>${escapeHtml(message)}</p>
       </div>
     `;
+  }
+
+  function entryUrl(publicId) {
+    return entryUrlTemplate.replace("__PUBLIC_ID__", encodeURIComponent(publicId));
   }
 
   function pluralize(count, singular, plural) {

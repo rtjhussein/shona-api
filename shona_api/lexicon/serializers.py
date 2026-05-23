@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from shona_api.editorial.models import ReviewState
+
+from .cross_references import normalize_cross_references
 from .examples import normalize_example_pairs
 from .models import Form, Lemma, NounClass, Sense, ToneRecord
 
@@ -99,6 +102,10 @@ class SenseSerializer(serializers.ModelSerializer):
     def to_representation(self, obj):
         data = super().to_representation(obj)
         data["examples"] = normalize_example_pairs(obj.examples)
+        data["cross_references"] = normalize_cross_references(
+            obj.cross_references,
+            resolver=resolve_cross_reference_target,
+        )
         return data
 
 
@@ -190,3 +197,25 @@ class SearchResultSerializer(serializers.Serializer):
         if result["form"] is not None:
             payload["form"] = FormSerializer(result["form"]).data
         return payload
+
+
+def resolve_cross_reference_target(target: str) -> dict[str, str] | None:
+    from .search import normalize_search_query
+
+    normalized_target = normalize_search_query(target)
+    if not normalized_target:
+        return None
+    lemma = (
+        Lemma.objects.filter(
+            review_state=ReviewState.PUBLISHED,
+            normalized_headword__iexact=normalized_target,
+        )
+        .order_by("normalized_headword", "headword")
+        .first()
+    )
+    if lemma is None:
+        return None
+    return {
+        "target_public_id": lemma.public_id,
+        "target_headword": lemma.headword,
+    }

@@ -55,6 +55,10 @@ class DictionaryEntryView(TemplateView):
             "lemma-read",
             kwargs={"public_id": public_id},
         )
+        context["entry_url_template"] = reverse(
+            "dictionary-entry",
+            kwargs={"public_id": "__PUBLIC_ID__"},
+        )
         context["search_url"] = reverse("dictionary-search")
         context["tsumo_endpoint"] = reverse("tsumo-list")
         context["madimikira_endpoint"] = reverse("madimikira-list")

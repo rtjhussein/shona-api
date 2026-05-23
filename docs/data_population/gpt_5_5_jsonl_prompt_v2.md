@@ -181,7 +181,7 @@ Extraction rules:
 14. Cross references:
    - "cp", "cf", "qv", "see", and similar references go into cross_references.
    - Example "cp bere M." becomes:
-     {"type": "cp", "target": "bere", "dialects": ["M"]}
+     {"type": "cp", "target": "bere", "dialects": ["M"], "source_note": "cp bere M."}
 15. Derived forms:
    - Verb-derived forms marked with arrows like ">" or "<-" go into derived_forms.
    - If the marker groups several forms, preserve them as a group object:

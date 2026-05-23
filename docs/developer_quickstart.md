@@ -99,6 +99,10 @@ The response includes the standard envelope plus:
 - `senses`: definitions, grammar, examples, dialects, and cross references.
   Hannan examples use a shared object shape with `shona` and `english` keys,
   plus optional `source_note` or `dialects` when preserved from source data.
+  Cross references keep `type`, `target`, `dialects`, and raw `source_note`;
+  when the target is a published lemma they also include `resolved: true`,
+  `target_public_id`, and `target_headword`. Unresolved references remain in
+  the list with `resolved: false`.
 - `tone_records`: tone pattern metadata when available
 - `forms`: exposed forms and grammatical metadata. Hannan-derived forms may
   include `derived_form_evidence` with relation markers such as `>`, relation

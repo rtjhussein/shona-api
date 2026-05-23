@@ -1559,13 +1559,51 @@
           },
           "cross_references": {
             "type": "array",
-            "items": true
+            "items": {
+              "$ref": "#/components/schemas/CrossReference"
+            }
           }
         },
         "required": [
           "public_id",
           "number",
           "definition"
+        ],
+        "additionalProperties": true
+      },
+      "CrossReference": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "cp"
+          },
+          "target": {
+            "type": "string"
+          },
+          "dialects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source_note": {
+            "type": "string"
+          },
+          "resolved": {
+            "type": "boolean"
+          },
+          "target_public_id": {
+            "type": "string"
+          },
+          "target_headword": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "target",
+          "dialects"
         ],
         "additionalProperties": true
       },

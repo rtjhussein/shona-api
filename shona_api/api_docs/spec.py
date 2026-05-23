@@ -533,9 +533,26 @@ def schemas():
                     "type": "array",
                     "items": {"$ref": "#/components/schemas/ExamplePair"},
                 },
-                "cross_references": {"type": "array", "items": True},
+                "cross_references": {
+                    "type": "array",
+                    "items": {"$ref": "#/components/schemas/CrossReference"},
+                },
             },
             "required": ["public_id", "number", "definition"],
+            "additionalProperties": True,
+        },
+        "CrossReference": {
+            "type": "object",
+            "properties": {
+                "type": {"type": "string", "example": "cp"},
+                "target": {"type": "string"},
+                "dialects": string_array,
+                "source_note": {"type": "string"},
+                "resolved": {"type": "boolean"},
+                "target_public_id": {"type": "string"},
+                "target_headword": {"type": "string"},
+            },
+            "required": ["type", "target", "dialects"],
             "additionalProperties": True,
         },
         "ExamplePair": {

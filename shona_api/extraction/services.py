@@ -12,6 +12,10 @@ from shona_api.editorial.models import (
     ReviewState,
 )
 from shona_api.figurative_language.models import FigurativeExpression
+from shona_api.lexicon.cross_references import (
+    CROSS_REFERENCE_SCHEMA_VERSION,
+    normalize_cross_references,
+)
 from shona_api.lexicon.examples import (
     EXAMPLE_SCHEMA_VERSION,
     normalize_example_pairs,
@@ -115,6 +119,10 @@ def publish_reviewed_extraction_unit(
         senses = []
         for sense_data in parser_output.get("senses") or []:
             examples = normalize_example_pairs(sense_data.get("examples"))
+            cross_references = normalize_cross_references(
+                sense_data.get("cross_references"),
+                resolver=_resolve_cross_reference_target,
+            )
             sense_provenance = _record_provenance(
                 provenance,
                 "sense",
@@ -124,10 +132,15 @@ def publish_reviewed_extraction_unit(
                 dialects=list(sense_data.get("dialects") or []),
                 examples=examples,
                 example_schema_version=EXAMPLE_SCHEMA_VERSION,
+                cross_references=cross_references,
+                cross_reference_schema_version=CROSS_REFERENCE_SCHEMA_VERSION,
             )
             raw_examples = sense_data.get("examples")
             if isinstance(raw_examples, list):
                 sense_provenance["raw_examples"] = list(raw_examples)
+            raw_cross_references = sense_data.get("cross_references")
+            if isinstance(raw_cross_references, list):
+                sense_provenance["raw_cross_references"] = list(raw_cross_references)
             senses.append(
                 Sense.objects.create(
                     lemma=lemma,
@@ -136,7 +149,7 @@ def publish_reviewed_extraction_unit(
                     dialects=list(sense_data.get("dialects") or []),
                     grammar=list(sense_data.get("grammar") or []),
                     examples=examples,
-                    cross_references=list(sense_data.get("cross_references") or []),
+                    cross_references=cross_references,
                     provenance=sense_provenance,
                     review_state=ReviewState.PUBLISHED,
                 )
@@ -345,6 +358,28 @@ def _parser_noun_class(parser_output: dict[str, object]) -> NounClass | None:
         if isinstance(class_number, str) and class_number.strip():
             return NounClass.objects.filter(class_number=class_number.strip()).first()
     return None
+
+
+def _resolve_cross_reference_target(target: str) -> dict[str, str] | None:
+    from shona_api.lexicon.search import normalize_search_query
+
+    normalized_target = normalize_search_query(target)
+    if not normalized_target:
+        return None
+    lemma = (
+        Lemma.objects.filter(
+            review_state=ReviewState.PUBLISHED,
+            normalized_headword__iexact=normalized_target,
+        )
+        .order_by("normalized_headword", "headword")
+        .first()
+    )
+    if lemma is None:
+        return None
+    return {
+        "target_public_id": lemma.public_id,
+        "target_headword": lemma.headword,
+    }
 
 
 DERIVED_FORM_RELATIONS = {

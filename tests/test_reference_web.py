@@ -37,6 +37,9 @@ def test_dictionary_entry_page_loads_without_api_auth():
     assert b"Shona Dictionary" in response.content
     assert b'data-lemma-public-id="lemma_demo"' in response.content
     assert b'data-lemma-endpoint="/v1/lemmas/lemma_demo"' in response.content
+    assert b'data-entry-url-template="/dictionary/entries/__PUBLIC_ID__/"' in (
+        response.content
+    )
     assert b'data-tsumo-endpoint="/v1/figurative-expressions/tsumo"' in (
         response.content
     )
@@ -81,3 +84,14 @@ def test_dictionary_web_renders_standardized_example_pairs():
     assert "exampleTextPart" in entry_js
     assert "example-shona" in css_content
     assert "example-english" in css_content
+
+
+def test_dictionary_web_renders_cross_reference_links():
+    search_js = SEARCH_JS.read_text(encoding="utf-8")
+    entry_js = ENTRY_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
+
+    assert "target_public_id" in search_js
+    assert "target_public_id" in entry_js
+    assert "xref-link" in css_content
+    assert "xref-unresolved" in css_content
