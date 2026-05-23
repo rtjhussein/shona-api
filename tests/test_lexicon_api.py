@@ -331,6 +331,54 @@ def test_lemma_and_search_payloads_expose_derived_form_evidence(
 
 
 @pytest.mark.django_db
+def test_lemma_and_search_payloads_use_shared_example_shape(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, sense, *_ = canonical_lemma
+    sense.examples = [
+        {
+            "text": "Ndinobuda muhotwe",
+            "translation": "my nose is bleeding",
+            "source_note": "Ndinobuda muhotwe: my nose is bleeding.",
+            "dialects": ["K"],
+        },
+        "Ndabuda basa: I have left my employment.",
+    ]
+    sense.save(update_fields=("examples",))
+    publish_canonical_bundle(canonical_lemma)
+
+    lemma_response = client.get(
+        f"/v1/lemmas/{lemma.public_id}",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    search_response = client.get(
+        "/v1/search",
+        {"q": "buda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    expected_examples = [
+        {
+            "shona": "Ndinobuda muhotwe",
+            "english": "my nose is bleeding",
+            "source_note": "Ndinobuda muhotwe: my nose is bleeding.",
+            "dialects": ["K"],
+        },
+        {
+            "shona": "Ndabuda basa",
+            "english": "I have left my employment.",
+        },
+    ]
+    assert lemma_response.status_code == 200
+    assert search_response.status_code == 200
+    assert lemma_response.json()["data"]["senses"][0]["examples"] == expected_examples
+    assert (
+        search_response.json()["data"]["results"][0]["lemma"]["senses"][0]["examples"]
+        == expected_examples
+    )
+
+
+@pytest.mark.django_db
 def test_search_endpoint_returns_structured_zero_result(client, api_key, current_release):
     response = client.get(
         "/v1/search",

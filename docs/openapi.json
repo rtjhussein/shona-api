@@ -1553,7 +1553,9 @@
           },
           "examples": {
             "type": "array",
-            "items": true
+            "items": {
+              "$ref": "#/components/schemas/ExamplePair"
+            }
           },
           "cross_references": {
             "type": "array",
@@ -1564,6 +1566,31 @@
           "public_id",
           "number",
           "definition"
+        ],
+        "additionalProperties": true
+      },
+      "ExamplePair": {
+        "type": "object",
+        "properties": {
+          "shona": {
+            "type": "string"
+          },
+          "english": {
+            "type": "string"
+          },
+          "source_note": {
+            "type": "string"
+          },
+          "dialects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "shona",
+          "english"
         ],
         "additionalProperties": true
       },

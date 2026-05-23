@@ -154,6 +154,65 @@ def test_publish_preserves_derived_form_relation_evidence_from_objects(hannan_so
 
 
 @pytest.mark.django_db
+def test_publish_standardizes_hannan_examples_and_preserves_raw_shape(hannan_source):
+    raw_examples = [
+        {
+            "text": "Ndinobuda muhotwe",
+            "translation": "my nose is bleeding",
+            "source_note": "Ndinobuda muhotwe: my nose is bleeding.",
+        },
+        "Ndabuda basa: I have left my employment.",
+    ]
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out. Ndinobuda muhotwe: my nose is bleeding.",
+        parser_output={
+            "headword": "-buda",
+            "headword_kind": "verb_stem",
+            "part_of_speech": {"code": "vi", "label": "intransitive verb"},
+            "dialects": [],
+            "comparative_bantu_marker": False,
+            "tone_pattern": "H",
+            "senses": [
+                {
+                    "number": 1,
+                    "definition": "Come out.",
+                    "examples": raw_examples,
+                }
+            ],
+            "derived_forms": [],
+            "parse_metadata": {
+                "parser": "gpt-5.5-thinking",
+                "completeness": "parsed",
+            },
+        },
+        parser_name="gpt-5.5-thinking",
+        parser_status=ExtractionUnit.ParserStatus.PARSED,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.senses[0].examples == [
+        {
+            "shona": "Ndinobuda muhotwe",
+            "english": "my nose is bleeding",
+            "source_note": "Ndinobuda muhotwe: my nose is bleeding.",
+        },
+        {
+            "shona": "Ndabuda basa",
+            "english": "I have left my employment.",
+        },
+    ]
+    assert bundle.senses[0].provenance["raw_examples"] == raw_examples
+    assert bundle.senses[0].provenance["example_schema_version"] == (
+        "hannan-example-pair-v1"
+    )
+
+
+@pytest.mark.django_db
 def test_publish_prefers_v2_dialect_scoped_tone_records(hannan_source):
     unit = ExtractionUnit.objects.create(
         source=hannan_source,

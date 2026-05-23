@@ -12,6 +12,10 @@ from shona_api.editorial.models import (
     ReviewState,
 )
 from shona_api.figurative_language.models import FigurativeExpression
+from shona_api.lexicon.examples import (
+    EXAMPLE_SCHEMA_VERSION,
+    normalize_example_pairs,
+)
 from shona_api.lexicon.models import Form, Lemma, NounClass, Sense, ToneRecord
 
 from .gpt_jsonl import build_tone_record_payloads, validate_publishable_parser_output
@@ -108,27 +112,35 @@ def publish_reviewed_extraction_unit(
             review_state=ReviewState.PUBLISHED,
         )
 
-        senses = [
-            Sense.objects.create(
-                lemma=lemma,
-                number=sense_data["number"],
+        senses = []
+        for sense_data in parser_output.get("senses") or []:
+            examples = normalize_example_pairs(sense_data.get("examples"))
+            sense_provenance = _record_provenance(
+                provenance,
+                "sense",
+                sense_number=sense_data["number"],
                 definition=sense_data["definition"],
-                dialects=list(sense_data.get("dialects") or []),
                 grammar=list(sense_data.get("grammar") or []),
-                examples=list(sense_data.get("examples") or []),
-                cross_references=list(sense_data.get("cross_references") or []),
-                provenance=_record_provenance(
-                    provenance,
-                    "sense",
-                    sense_number=sense_data["number"],
-                    definition=sense_data["definition"],
-                    grammar=list(sense_data.get("grammar") or []),
-                    dialects=list(sense_data.get("dialects") or []),
-                ),
-                review_state=ReviewState.PUBLISHED,
+                dialects=list(sense_data.get("dialects") or []),
+                examples=examples,
+                example_schema_version=EXAMPLE_SCHEMA_VERSION,
             )
-            for sense_data in parser_output.get("senses") or []
-        ]
+            raw_examples = sense_data.get("examples")
+            if isinstance(raw_examples, list):
+                sense_provenance["raw_examples"] = list(raw_examples)
+            senses.append(
+                Sense.objects.create(
+                    lemma=lemma,
+                    number=sense_data["number"],
+                    definition=sense_data["definition"],
+                    dialects=list(sense_data.get("dialects") or []),
+                    grammar=list(sense_data.get("grammar") or []),
+                    examples=examples,
+                    cross_references=list(sense_data.get("cross_references") or []),
+                    provenance=sense_provenance,
+                    review_state=ReviewState.PUBLISHED,
+                )
+            )
 
         tone_records = [
             ToneRecord.objects.create(
