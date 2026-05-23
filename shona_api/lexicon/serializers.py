@@ -82,6 +82,11 @@ class LemmaCoreSerializer(serializers.ModelSerializer):
             "review_state",
         )
 
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        data["entry_quality"] = build_entry_quality_summary(obj)
+        return data
+
 
 class SenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -218,4 +223,42 @@ def resolve_cross_reference_target(target: str) -> dict[str, str] | None:
     return {
         "target_public_id": lemma.public_id,
         "target_headword": lemma.headword,
+    }
+
+
+def build_entry_quality_summary(lemma) -> dict[str, object]:
+    senses = list(lemma.senses.all())
+    forms = list(lemma.forms.all())
+    tone_records = list(lemma.tone_records.all())
+    examples = [
+        example
+        for sense in senses
+        for example in normalize_example_pairs(sense.examples)
+    ]
+    cross_references = [
+        reference
+        for sense in senses
+        for reference in normalize_cross_references(
+            sense.cross_references,
+            resolver=resolve_cross_reference_target,
+        )
+    ]
+    resolved_cross_references = [
+        reference
+        for reference in cross_references
+        if reference.get("target_public_id")
+    ]
+    return {
+        "sense_count": len(senses),
+        "example_count": len(examples),
+        "form_count": len(forms),
+        "derived_form_count": sum(
+            1 for form in forms if form.form_kind == Form.FormKind.DERIVED
+        ),
+        "tone_record_count": len(tone_records),
+        "cross_reference_count": len(cross_references),
+        "resolved_cross_reference_count": len(resolved_cross_references),
+        "unresolved_cross_reference_count": (
+            len(cross_references) - len(resolved_cross_references)
+        ),
     }

@@ -436,6 +436,7 @@
         ${form ? renderFormMatch(form) : ""}
         <div class="meta-row">
           <span class="meta-chip">${escapeHtml(kind)}</span>
+          ${renderEntryQualityChips(lemma.entry_quality)}
           <span class="meta-chip mono">${escapeHtml(lemma.public_id || "")}</span>
         </div>
       </li>
@@ -525,6 +526,7 @@
           ${renderCountChip("graphemes", lemma.grapheme_count)}
           ${nounClass ? chip(`class ${nounClass.class_number}`) : ""}
           ${tones.length ? chip(`${tones.length} tone ${pluralize(tones.length, "record", "records")}`) : ""}
+          ${renderEntryQualityChips(lemma.entry_quality)}
         </div>
         ${renderDefinitions(senses)}
         ${renderNounClassTable(nounClass)}
@@ -763,6 +765,27 @@
       return "";
     }
     return chip(`${count} ${label}`);
+  }
+
+  function renderEntryQualityChips(quality) {
+    if (!quality || typeof quality !== "object") {
+      return "";
+    }
+    const counts = [
+      [quality.sense_count, "sense", "senses"],
+      [quality.example_count, "example", "examples"],
+      [quality.form_count, "form", "forms"],
+      [quality.tone_record_count, "tone", "tones"],
+      [quality.cross_reference_count, "xref", "xrefs"],
+    ];
+    return counts
+      .filter(function (item) {
+        return typeof item[0] === "number" && item[0] > 0;
+      })
+      .map(function (item) {
+        return chip(`${item[0]} ${pluralize(item[0], item[1], item[2])}`);
+      })
+      .join("");
   }
 
   function chip(value) {

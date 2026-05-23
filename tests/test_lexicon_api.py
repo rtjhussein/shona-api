@@ -143,6 +143,16 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
             },
             "revision": 1,
             "review_state": ReviewState.APPROVED,
+            "entry_quality": {
+                "sense_count": 1,
+                "example_count": 0,
+                "form_count": 1,
+                "derived_form_count": 1,
+                "tone_record_count": 1,
+                "cross_reference_count": 0,
+                "resolved_cross_reference_count": 0,
+                "unresolved_cross_reference_count": 0,
+            },
         },
         "senses": [
             {
@@ -444,6 +454,54 @@ def test_lemma_and_search_payloads_resolve_cross_reference_targets(
             "cross_references"
         ]
         == expected_cross_references
+    )
+
+
+@pytest.mark.django_db
+def test_lemma_and_search_payloads_share_entry_quality_summary(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, sense, _, _ = canonical_lemma
+    target = Lemma.objects.create(
+        headword="-simba",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        review_state=ReviewState.PUBLISHED,
+    )
+    sense.examples = [{"shona": "Ndinobuda muhotwe", "english": "my nose is bleeding"}]
+    sense.cross_references = [
+        {"type": "cp", "target": "-simba", "dialects": []},
+        {"type": "see", "target": "chisipo", "dialects": []},
+    ]
+    sense.save(update_fields=("examples", "cross_references"))
+    publish_canonical_bundle(canonical_lemma)
+
+    lemma_response = client.get(
+        f"/v1/lemmas/{lemma.public_id}",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    search_response = client.get(
+        "/v1/search",
+        {"q": "buda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    expected_quality = {
+        "sense_count": 1,
+        "example_count": 1,
+        "form_count": 1,
+        "derived_form_count": 1,
+        "tone_record_count": 1,
+        "cross_reference_count": 2,
+        "resolved_cross_reference_count": 1,
+        "unresolved_cross_reference_count": 1,
+    }
+    assert target.public_id
+    assert lemma_response.status_code == 200
+    assert search_response.status_code == 200
+    assert lemma_response.json()["data"]["lemma"]["entry_quality"] == expected_quality
+    assert (
+        search_response.json()["data"]["results"][0]["lemma"]["entry_quality"]
+        == expected_quality
     )
 
 

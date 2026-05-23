@@ -95,3 +95,13 @@ def test_dictionary_web_renders_cross_reference_links():
     assert "target_public_id" in entry_js
     assert "xref-link" in css_content
     assert "xref-unresolved" in css_content
+
+
+def test_dictionary_web_renders_entry_quality_chips():
+    search_js = SEARCH_JS.read_text(encoding="utf-8")
+    entry_js = ENTRY_JS.read_text(encoding="utf-8")
+
+    assert "entry_quality" in search_js
+    assert "entry_quality" in entry_js
+    assert "renderEntryQualityChips" in search_js
+    assert "renderEntryQualityChips" in entry_js
