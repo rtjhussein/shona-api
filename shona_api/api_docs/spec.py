@@ -495,6 +495,7 @@ def schemas():
                 "learner_level": {"type": "string"},
                 "curriculum_stage": {"type": "string"},
                 "review_state": {"type": "string"},
+                "entry_quality": {"$ref": "#/components/schemas/EntryQuality"},
             },
             "required": [
                 "public_id",
@@ -506,6 +507,29 @@ def schemas():
                 "noun_class",
             ],
             "additionalProperties": True,
+        },
+        "EntryQuality": {
+            "type": "object",
+            "properties": {
+                "sense_count": {"type": "integer"},
+                "example_count": {"type": "integer"},
+                "form_count": {"type": "integer"},
+                "derived_form_count": {"type": "integer"},
+                "tone_record_count": {"type": "integer"},
+                "cross_reference_count": {"type": "integer"},
+                "resolved_cross_reference_count": {"type": "integer"},
+                "unresolved_cross_reference_count": {"type": "integer"},
+            },
+            "required": [
+                "sense_count",
+                "example_count",
+                "form_count",
+                "derived_form_count",
+                "tone_record_count",
+                "cross_reference_count",
+                "resolved_cross_reference_count",
+                "unresolved_cross_reference_count",
+            ],
         },
         "NounClass": {
             "type": "object",

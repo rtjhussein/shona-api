@@ -21,6 +21,7 @@ def test_openapi_spec_is_published_without_api_auth():
     assert "ApiKeyAuth" in body["components"]["securitySchemes"]
     assert "ExamplePair" in body["components"]["schemas"]
     assert "CrossReference" in body["components"]["schemas"]
+    assert "EntryQuality" in body["components"]["schemas"]
 
 
 def test_committed_openapi_spec_matches_generator():
@@ -49,6 +50,7 @@ def test_developer_quickstart_documents_current_public_api_examples():
     assert "derived_form_evidence" in quickstart
     assert "`shona` and `english`" in quickstart
     assert "target_public_id" in quickstart
+    assert "entry_quality" in quickstart
     assert "GET /v1/lemmas/{public_id}" in quickstart
     assert "GET /v1/figurative-expressions/tsumo" in quickstart
     assert "GET /v1/figurative-expressions/madimikira" in quickstart

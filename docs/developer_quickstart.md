@@ -95,7 +95,9 @@ Authorization: Api-Key shona_sk_...
 The response includes the standard envelope plus:
 
 - `lemma`: headword, normalized headword, POS, noun class when available,
-  learner metadata, phonology, provenance, revision, and review state
+  learner metadata, phonology, provenance, revision, review state, and an
+  `entry_quality` count summary for senses, examples, forms, tone records, and
+  cross references
 - `senses`: definitions, grammar, examples, dialects, and cross references.
   Hannan examples use a shared object shape with `shona` and `english` keys,
   plus optional `source_note` or `dialects` when preserved from source data.
