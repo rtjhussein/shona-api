@@ -1,5 +1,11 @@
+from pathlib import Path
+
 from django.test import Client
 from django.urls import reverse
+
+
+SEARCH_JS = Path("shona_api/web/static/web/dictionary-search.js")
+SEARCH_CSS = Path("shona_api/web/static/web/dictionary-search.css")
 
 
 def test_dictionary_search_page_loads_without_api_auth():
@@ -37,3 +43,11 @@ def test_dictionary_entry_page_loads_without_api_auth():
         response.content
     )
     assert b"dictionary-entry.js" in response.content
+
+
+def test_dictionary_search_javascript_renders_infinitive_morphology_slots():
+    js_content = SEARCH_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
+
+    assert "infinitive_prefix" in js_content
+    assert "slot-pill--infinitive" in css_content

@@ -98,3 +98,13 @@ def test_draft_rule_cards_cannot_be_public_endpoint_safe():
         assert card["api_safety"]["generator_consumes"] is False
         assert card["api_safety"]["public_endpoint_safe"] is False
         assert card["api_safety"]["requires_review_before_public"] is True
+
+
+def test_public_endpoint_safe_cards_require_reviewed_source_locator():
+    for _, card in _load_rule_cards():
+        if not card["api_safety"]["public_endpoint_safe"]:
+            continue
+
+        assert card["qa"]["review_state"] in {"approved", "published"}
+        assert not card["source_locator"].startswith("PENDING_FORTUNE_LOCATOR:")
+        assert card["api_safety"]["requires_review_before_public"] is False

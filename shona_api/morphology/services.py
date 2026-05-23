@@ -9,7 +9,23 @@ from shona_api.phonology import compute_phonology_fields
 ANALYZER_VERSION = "shona-morphology-analyzer-v1"
 GENERATOR_VERSION = "shona-morphology-generator-v1"
 SUPPORTED_RULE_ID = "fortune.verbal.slots.001"
+INFINITIVE_RULE_ID = "fortune.verbal.infinitive.001"
+INFINITIVE_SOURCE_LOCATOR = (
+    "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, "
+    "PDF pages 90-91 (printed pp. 78-79)"
+)
 SUPPORTED_TENSE_ASPECT_MARKER = "no"
+SUPPORTED_ANALYSIS_SHAPE = (
+    "ku + reviewed verb_stem / subject_concord + no + [object_concord] + "
+    "verb_stem / ha + subject_concord + [object_concord] + "
+    "verb_stem_ending_in_e"
+)
+SUPPORTED_ANALYSIS_RULE_IDS = [
+    INFINITIVE_RULE_ID,
+    SUPPORTED_RULE_ID,
+    "fortune.verbal.negation.001",
+    "fortune.concord.object.001",
+]
 SUPPORTED_REVIEW_STATES = (
     ReviewState.APPROVED,
     ReviewState.PUBLISHED,
@@ -143,11 +159,16 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
     # Sort negative candidates by surface length descending
     neg_candidates.sort(key=lambda candidate: len(candidate["surface"]), reverse=True)
 
-    analyses = [
+    analyses = []
+    infinitive_analysis = _analyze_ku_infinitive(normalized)
+    if infinitive_analysis is not None:
+        analyses.append(infinitive_analysis)
+
+    analyses.extend([
         analysis
         for candidate in candidates
         if (analysis := _analyze_present_positive(normalized, candidate)) is not None
-    ]
+    ])
     
     analyses.extend([
         analysis
@@ -160,13 +181,15 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
             code="ANALYSIS_UNSUPPORTED",
             message=(
                 "No supported v1 analysis matched the input. Supported v1 forms "
-                "are positive present verb forms (subject concord + 'no' + [object_concord] + verb_stem) "
-                "and negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending in -e)."
+                "are ku- infinitive forms (ku + reviewed verb stem), "
+                "positive present verb forms (subject concord + 'no' + "
+                "[object_concord] + verb_stem), and negative present verb forms "
+                "(ha- + subject concord + [object_concord] + verb_stem ending in -e)."
             ),
             detail={
                 "normalized": normalized,
-                "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
-                "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001", "fortune.concord.object.001"],
+                "supported_shape": SUPPORTED_ANALYSIS_SHAPE,
+                "supported_rule_ids": SUPPORTED_ANALYSIS_RULE_IDS,
             },
         )
 
@@ -392,6 +415,53 @@ def _candidate_object_concords() -> list[dict[str, object]]:
     candidates = [dict(candidate) for candidate in PERSON_OBJECT_CONCORDS]
     candidates.extend(_noun_class_object_concords())
     return sorted(candidates, key=lambda candidate: len(candidate["surface"]), reverse=True)
+
+
+def _analyze_ku_infinitive(normalized: str) -> dict[str, object] | None:
+    if not normalized.startswith("ku") or len(normalized) <= 2:
+        return None
+
+    verb_stem = normalized.removeprefix("ku")
+    lemma = _get_reviewed_verb_stem(verb_stem)
+    if lemma is None:
+        return None
+
+    return {
+        "analysis_type": "infinitive",
+        "confidence": 0.82,
+        "rule_id": INFINITIVE_RULE_ID,
+        "lemma": _lemma_payload(lemma),
+        "source": {
+            "rule_card_id": INFINITIVE_RULE_ID,
+            "source_key": "source_fortune",
+            "source_locator": INFINITIVE_SOURCE_LOCATOR,
+        },
+        "slots": {
+            "infinitive_prefix": {
+                "surface": "ku",
+                "type": "class_15_infinitive_prefix",
+                "label": "class 15 infinitive prefix",
+            },
+            "subject": None,
+            "tense_aspect": None,
+            "polarity": None,
+            "object": None,
+            "verb_stem": {
+                "surface": verb_stem,
+                "lemma_public_id": lemma.public_id,
+            },
+            "final_vowel": {
+                "surface": verb_stem[-1],
+                "value": verb_stem[-1],
+            },
+        },
+        "phonology": compute_phonology_fields(normalized),
+        "limitations": [
+            "v1 analyzes only simple ku + reviewed verb-stem infinitives.",
+            "Infinitive complements, negation, objects, extensions, and tone are not analyzed.",
+            "Infinitive generation is not supported.",
+        ],
+    }
 
 
 def _analyze_present_positive(

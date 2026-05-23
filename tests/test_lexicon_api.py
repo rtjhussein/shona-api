@@ -314,10 +314,10 @@ def test_search_endpoint_returns_structured_zero_result(client, api_key, current
             "code": "ANALYSIS_UNSUPPORTED",
             "message": (
                 "No supported v1 analysis matched the input. Supported v1 forms "
-                "are positive present verb forms (subject concord + 'no' + "
-                "[object_concord] + verb_stem) and negative present verb forms "
-                "(ha- + subject concord + [object_concord] + verb_stem ending "
-                "in -e)."
+                "are ku- infinitive forms (ku + reviewed verb stem), positive "
+                "present verb forms (subject concord + 'no' + [object_concord] "
+                "+ verb_stem), and negative present verb forms (ha- + subject "
+                "concord + [object_concord] + verb_stem ending in -e)."
             ),
         },
     }
@@ -386,6 +386,36 @@ def test_search_endpoint_returns_morphology_analysis_on_verb_forms(
     assert "lemma_details" in analysis
     assert analysis["lemma_details"]["public_id"] == lemma.public_id
     assert len(analysis["lemma_details"]["senses"]) == 1
+    assert analysis["lemma_details"]["senses"][0]["definition"] == "Come out."
+
+
+@pytest.mark.django_db
+def test_search_endpoint_returns_morphology_analysis_on_ku_infinitives(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, *_ = canonical_lemma
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "kubuda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 0
+    assert "zero_result" not in body["data"]
+    assert body["data"]["morphology_enrichment"] == {
+        "status": "matched",
+        "count": 1,
+    }
+    analysis = body["data"]["morphology"]["analyses"][0]
+    assert analysis["analysis_type"] == "infinitive"
+    assert analysis["rule_id"] == "fortune.verbal.infinitive.001"
+    assert analysis["slots"]["infinitive_prefix"]["surface"] == "ku"
+    assert analysis["lemma"]["public_id"] == lemma.public_id
+    assert analysis["lemma_details"]["public_id"] == lemma.public_id
     assert analysis["lemma_details"]["senses"][0]["definition"] == "Come out."
 
 

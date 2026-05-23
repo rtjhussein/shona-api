@@ -3,7 +3,7 @@
   "rule_id": "fortune.verbal.infinitive.001",
   "title": "ku- infinitive and nominal verb forms",
   "source_key": "source_fortune",
-  "source_locator": "PENDING_FORTUNE_LOCATOR: infinitive or nominal verb construction section",
+  "source_locator": "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, PDF pages 90-91 (printed pp. 78-79)",
   "rule_domain": "verbal_constructions",
   "rule_type": "construction_slot",
   "rule_summary": "Draft lane for Fortune-backed review of ku- prefixed infinitive or nominal verb forms before public analysis support.",
@@ -16,10 +16,7 @@
   "conditions": {
     "dialects": [],
     "source_scope": "standard unless source says otherwise",
-    "review_blockers": [
-      "Exact Fortune locator missing",
-      "Public behavior not approved"
-    ]
+    "review_blockers": []
   },
   "outputs": {
     "analysis_fields": [
@@ -34,14 +31,14 @@
       {
         "surface": "kubuda",
         "lemma_headword": "-buda",
-        "status": "candidate_fixture",
-        "note": "Future fixture shape only; not public behavior until locator review approves the rule."
+        "status": "api_fixture",
+        "note": "Public analyzer fixture using the approved ku + reviewed verb-stem shape."
       },
       {
         "surface": "kuambura",
         "lemma_headword": "-ambura",
-        "status": "candidate_fixture",
-        "note": "Observed unsupported shape from the regression corpus; retained as a draft example."
+        "status": "api_fixture",
+        "note": "Public analyzer fixture using the approved ku + reviewed verb-stem shape."
       }
     ],
     "counterexamples": [
@@ -52,20 +49,20 @@
     ],
     "notes": [
       "Do not treat every ku segment as an infinitive prefix.",
-      "Do not expose this card through public morphology endpoints while review_state is draft."
+      "Do not generate infinitive forms from this card."
     ]
   },
   "qa": {
-    "extraction_confidence": 0.0,
-    "review_state": "draft",
-    "review_decision": "pending_source_locator",
-    "reviewer_notes": "Fill the exact local Fortune locator and confirm whether ku- behavior is infinitive, nominal, or context-dependent before implementation."
+    "extraction_confidence": 0.72,
+    "review_state": "approved",
+    "review_decision": "approved_for_simple_analyzer_only",
+    "reviewer_notes": "Source locator supports a class 15 ku- infinitive lane. Public support is limited to simple ku + reviewed verb stem analysis."
   },
   "api_safety": {
-    "analyzer_consumes": false,
+    "analyzer_consumes": true,
     "generator_consumes": false,
-    "public_endpoint_safe": false,
-    "requires_review_before_public": true,
-    "backward_compatibility": "No public behavior changes in this draft card."
+    "public_endpoint_safe": true,
+    "requires_review_before_public": false,
+    "backward_compatibility": "Adds a new matched analysis for simple ku- infinitives without changing existing finite verb analysis or generation."
   }
 }

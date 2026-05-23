@@ -74,11 +74,12 @@ curl.exe "http://127.0.0.1:8000/v1/search?q=buda" `
 Search currently supports exact lemma and exact form lookup using the v1
 orthography normalizer. Empty searches return `SEARCH_QUERY_REQUIRED`.
 Zero-result searches return a successful envelope with `count: 0` and a
-`zero_result` object. When search can analyze a supported inflected verb form,
-the response also includes `morphology` and `morphology_enrichment`. Unsupported
-or failed morphology enrichment keeps the search response successful and records
-the fallback under `zero_result.morphology_enrichment` when there are no exact
-matches.
+`zero_result` object. When search can analyze a supported verb form such as
+`ndinobuda` or a simple `ku-` infinitive such as `kubuda`, the response also
+includes `morphology` and `morphology_enrichment` with linked lemma details.
+Unsupported or failed morphology enrichment keeps the search response
+successful and records the fallback under `zero_result.morphology_enrichment`
+when there are no exact matches.
 
 ## 4. Read a lexical entry
 
@@ -134,15 +135,30 @@ Content-Type: application/json
 }
 ```
 
-Morphology analysis v1 is intentionally bounded. It supports single-token
-positive present verb forms shaped as:
+Morphology analysis v1 is intentionally bounded. It supports simple `ku-`
+infinitive or nominal verb forms shaped as:
+
+```text
+ku + reviewed verb stem
+```
+
+Example:
+
+```json
+{
+  "text": "kubuda"
+}
+```
+
+It also supports single-token positive present verb forms shaped as:
 
 ```text
 subject_concord + no + verb_stem
 ```
 
 Unsupported forms return `ANALYSIS_UNSUPPORTED` with detail about the supported
-shape.
+shape. Infinitive generation, infinitive complements, extensions, tone, and
+complex verbal morphology remain outside v1 support.
 
 ## 7. Generate a supported morphology form
 

@@ -265,7 +265,9 @@
       morphologyHtml = `
         <div class="morphology-container">
           <div class="morphology-badge">🔍 Inflected Verb Breakdown</div>
-          ${data.morphology.analyses.map(renderMorphologyAnalysis).join("")}
+          ${data.morphology.analyses.map(function (analysis) {
+            return renderMorphologyAnalysis(analysis, data.morphology.query);
+          }).join("")}
         </div>
       `;
     }
@@ -295,13 +297,21 @@
     resultsRegion.innerHTML = morphologyHtml + resultsListHtml;
   }
 
-  function renderMorphologyAnalysis(analysis) {
+  function renderMorphologyAnalysis(analysis, query) {
     const lemma = analysis.lemma || {};
     const slots = analysis.slots || {};
     
     // Render individual slot pills dynamically
     let slotsHtml = "";
     
+    if (slots.infinitive_prefix && slots.infinitive_prefix.surface) {
+      slotsHtml += renderSlotPill(
+        "infinitive",
+        slots.infinitive_prefix.surface,
+        "infinitive / prefix",
+        slots.infinitive_prefix.label
+      );
+    }
     if (slots.polarity && slots.polarity.surface) {
       slotsHtml += renderSlotPill("polarity", slots.polarity.surface, "polarity / negative", slots.polarity.label);
     }
@@ -326,18 +336,26 @@
     return `
       <div class="morphology-card" data-lemma-id="${escapeAttribute(lemma.public_id)}">
         <div class="morph-word-row">
-          <span class="morph-word-raw">${escapeHtml(analysis.query ? analysis.query.normalized : "")}</span>
+          <span class="morph-word-raw">${escapeHtml(query ? query.normalized : "")}</span>
           <span class="confidence-tag">confidence ${Math.round(analysis.confidence * 100)}%</span>
         </div>
+        <p class="morph-analysis-type">${escapeHtml(morphologyAnalysisLabel(analysis))}</p>
         <div class="morph-slots-row">
           ${slotsHtml}
         </div>
         <div class="morph-details-teaser">
-          Decomposed stem: <strong>${escapeHtml(lemma.headword)}</strong> (${escapeHtml(lemma.part_of_speech_code || "verb")}). 
+          Linked stem: <strong>${escapeHtml(lemma.headword)}</strong> (${escapeHtml(lemma.part_of_speech_code || "verb")}).
           <span class="morph-action-link">View stem details &rarr;</span>
         </div>
       </div>
     `;
+  }
+
+  function morphologyAnalysisLabel(analysis) {
+    if (analysis.analysis_type === "infinitive") {
+      return "ku- infinitive linked to a reviewed verb stem";
+    }
+    return "inflected verb breakdown";
   }
 
   function renderSlotPill(type, surface, slotTypeLabel, description) {

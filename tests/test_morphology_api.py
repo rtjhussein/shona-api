@@ -307,6 +307,55 @@ def test_analyze_endpoint_returns_bounded_positive_present_verb_analysis(
 
 
 @pytest.mark.django_db
+def test_analyze_endpoint_returns_ku_infinitive_analysis(
+    client, api_key, current_release, verb_lemma
+):
+    response = client.post(
+        "/v1/analyze",
+        {"text": "Kubuda"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["query"]["normalized"] == "kubuda"
+    assert body["data"]["count"] == 1
+    analysis = body["data"]["analyses"][0]
+    assert analysis["analysis_type"] == "infinitive"
+    assert analysis["rule_id"] == "fortune.verbal.infinitive.001"
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["source"] == {
+        "rule_card_id": "fortune.verbal.infinitive.001",
+        "source_key": "source_fortune",
+        "source_locator": (
+            "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, "
+            "PDF pages 90-91 (printed pp. 78-79)"
+        ),
+    }
+    assert analysis["slots"] == {
+        "infinitive_prefix": {
+            "surface": "ku",
+            "type": "class_15_infinitive_prefix",
+            "label": "class 15 infinitive prefix",
+        },
+        "subject": None,
+        "tense_aspect": None,
+        "polarity": None,
+        "object": None,
+        "verb_stem": {
+            "surface": "buda",
+            "lemma_public_id": verb_lemma.public_id,
+        },
+        "final_vowel": {
+            "surface": "a",
+            "value": "a",
+        },
+    }
+    assert "generation is not supported" in analysis["limitations"][2]
+
+
+@pytest.mark.django_db
 def test_analyze_endpoint_can_use_reviewed_noun_class_subject_concord(
     client, api_key, current_release, verb_lemma
 ):
@@ -375,8 +424,13 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
     assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
     assert body["error"]["detail"] == {
         "normalized": "handibuda",
-        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
-        "supported_rule_ids": ["fortune.verbal.slots.001", "fortune.verbal.negation.001", "fortune.concord.object.001"],
+        "supported_shape": "ku + reviewed verb_stem / subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+        "supported_rule_ids": [
+            "fortune.verbal.infinitive.001",
+            "fortune.verbal.slots.001",
+            "fortune.verbal.negation.001",
+            "fortune.concord.object.001",
+        ],
     }
 
 
