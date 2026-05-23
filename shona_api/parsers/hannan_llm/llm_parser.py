@@ -54,7 +54,15 @@ class PartOfSpeech(BaseModel):
 
 
 class DerivedFormGroup(BaseModel):
+    marker: Optional[str] = Field(
+        default=None,
+        description="Printed relation marker such as '>' or '<-'.",
+    )
     forms: List[str] = Field(description="Derived forms belonging to this group.")
+    source_note: Optional[str] = Field(
+        default=None,
+        description="Raw source note or phrase that introduced the forms.",
+    )
 
 
 class NounMetadata(BaseModel):
@@ -102,7 +110,8 @@ PROMPT = (
     "   - Put them in the `examples` list of the corresponding sense.\n\n"
     "4. VERB DERIVED FORMS:\n"
     "   - Verb stems begin with a hyphen.\n"
-    "   - Derived verb forms listed at the end of verb entries, marked by '>' or '<-', belong in `derived_forms`.\n\n"
+    "   - Derived verb forms listed at the end of verb entries, marked by '>' or '<-', belong in `derived_forms`.\n"
+    "   - Preserve the printed marker in `derived_forms[].marker` and the short raw source phrase in `derived_forms[].source_note`.\n\n"
     "Ensure all entries on the page are fully processed, correcting standard abbreviations and contextually "
     "repairing visual OCR character damage."
 )

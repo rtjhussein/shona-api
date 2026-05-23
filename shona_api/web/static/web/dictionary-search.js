@@ -442,11 +442,42 @@
 
   function renderFormMatch(form) {
     return `
-      <p class="matched-form">
-        Matched form <strong>${escapeHtml(form.form_text || "")}</strong>
-        <span class="meta-chip">${escapeHtml(humanize(form.form_kind))}</span>
-      </p>
+      <div class="matched-form-block">
+        <p class="matched-form">
+          Matched form <strong>${escapeHtml(form.form_text || "")}</strong>
+          <span class="meta-chip">${escapeHtml(humanize(form.form_kind))}</span>
+        </p>
+        ${renderDerivedFormEvidence(form)}
+      </div>
     `;
+  }
+
+  function renderDerivedFormEvidence(form) {
+    const evidence = form && form.derived_form_evidence;
+    if (!evidence || typeof evidence !== "object") {
+      return "";
+    }
+
+    const rows = [
+      ["Marker", evidence.marker],
+      ["Relation", evidence.relation ? humanize(evidence.relation) : ""],
+      ["Source note", evidence.source_note],
+      ["Raw source", evidence.raw_source],
+    ]
+      .filter(function (row) {
+        return row[1] !== null && row[1] !== undefined && row[1] !== "";
+      })
+      .map(function (row) {
+        return `
+          <div class="derived-evidence-row">
+            <dt>${escapeHtml(row[0])}</dt>
+            <dd>${escapeHtml(row[1])}</dd>
+          </div>
+        `;
+      })
+      .join("");
+
+    return rows ? `<dl class="derived-evidence">${rows}</dl>` : "";
   }
 
   // --- Dynamic Detail Pane Rendering ---
@@ -612,6 +643,7 @@
                 <strong>${escapeHtml(form.form_text)}</strong>
                 <span>${escapeHtml(humanize(form.form_kind))}</span>
                 <div class="meta-row mt-1">${renderArrayChips(form.grammar)}</div>
+                ${renderDerivedFormEvidence(form)}
               </li>
             `;
           })

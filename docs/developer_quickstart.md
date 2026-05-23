@@ -98,7 +98,9 @@ The response includes the standard envelope plus:
   learner metadata, phonology, provenance, revision, and review state
 - `senses`: definitions, grammar, examples, dialects, and cross references
 - `tone_records`: tone pattern metadata when available
-- `forms`: exposed forms and grammatical metadata
+- `forms`: exposed forms and grammatical metadata. Hannan-derived forms may
+  include `derived_form_evidence` with relation markers such as `>`, relation
+  direction, and raw source notes when that evidence came through publication.
 
 Missing lemma IDs return `LEMMA_NOT_FOUND`.
 

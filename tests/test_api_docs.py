@@ -44,6 +44,7 @@ def test_developer_quickstart_documents_current_public_api_examples():
     assert "GET /v1/search?q=buda" in quickstart
     assert "kubuda" in quickstart
     assert "future_lanes" in quickstart
+    assert "derived_form_evidence" in quickstart
     assert "GET /v1/lemmas/{public_id}" in quickstart
     assert "GET /v1/figurative-expressions/tsumo" in quickstart
     assert "GET /v1/figurative-expressions/madimikira" in quickstart

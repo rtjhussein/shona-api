@@ -657,6 +657,45 @@ h1 {
   font-weight: 800;
 }
 
+.matched-form-block {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.derived-evidence {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-light);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.derived-evidence-row {
+  display: grid;
+  grid-template-columns: minmax(72px, max-content) 1fr;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.derived-evidence-row dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.derived-evidence-row dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .badge-row,
 .meta-row {
   display: flex;

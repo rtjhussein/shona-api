@@ -6,6 +6,7 @@ from django.urls import reverse
 
 SEARCH_JS = Path("shona_api/web/static/web/dictionary-search.js")
 SEARCH_CSS = Path("shona_api/web/static/web/dictionary-search.css")
+ENTRY_JS = Path("shona_api/web/static/web/dictionary-entry.js")
 
 
 def test_dictionary_search_page_loads_without_api_auth():
@@ -59,3 +60,13 @@ def test_dictionary_search_javascript_renders_unsupported_future_lanes():
 
     assert "future_lanes" in js_content
     assert "unsupported-lane-list" in css_content
+
+
+def test_dictionary_web_renders_derived_form_evidence():
+    search_js = SEARCH_JS.read_text(encoding="utf-8")
+    entry_js = ENTRY_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
+
+    assert "derived_form_evidence" in search_js
+    assert "derived_form_evidence" in entry_js
+    assert "derived-evidence" in css_content

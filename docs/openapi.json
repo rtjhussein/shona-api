@@ -1633,6 +1633,10 @@
               "type": "string"
             }
           },
+          "derived_form_evidence": {
+            "type": "object",
+            "additionalProperties": true
+          },
           "sense_public_id": {
             "oneOf": [
               {
