@@ -102,11 +102,15 @@ def test_dictionary_web_renders_cross_reference_links():
 def test_dictionary_web_renders_entry_quality_chips():
     search_js = SEARCH_JS.read_text(encoding="utf-8")
     entry_js = ENTRY_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
 
     assert "entry_quality" in search_js
     assert "entry_quality" in entry_js
     assert "renderEntryQualityChips" in search_js
     assert "renderEntryQualityChips" in entry_js
+    assert "renderEntryQualityPanel" in search_js
+    assert "renderEntryQualityPanel" in entry_js
+    assert "quality-grid" in css_content
 
 
 def test_dictionary_web_submits_compact_search_filters():
@@ -116,3 +120,11 @@ def test_dictionary_web_submits_compact_search_filters():
     assert "appendSearchFilters" in search_js
     assert "headword_kind" in search_js
     assert "filter-row" in css_content
+
+
+def test_dictionary_search_cards_preview_depth_data():
+    search_js = SEARCH_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
+
+    assert "renderCardDepthPreview" in search_js
+    assert "card-depth-preview" in css_content
