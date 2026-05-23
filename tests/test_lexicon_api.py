@@ -379,6 +379,75 @@ def test_lemma_and_search_payloads_use_shared_example_shape(
 
 
 @pytest.mark.django_db
+def test_lemma_and_search_payloads_resolve_cross_reference_targets(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, sense, *_ = canonical_lemma
+    target = Lemma.objects.create(
+        headword="-simba",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vi",
+        review_state=ReviewState.PUBLISHED,
+    )
+    sense.cross_references = [
+        {
+            "type": "cp",
+            "target": "-simba",
+            "dialects": ["K"],
+            "source_note": "cp -simba K.",
+        },
+        {
+            "type": "see",
+            "target": "chisipo",
+            "source_note": "see chisipo.",
+        },
+    ]
+    sense.save(update_fields=("cross_references",))
+    publish_canonical_bundle(canonical_lemma)
+
+    lemma_response = client.get(
+        f"/v1/lemmas/{lemma.public_id}",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    search_response = client.get(
+        "/v1/search",
+        {"q": "buda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    expected_cross_references = [
+        {
+            "type": "cp",
+            "target": "-simba",
+            "dialects": ["K"],
+            "source_note": "cp -simba K.",
+            "resolved": True,
+            "target_public_id": target.public_id,
+            "target_headword": "-simba",
+        },
+        {
+            "type": "see",
+            "target": "chisipo",
+            "dialects": [],
+            "source_note": "see chisipo.",
+            "resolved": False,
+        },
+    ]
+    assert lemma_response.status_code == 200
+    assert search_response.status_code == 200
+    assert (
+        lemma_response.json()["data"]["senses"][0]["cross_references"]
+        == expected_cross_references
+    )
+    assert (
+        search_response.json()["data"]["results"][0]["lemma"]["senses"][0][
+            "cross_references"
+        ]
+        == expected_cross_references
+    )
+
+
+@pytest.mark.django_db
 def test_search_endpoint_returns_structured_zero_result(client, api_key, current_release):
     response = client.get(
         "/v1/search",

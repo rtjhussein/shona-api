@@ -14,6 +14,7 @@
   const clearKeyButton = shell.querySelector("[data-clear-key]");
   const apiKeyStorage = shell.dataset.apiKeyStorage;
   const lemmaPublicId = shell.dataset.lemmaPublicId;
+  const entryUrlTemplate = shell.dataset.entryUrlTemplate;
   const endpoints = {
     lemma: shell.dataset.lemmaEndpoint,
     tsumo: shell.dataset.tsumoEndpoint,
@@ -185,6 +186,7 @@
               <li>
                 <p>${escapeHtml(sense.definition || "")}</p>
                 ${renderExamples(sense.examples)}
+                ${renderCrossReferences(sense.cross_references)}
                 <div class="meta-row">
                   ${renderArrayChips(sense.grammar)}
                   ${renderArrayChips(sense.dialects)}
@@ -210,6 +212,38 @@
           })
           .join("")}
       </ul>
+    `;
+  }
+
+  function renderCrossReferences(references) {
+    if (!Array.isArray(references) || !references.length) {
+      return "";
+    }
+    return `
+      <ul class="xref-list">
+        ${references.map(renderCrossReference).join("")}
+      </ul>
+    `;
+  }
+
+  function renderCrossReference(reference) {
+    const label = `${reference.type || "reference"} ${reference.target || ""}`.trim();
+    const dialects = Array.isArray(reference.dialects) && reference.dialects.length
+      ? `<span class="meta-chip">${escapeHtml(reference.dialects.join(", "))}</span>`
+      : "";
+    const sourceNote = reference.source_note
+      ? `<span class="xref-source">${escapeHtml(reference.source_note)}</span>`
+      : "";
+    const target = reference.target_public_id
+      ? `<a class="xref-link" href="${escapeAttribute(entryUrl(reference.target_public_id))}">${escapeHtml(label)}</a>`
+      : `<span class="xref-unresolved">${escapeHtml(label)}</span><span class="meta-chip">unresolved</span>`;
+
+    return `
+      <li>
+        ${target}
+        ${dialects}
+        ${sourceNote}
+      </li>
     `;
   }
 
@@ -461,6 +495,10 @@
     return count === 1 ? singular : plural;
   }
 
+  function entryUrl(publicId) {
+    return entryUrlTemplate.replace("__PUBLIC_ID__", encodeURIComponent(publicId));
+  }
+
   function humanize(value) {
     if (!value) {
       return "";
@@ -475,5 +513,9 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value).replace(/`/g, "&#096;");
   }
 })();

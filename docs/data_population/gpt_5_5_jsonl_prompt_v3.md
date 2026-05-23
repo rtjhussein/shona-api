@@ -133,6 +133,8 @@ Extraction rules:
      otherwise use null.
 11. Cross references:
    - "cp", "cf", "qv", "see", and similar references go into cross_references.
+   - Preserve a short raw source phrase in source_note when the marker and
+     target are printed together, for example {"type": "cp", "target": "bere", "dialects": ["M"], "source_note": "cp bere M."}
 12. Derived forms:
    - Verb-derived forms marked with arrows like ">" or "<-" go into derived_forms.
    - Preserve the relation marker and short raw note when present, for example

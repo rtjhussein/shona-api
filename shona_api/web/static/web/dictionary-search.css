@@ -831,6 +831,54 @@ h1 {
   font-size: 0.82rem;
 }
 
+.xref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xref-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.xref-link,
+.xref-unresolved {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.xref-link {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.xref-link:hover {
+  background: #99f6e4;
+}
+
+.xref-unresolved {
+  border: 1px solid var(--line);
+  background: var(--wash);
+  color: var(--muted);
+}
+
+.xref-source {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .compact-list {
   display: flex;
   flex-direction: column;

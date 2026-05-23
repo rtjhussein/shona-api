@@ -4,6 +4,7 @@ import re
 from copy import deepcopy
 from typing import Any
 
+from shona_api.lexicon.cross_references import normalize_cross_references
 from shona_api.lexicon.examples import normalize_example_pairs
 
 
@@ -429,23 +430,7 @@ def _clean_examples(value: Any) -> list[dict[str, object]]:
 
 
 def _clean_cross_references(value: Any) -> list[dict[str, Any]]:
-    if not isinstance(value, list):
-        return []
-    references = []
-    for item in value:
-        if not isinstance(item, dict):
-            continue
-        ref_type = item.get("type")
-        target = item.get("target")
-        if isinstance(ref_type, str) and isinstance(target, str):
-            references.append(
-                {
-                    "type": ref_type.strip(),
-                    "target": target.strip(),
-                    "dialects": _clean_string_list(item.get("dialects")),
-                }
-            )
-    return references
+    return normalize_cross_references(value)
 
 
 def _split_first_token(text: str) -> tuple[str, str]:

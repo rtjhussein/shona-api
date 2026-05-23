@@ -213,6 +213,83 @@ def test_publish_standardizes_hannan_examples_and_preserves_raw_shape(hannan_sou
 
 
 @pytest.mark.django_db
+def test_publish_resolves_cross_references_and_preserves_raw_shape(hannan_source):
+    target = Lemma.objects.create(
+        headword="-simba",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vi",
+        review_state=ReviewState.PUBLISHED,
+    )
+    raw_cross_references = [
+        {
+            "type": "cp",
+            "target": "-simba",
+            "dialects": ["K", "Ko", "M", "Z"],
+            "source_note": "cp -simba KKoMZ.",
+        },
+        {
+            "type": "see",
+            "target": "chisipo",
+            "source_note": "see chisipo.",
+        },
+    ]
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan_dictionary.pdf:p.42:entry:-buda",
+        raw_text="-buda [H] vi Come out. cp -simba KKoMZ. see chisipo.",
+        parser_output={
+            "headword": "-buda",
+            "headword_kind": "verb_stem",
+            "part_of_speech": {"code": "vi", "label": "intransitive verb"},
+            "dialects": [],
+            "comparative_bantu_marker": False,
+            "tone_pattern": "H",
+            "senses": [
+                {
+                    "number": 1,
+                    "definition": "Come out.",
+                    "cross_references": raw_cross_references,
+                }
+            ],
+            "derived_forms": [],
+            "parse_metadata": {
+                "parser": "gpt-5.5-thinking",
+                "completeness": "parsed",
+            },
+        },
+        parser_name="gpt-5.5-thinking",
+        parser_status=ExtractionUnit.ParserStatus.PARSED,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.senses[0].cross_references == [
+        {
+            "type": "cp",
+            "target": "-simba",
+            "dialects": ["K", "Ko", "M", "Z"],
+            "source_note": "cp -simba KKoMZ.",
+            "resolved": True,
+            "target_public_id": target.public_id,
+            "target_headword": "-simba",
+        },
+        {
+            "type": "see",
+            "target": "chisipo",
+            "dialects": [],
+            "source_note": "see chisipo.",
+            "resolved": False,
+        },
+    ]
+    assert bundle.senses[0].provenance["raw_cross_references"] == raw_cross_references
+    assert bundle.senses[0].provenance["cross_reference_schema_version"] == (
+        "hannan-cross-reference-v1"
+    )
+
+
+@pytest.mark.django_db
 def test_publish_prefers_v2_dialect_scoped_tone_records(hannan_source):
     unit = ExtractionUnit.objects.create(
         source=hannan_source,
