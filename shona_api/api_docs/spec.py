@@ -75,7 +75,65 @@ def build_openapi_spec():
                                 "lemma": {"value": "buda"},
                                 "infinitive": {"value": "kubuda"},
                             },
-                        }
+                        },
+                        {
+                            "name": "headword_kind",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional bounded lemma kind filter.",
+                            "schema": {
+                                "type": "string",
+                                "enum": [
+                                    "word",
+                                    "noun",
+                                    "verb_stem",
+                                    "ideophone",
+                                    "unknown",
+                                ],
+                            },
+                        },
+                        {
+                            "name": "pos",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional bounded part-of-speech filter.",
+                            "schema": {
+                                "type": "string",
+                                "enum": [
+                                    "n",
+                                    "vi",
+                                    "vt",
+                                    "v t",
+                                    "v i",
+                                    "adj",
+                                    "adv",
+                                    "ideo",
+                                    "interj",
+                                ],
+                            },
+                        },
+                        {
+                            "name": "dialect",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional Hannan dialect filter.",
+                            "schema": {
+                                "type": "string",
+                                "enum": ["K", "Ko", "M", "Z"],
+                            },
+                        },
+                        {
+                            "name": "limit",
+                            "in": "query",
+                            "required": False,
+                            "description": "Maximum results to return, from 1 to 50.",
+                            "schema": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 50,
+                                "default": 20,
+                            },
+                        },
                     ],
                     "responses": {
                         "200": success_response(

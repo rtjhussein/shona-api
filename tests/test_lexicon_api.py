@@ -305,6 +305,74 @@ def test_search_endpoint_returns_exact_form_match(
 
 
 @pytest.mark.django_db
+def test_search_endpoint_applies_bounded_filters(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, *_ = canonical_lemma
+    other = Lemma.objects.create(
+        headword="buda",
+        headword_kind=Lemma.HeadwordKind.NOUN,
+        part_of_speech_code="n",
+        part_of_speech_label="noun",
+        dialects=["M"],
+        review_state=ReviewState.PUBLISHED,
+    )
+    Sense.objects.create(
+        lemma=other,
+        number=1,
+        definition="Filtered noun duplicate.",
+        review_state=ReviewState.PUBLISHED,
+    )
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {
+            "q": "buda",
+            "headword_kind": "verb_stem",
+            "pos": "vi",
+            "dialect": "K",
+            "limit": "1",
+        },
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    assert body["data"]["query"]["filters"] == {
+        "headword_kind": "verb_stem",
+        "pos": "vi",
+        "dialect": "K",
+        "limit": 1,
+    }
+    assert body["data"]["results"][0]["lemma"]["public_id"] == lemma.public_id
+
+
+@pytest.mark.django_db
+def test_search_endpoint_rejects_invalid_filters(client, api_key, current_release):
+    response = client.get(
+        "/v1/search",
+        {"q": "buda", "dialect": "bad"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "api_version": "v1",
+        "error": {
+            "code": "SEARCH_FILTER_INVALID",
+            "message": "Invalid search filter 'dialect'.",
+            "detail": {
+                "field": "dialect",
+                "value": "bad",
+                "allowed_values": ["K", "Ko", "M", "Z"],
+            },
+        },
+    }
+
+
+@pytest.mark.django_db
 def test_lemma_and_search_payloads_expose_derived_form_evidence(
     client, api_key, current_release, canonical_lemma
 ):
