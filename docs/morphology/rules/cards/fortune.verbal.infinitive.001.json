@@ -1,0 +1,71 @@
+{
+  "rule_card_schema_version": "2026-05-23",
+  "rule_id": "fortune.verbal.infinitive.001",
+  "title": "ku- infinitive and nominal verb forms",
+  "source_key": "source_fortune",
+  "source_locator": "PENDING_FORTUNE_LOCATOR: infinitive or nominal verb construction section",
+  "rule_domain": "verbal_constructions",
+  "rule_type": "construction_slot",
+  "rule_summary": "Draft lane for Fortune-backed review of ku- prefixed infinitive or nominal verb forms before public analysis support.",
+  "affected_rule_set": "morphology-rules-v2",
+  "inputs": {
+    "lexical_category": "verb",
+    "headword_kind": "verb_stem",
+    "surface_shape": "ku + verb stem"
+  },
+  "conditions": {
+    "dialects": [],
+    "source_scope": "standard unless source says otherwise",
+    "review_blockers": [
+      "Exact Fortune locator missing",
+      "Public behavior not approved"
+    ]
+  },
+  "outputs": {
+    "analysis_fields": [
+      "analysis_type",
+      "slots.infinitive_prefix",
+      "slots.verb_stem"
+    ],
+    "model_fields": []
+  },
+  "evidence": {
+    "examples": [
+      {
+        "surface": "kubuda",
+        "lemma_headword": "-buda",
+        "status": "candidate_fixture",
+        "note": "Future fixture shape only; not public behavior until locator review approves the rule."
+      },
+      {
+        "surface": "kuambura",
+        "lemma_headword": "-ambura",
+        "status": "candidate_fixture",
+        "note": "Observed unsupported shape from the regression corpus; retained as a draft example."
+      }
+    ],
+    "counterexamples": [
+      {
+        "surface": "ndinokuda",
+        "note": "The same surface segment ku can be an object concord in supported v1 forms."
+      }
+    ],
+    "notes": [
+      "Do not treat every ku segment as an infinitive prefix.",
+      "Do not expose this card through public morphology endpoints while review_state is draft."
+    ]
+  },
+  "qa": {
+    "extraction_confidence": 0.0,
+    "review_state": "draft",
+    "review_decision": "pending_source_locator",
+    "reviewer_notes": "Fill the exact local Fortune locator and confirm whether ku- behavior is infinitive, nominal, or context-dependent before implementation."
+  },
+  "api_safety": {
+    "analyzer_consumes": false,
+    "generator_consumes": false,
+    "public_endpoint_safe": false,
+    "requires_review_before_public": true,
+    "backward_compatibility": "No public behavior changes in this draft card."
+  }
+}

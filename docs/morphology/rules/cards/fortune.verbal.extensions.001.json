@@ -1,0 +1,64 @@
+{
+  "rule_card_schema_version": "2026-05-23",
+  "rule_id": "fortune.verbal.extensions.001",
+  "title": "Passive and extension-like verb surfaces",
+  "source_key": "source_fortune",
+  "source_locator": "PENDING_FORTUNE_LOCATOR: verbal extension or passive construction section",
+  "rule_domain": "verbal_constructions",
+  "rule_type": "derivation",
+  "rule_summary": "Draft lane for Fortune-backed review of passive and extension-like verb surfaces before analysis, generation, or search explanations cite support.",
+  "affected_rule_set": "morphology-rules-v2",
+  "inputs": {
+    "lexical_category": "verb",
+    "headword_kind": "verb_stem",
+    "surface_shape": "verb stem + extension-like material"
+  },
+  "conditions": {
+    "dialects": [],
+    "source_scope": "standard unless source says otherwise",
+    "review_blockers": [
+      "Exact Fortune locator missing",
+      "Extension inventory and segmentation not approved",
+      "Public unsupported-message wording not approved"
+    ]
+  },
+  "outputs": {
+    "analysis_fields": [
+      "analysis_type",
+      "slots.verb_stem",
+      "slots.extension"
+    ],
+    "model_fields": [
+      "Form.grammatical_features",
+      "Form.derivation_notes"
+    ]
+  },
+  "evidence": {
+    "examples": [
+      {
+        "surface": "badanudzwa",
+        "lemma_headword": "-badanudza",
+        "status": "candidate_fixture",
+        "note": "Observed unsupported passive or extension-like surface from the real-data regression corpus."
+      }
+    ],
+    "counterexamples": [],
+    "notes": [
+      "This card does not authorize generated passive or extension forms.",
+      "Future unsupported-shape explanations may cite this card only as a draft future lane, not as supported analysis."
+    ]
+  },
+  "qa": {
+    "extraction_confidence": 0.0,
+    "review_state": "draft",
+    "review_decision": "pending_source_locator",
+    "reviewer_notes": "Fill the exact local Fortune locator and separate passive, applicative, causative, reciprocal, and other extension lanes if the source requires it."
+  },
+  "api_safety": {
+    "analyzer_consumes": false,
+    "generator_consumes": false,
+    "public_endpoint_safe": false,
+    "requires_review_before_public": true,
+    "backward_compatibility": "No public behavior changes in this draft card."
+  }
+}
