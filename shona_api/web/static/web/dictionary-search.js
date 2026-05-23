@@ -464,6 +464,7 @@
           </div>
         </div>
         ${defPreview ? `<p class="result-definition-teaser">${escapeHtml(defPreview)}</p>` : ""}
+        ${renderCardDepthPreview(lemma)}
         ${renderCrossReferences(crossReferences)}
         ${form ? renderFormMatch(form) : ""}
         <div class="meta-row">
@@ -560,6 +561,7 @@
           ${tones.length ? chip(`${tones.length} tone ${pluralize(tones.length, "record", "records")}`) : ""}
           ${renderEntryQualityChips(lemma.entry_quality)}
         </div>
+        ${renderEntryQualityPanel(lemma.entry_quality)}
         ${renderDefinitions(senses)}
         ${renderNounClassTable(nounClass)}
         ${renderToneRecords(tones)}
@@ -625,6 +627,47 @@
     return senses.flatMap(function (sense) {
       return Array.isArray(sense.cross_references) ? sense.cross_references : [];
     });
+  }
+
+  function renderCardDepthPreview(lemma) {
+    const forms = Array.isArray(lemma.forms) ? lemma.forms : [];
+    const tones = Array.isArray(lemma.tone_records) ? lemma.tone_records : [];
+    const senses = Array.isArray(lemma.senses) ? lemma.senses : [];
+    const examples = senses.flatMap(function (sense) {
+      return Array.isArray(sense.examples) ? sense.examples : [];
+    });
+    const items = [];
+    if (forms.length) {
+      items.push(
+        `<span><strong>Forms</strong> ${forms.slice(0, 2).map(formLabel).join(", ")}</span>`
+      );
+    }
+    if (tones.length) {
+      items.push(
+        `<span><strong>Tone</strong> ${tones.slice(0, 2).map(function (tone) {
+          return escapeHtml(tone.pattern || "");
+        }).join(", ")}</span>`
+      );
+    }
+    if (examples.length) {
+      items.push(
+        `<span><strong>Example</strong> ${escapeHtml(examplePreview(examples[0]))}</span>`
+      );
+    }
+    return items.length
+      ? `<div class="card-depth-preview">${items.join("")}</div>`
+      : "";
+  }
+
+  function formLabel(form) {
+    const kind = form.form_kind ? ` ${humanize(form.form_kind)}` : "";
+    return `${escapeHtml(form.form_text || "")}${escapeHtml(kind)}`;
+  }
+
+  function examplePreview(example) {
+    const shona = exampleTextPart(example, "shona");
+    const english = exampleTextPart(example, "english");
+    return english ? `${shona} / ${english}` : shona;
   }
 
   function renderCrossReferences(references) {
@@ -818,6 +861,30 @@
         return chip(`${item[0]} ${pluralize(item[0], item[1], item[2])}`);
       })
       .join("");
+  }
+
+  function renderEntryQualityPanel(quality) {
+    if (!quality || typeof quality !== "object") {
+      return "";
+    }
+    const rows = [
+      ["Senses", quality.sense_count],
+      ["Examples", quality.example_count],
+      ["Forms", quality.form_count],
+      ["Tone", quality.tone_record_count],
+      ["Cross refs", quality.cross_reference_count],
+      ["Resolved refs", quality.resolved_cross_reference_count],
+    ].map(function (row) {
+      const count = typeof row[1] === "number" ? row[1] : 0;
+      return `
+        <div class="quality-item">
+          <dt>${escapeHtml(row[0])}</dt>
+          <dd>${count}</dd>
+        </div>
+      `;
+    }).join("");
+
+    return section("Entry Depth", `<dl class="quality-grid">${rows}</dl>`);
   }
 
   function chip(value) {

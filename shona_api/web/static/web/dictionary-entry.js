@@ -164,6 +164,7 @@
           ${tones.length ? chip(`${tones.length} tone ${pluralize(tones.length, "record", "records")}`) : ""}
           ${renderEntryQualityChips(lemma.entry_quality)}
         </div>
+        ${renderEntryQualityPanel(lemma.entry_quality)}
         ${renderDefinitions(senses)}
         ${renderNounClass(nounClass)}
         ${renderToneRecords(tones)}
@@ -494,6 +495,30 @@
         return chip(`${item[0]} ${pluralize(item[0], item[1], item[2])}`);
       })
       .join("");
+  }
+
+  function renderEntryQualityPanel(quality) {
+    if (!quality || typeof quality !== "object") {
+      return "";
+    }
+    const rows = [
+      ["Senses", quality.sense_count],
+      ["Examples", quality.example_count],
+      ["Forms", quality.form_count],
+      ["Tone", quality.tone_record_count],
+      ["Cross refs", quality.cross_reference_count],
+      ["Resolved refs", quality.resolved_cross_reference_count],
+    ].map(function (row) {
+      const count = typeof row[1] === "number" ? row[1] : 0;
+      return `
+        <div class="quality-item">
+          <dt>${escapeHtml(row[0])}</dt>
+          <dd>${count}</dd>
+        </div>
+      `;
+    }).join("");
+
+    return section("Entry Depth", `<dl class="quality-grid">${rows}</dl>`);
   }
 
   function chip(value) {
