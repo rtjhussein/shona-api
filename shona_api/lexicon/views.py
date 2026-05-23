@@ -31,6 +31,23 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_SEARCH_LIMIT = 20
+MAX_SEARCH_LIMIT = 50
+HEADWORD_KIND_FILTERS = {
+    Lemma.HeadwordKind.WORD,
+    Lemma.HeadwordKind.NOUN,
+    Lemma.HeadwordKind.VERB_STEM,
+    Lemma.HeadwordKind.IDEOPHONE,
+    Lemma.HeadwordKind.UNKNOWN,
+}
+POS_FILTERS = {"n", "vi", "vt", "v t", "v i", "adj", "adv", "ideo", "interj"}
+DIALECT_FILTERS = {
+    "k": "K",
+    "ko": "Ko",
+    "m": "M",
+    "z": "Z",
+}
+
 
 def build_success_envelope(*, data, release_metadata):
     return {
@@ -131,7 +148,11 @@ class SearchView(APIView):
         except CurrentReleaseNotFound:
             return build_current_release_missing_response()
 
-        results = self._search(normalized_query)
+        filters, filter_error = self._parse_filters(request)
+        if filter_error:
+            return filter_error
+
+        results = self._search(normalized_query, filters=filters)
 
         morphology_analysis, morphology_enrichment = self._build_morphology_enrichment(
             raw_query=raw_query,
@@ -143,6 +164,7 @@ class SearchView(APIView):
                 data=self._build_search_payload(
                     raw_query=raw_query,
                     normalized_query=normalized_query,
+                    filters=filters,
                     results=results,
                     morphology_analysis=morphology_analysis,
                     morphology_enrichment=morphology_enrichment,
@@ -152,7 +174,8 @@ class SearchView(APIView):
             status=status.HTTP_200_OK,
         )
 
-    def _search(self, normalized_query):
+    def _search(self, normalized_query, *, filters):
+        limit = filters["limit"]
         lemma_results = [
             {
                 "result_type": "lemma",
@@ -160,11 +183,14 @@ class SearchView(APIView):
                 "lemma": lemma,
                 "form": None,
             }
-            for lemma in self._lemma_queryset().filter(
-                normalized_headword=normalized_query,
-            )[:20]
+            for lemma in self._filter_lemmas(
+                self._lemma_queryset(filters).filter(
+                    normalized_headword=normalized_query,
+                ),
+                filters,
+            )[:limit]
         ]
-        remaining_limit = max(20 - len(lemma_results), 0)
+        remaining_limit = max(limit - len(lemma_results), 0)
         form_results = [
             {
                 "result_type": "form",
@@ -172,14 +198,17 @@ class SearchView(APIView):
                 "lemma": form.lemma,
                 "form": form,
             }
-            for form in self._form_queryset().filter(
-                normalized_form=normalized_query,
+            for form in self._filter_forms(
+                self._form_queryset(filters).filter(
+                    normalized_form=normalized_query,
+                ),
+                filters,
             )[:remaining_limit]
         ]
         return lemma_results + form_results
 
-    def _lemma_queryset(self):
-        return Lemma.objects.filter(
+    def _lemma_queryset(self, filters):
+        queryset = Lemma.objects.filter(
             review_state__in=self.public_review_states,
         ).select_related(
             "noun_class",
@@ -189,9 +218,14 @@ class SearchView(APIView):
             "tone_records__form",
             "forms__sense",
         )
+        if filters["headword_kind"]:
+            queryset = queryset.filter(headword_kind=filters["headword_kind"])
+        if filters["pos"]:
+            queryset = queryset.filter(part_of_speech_code=filters["pos"])
+        return queryset
 
-    def _form_queryset(self):
-        return (
+    def _form_queryset(self, filters):
+        queryset = (
             Form.objects.filter(
                 review_state__in=self.public_review_states,
                 lemma__review_state__in=self.public_review_states,
@@ -210,6 +244,101 @@ class SearchView(APIView):
                 "lemma__senses",
                 "lemma__tone_records__form",
             )
+        )
+        if filters["headword_kind"]:
+            queryset = queryset.filter(lemma__headword_kind=filters["headword_kind"])
+        if filters["pos"]:
+            queryset = queryset.filter(lemma__part_of_speech_code=filters["pos"])
+        return queryset
+
+    def _filter_lemmas(self, queryset, filters):
+        lemmas = list(queryset)
+        dialect = filters["dialect"]
+        if dialect:
+            lemmas = [lemma for lemma in lemmas if dialect in (lemma.dialects or [])]
+        return lemmas
+
+    def _filter_forms(self, queryset, filters):
+        forms = list(queryset)
+        dialect = filters["dialect"]
+        if dialect:
+            forms = [
+                form
+                for form in forms
+                if dialect in (form.lemma.dialects or [])
+            ]
+        return forms
+
+    def _parse_filters(self, request):
+        filters = {
+            "headword_kind": None,
+            "pos": None,
+            "dialect": None,
+            "limit": DEFAULT_SEARCH_LIMIT,
+        }
+        headword_kind = request.query_params.get("headword_kind", "").strip()
+        if headword_kind:
+            if headword_kind not in HEADWORD_KIND_FILTERS:
+                return None, self._invalid_filter_response(
+                    field="headword_kind",
+                    value=headword_kind,
+                    allowed=sorted(HEADWORD_KIND_FILTERS),
+                )
+            filters["headword_kind"] = headword_kind
+
+        pos = request.query_params.get("pos", "").strip()
+        if pos:
+            if pos not in POS_FILTERS:
+                return None, self._invalid_filter_response(
+                    field="pos",
+                    value=pos,
+                    allowed=sorted(POS_FILTERS),
+                )
+            filters["pos"] = pos
+
+        raw_dialect = request.query_params.get("dialect", "").strip()
+        if raw_dialect:
+            dialect = DIALECT_FILTERS.get(raw_dialect.casefold())
+            if not dialect:
+                return None, self._invalid_filter_response(
+                    field="dialect",
+                    value=raw_dialect,
+                    allowed=sorted(DIALECT_FILTERS.values()),
+                )
+            filters["dialect"] = dialect
+
+        raw_limit = request.query_params.get("limit", "").strip()
+        if raw_limit:
+            try:
+                limit = int(raw_limit)
+            except ValueError:
+                return None, self._invalid_filter_response(
+                    field="limit",
+                    value=raw_limit,
+                    allowed=[f"1..{MAX_SEARCH_LIMIT}"],
+                )
+            if limit < 1 or limit > MAX_SEARCH_LIMIT:
+                return None, self._invalid_filter_response(
+                    field="limit",
+                    value=raw_limit,
+                    allowed=[f"1..{MAX_SEARCH_LIMIT}"],
+                )
+            filters["limit"] = limit
+
+        return filters, None
+
+    def _invalid_filter_response(self, *, field, value, allowed):
+        return Response(
+            build_error_envelope(
+                code="SEARCH_FILTER_INVALID",
+                message=f"Invalid search filter '{field}'.",
+                detail={
+                    "field": field,
+                    "value": value,
+                    "allowed_values": allowed,
+                },
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     def _build_morphology_enrichment(self, *, raw_query, release_metadata):
@@ -296,6 +425,7 @@ class SearchView(APIView):
         *,
         raw_query,
         normalized_query,
+        filters,
         results,
         morphology_analysis=None,
         morphology_enrichment=None,
@@ -309,6 +439,9 @@ class SearchView(APIView):
             "count": len(results),
             "results": SearchResultSerializer(results, many=True).data,
         }
+        active_filters = self._active_filter_payload(filters)
+        if active_filters:
+            payload["query"]["filters"] = active_filters
         if morphology_analysis:
             payload["morphology"] = morphology_analysis
         if morphology_enrichment and morphology_enrichment["status"] == "matched":
@@ -322,3 +455,13 @@ class SearchView(APIView):
                 zero_result["morphology_enrichment"] = morphology_enrichment
             payload["zero_result"] = zero_result
         return payload
+
+    def _active_filter_payload(self, filters):
+        active = {
+            key: value
+            for key, value in filters.items()
+            if value and key != "limit"
+        }
+        if filters["limit"] != DEFAULT_SEARCH_LIMIT:
+            active["limit"] = filters["limit"]
+        return active

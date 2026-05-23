@@ -42,6 +42,49 @@
             >
             <button class="search-button" type="submit">Search</button>
           </div>
+          <div class="filter-row" aria-label="Search filters">
+            <label>
+              <span>Kind</span>
+              <select name="headword_kind" data-filter-headword-kind>
+                <option value="">Any</option>
+                <option value="word">Word</option>
+                <option value="noun">Noun</option>
+                <option value="verb_stem">Verb stem</option>
+                <option value="ideophone">Ideophone</option>
+              </select>
+            </label>
+            <label>
+              <span>POS</span>
+              <select name="pos" data-filter-pos>
+                <option value="">Any</option>
+                <option value="n">n</option>
+                <option value="vi">vi</option>
+                <option value="vt">vt</option>
+                <option value="v t">v t</option>
+                <option value="v i">v i</option>
+                <option value="adj">adj</option>
+                <option value="adv">adv</option>
+              </select>
+            </label>
+            <label>
+              <span>Dialect</span>
+              <select name="dialect" data-filter-dialect>
+                <option value="">Any</option>
+                <option value="K">K</option>
+                <option value="Ko">Ko</option>
+                <option value="M">M</option>
+                <option value="Z">Z</option>
+              </select>
+            </label>
+            <label>
+              <span>Limit</span>
+              <select name="limit" data-filter-limit>
+                <option value="20">20</option>
+                <option value="10">10</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+          </div>
         </form>
 
         <details class="api-key-panel" data-api-key-panel>

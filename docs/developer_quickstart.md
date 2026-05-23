@@ -83,6 +83,16 @@ when there are no exact matches. Some unsupported surfaces include
 `future_lanes` with rule-card IDs, for example passive or extension-like forms
 point at `fortune.verbal.extensions.001` without claiming v1 support.
 
+Search accepts compact optional filters:
+
+- `headword_kind`: one of `word`, `noun`, `verb_stem`, `ideophone`, `unknown`
+- `pos`: one of `n`, `vi`, `vt`, `v t`, `v i`, `adj`, `adv`, `ideo`, `interj`
+- `dialect`: one of `K`, `Ko`, `M`, `Z`
+- `limit`: integer from `1` to `50`, defaulting to `20`
+
+Invalid filter values return `SEARCH_FILTER_INVALID` with `error.detail.field`,
+`value`, and `allowed_values`.
+
 ## 4. Read a lexical entry
 
 Use a `public_id` returned by search:

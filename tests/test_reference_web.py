@@ -18,6 +18,8 @@ def test_dictionary_search_page_loads_without_api_auth():
     assert b'data-entry-url-template="/dictionary/entries/__PUBLIC_ID__/"' in (
         response.content
     )
+    assert b"data-filter-headword-kind" in response.content
+    assert b"data-filter-dialect" in response.content
 
 
 def test_dictionary_search_alias_route_loads_same_public_ui():
@@ -105,3 +107,12 @@ def test_dictionary_web_renders_entry_quality_chips():
     assert "entry_quality" in entry_js
     assert "renderEntryQualityChips" in search_js
     assert "renderEntryQualityChips" in entry_js
+
+
+def test_dictionary_web_submits_compact_search_filters():
+    search_js = SEARCH_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
+
+    assert "appendSearchFilters" in search_js
+    assert "headword_kind" in search_js
+    assert "filter-row" in css_content

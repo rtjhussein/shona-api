@@ -6,6 +6,10 @@
 
   const form = shell.querySelector("[data-search-form]");
   const queryInput = shell.querySelector("[data-query-input]");
+  const headwordKindFilter = shell.querySelector("[data-filter-headword-kind]");
+  const posFilter = shell.querySelector("[data-filter-pos]");
+  const dialectFilter = shell.querySelector("[data-filter-dialect]");
+  const limitFilter = shell.querySelector("[data-filter-limit]");
   const resultsRegion = shell.querySelector("[data-results-region]");
   const detailsRegion = shell.querySelector("[data-details-region]");
   const apiKeyPanel = shell.querySelector("[data-api-key-panel]");
@@ -82,6 +86,7 @@
   async function search(query, apiKey) {
     const url = new URL(searchEndpoint, window.location.origin);
     url.searchParams.set("q", query);
+    appendSearchFilters(url);
 
     renderState("Searching", "Checking the public dictionary API...");
     resultsRegion.setAttribute("aria-busy", "true");
@@ -275,6 +280,7 @@
           <div>
             <h2>${data.count} ${pluralize(data.count, "result", "results")}</h2>
             <p>Query: "${escapeHtml(data.query.raw)}"</p>
+            ${renderActiveFilters(data.query.filters)}
           </div>
           <span class="meta-chip mono">${escapeHtml(data.query.normalizer)}</span>
         </div>
@@ -291,6 +297,32 @@
     }
 
     resultsRegion.innerHTML = morphologyHtml + resultsListHtml;
+  }
+
+  function appendSearchFilters(url) {
+    [
+      ["headword_kind", headwordKindFilter],
+      ["pos", posFilter],
+      ["dialect", dialectFilter],
+      ["limit", limitFilter],
+    ].forEach(function (item) {
+      const value = item[1] ? item[1].value.trim() : "";
+      if (value) {
+        url.searchParams.set(item[0], value);
+      }
+    });
+  }
+
+  function renderActiveFilters(filters) {
+    if (!filters || typeof filters !== "object") {
+      return "";
+    }
+    const chips = Object.keys(filters)
+      .map(function (key) {
+        return `<span class="meta-chip">${escapeHtml(humanize(key))}: ${escapeHtml(filters[key])}</span>`;
+      })
+      .join("");
+    return chips ? `<div class="meta-row filter-chip-row">${chips}</div>` : "";
   }
 
   function renderZeroResult(data) {
