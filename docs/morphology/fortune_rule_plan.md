@@ -62,6 +62,16 @@ fixtures second, generation last.
 
 ## Rule Card Shape
 
+Concrete rule cards live under:
+
+```text
+docs/morphology/rules/cards/
+```
+
+Each card is a small JSON document so tests and future import tooling can read
+the same artifact that reviewers edit. `docs/morphology/rules/README.md`
+defines the required field contract, review states, and API safety gate.
+
 Later morphology issues should consume reviewed rule cards with this shape:
 
 ```yaml
@@ -96,6 +106,12 @@ implementation:
   analyzer_consumes: true
   generator_consumes: false
   public_endpoint_safe: false
+api_safety:
+  analyzer_consumes: true
+  generator_consumes: false
+  public_endpoint_safe: false
+  requires_review_before_public: true
+  backward_compatibility: "No breaking public behavior."
 ```
 
 Rules can be stored as markdown tables, YAML fixtures, or future database
