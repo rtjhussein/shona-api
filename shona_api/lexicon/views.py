@@ -226,11 +226,14 @@ class SearchView(APIView):
                 "search.morphology_enrichment.unsupported",
                 tags={"code": exc.code},
             )
-            return None, {
+            enrichment = {
                 "status": "unsupported",
                 "code": exc.code,
                 "message": exc.message,
             }
+            if exc.detail and exc.detail.get("future_lanes"):
+                enrichment["detail"] = exc.detail
+            return None, enrichment
         except Exception as exc:
             record_metric(
                 "search.morphology_enrichment.failed",

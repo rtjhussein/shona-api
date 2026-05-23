@@ -353,6 +353,37 @@ h1 {
   color: #9f1239;
 }
 
+.unsupported-lane-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.unsupported-lane-list li {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent-light);
+  border-radius: 8px;
+  background: var(--wash);
+  padding: 12px 14px;
+}
+
+.unsupported-lane-list strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.unsupported-lane-list span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
 /* Morphology Container & Card styling */
 .morphology-container {
   display: flex;
