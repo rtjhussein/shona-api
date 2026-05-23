@@ -55,14 +55,25 @@ def build_openapi_spec():
                 "get": {
                     "tags": ["Lexicon"],
                     "summary": "Search reviewed lemmas and forms.",
+                    "description": (
+                        "Search exact reviewed lemmas/forms and attach morphology "
+                        "enrichment for supported forms such as ndinobuda or kubuda."
+                    ),
                     "operationId": "searchLexicon",
                     "parameters": [
                         {
                             "name": "q",
                             "in": "query",
                             "required": True,
+                            "description": (
+                                "Search query, for example a lemma, form, or "
+                                "supported morphology surface."
+                            ),
                             "schema": {"type": "string", "minLength": 1},
-                            "example": "buda",
+                            "examples": {
+                                "lemma": {"value": "buda"},
+                                "infinitive": {"value": "kubuda"},
+                            },
                         }
                     ],
                     "responses": {
@@ -175,10 +186,14 @@ def build_openapi_spec():
                 "post": {
                     "tags": ["Morphology"],
                     "summary": "Analyze a supported v1 Shona form.",
+                    "description": (
+                        "Supports simple ku- infinitives built from reviewed verb "
+                        "stems plus bounded present positive/negative verb forms."
+                    ),
                     "operationId": "analyzeForm",
                     "requestBody": json_body(
                         {"$ref": "#/components/schemas/AnalyzeRequest"},
-                        {"text": "ndinobuda"},
+                        {"text": "kubuda"},
                     ),
                     "responses": {
                         "200": success_response(
@@ -602,7 +617,7 @@ def schemas():
         },
         "AnalyzeRequest": {
             "type": "object",
-            "properties": {"text": {"type": "string", "example": "ndinobuda"}},
+            "properties": {"text": {"type": "string", "example": "kubuda"}},
             "required": ["text"],
         },
         "AnalyzeData": {

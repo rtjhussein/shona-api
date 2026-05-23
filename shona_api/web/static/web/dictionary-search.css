@@ -32,6 +32,10 @@
   --slot-bg-object: #f0f9ff;
   --slot-border-object: #bae6fd;
   --slot-color-object: #0369a1;
+
+  --slot-bg-infinitive: #ecfeff;
+  --slot-border-infinitive: #a5f3fc;
+  --slot-color-infinitive: #0e7490;
   
   --slot-bg-stem: #faf5ff;
   --slot-border-stem: #e9d5ff;
@@ -388,6 +392,13 @@ h1 {
   margin-bottom: 14px;
 }
 
+.morph-analysis-type {
+  margin: -6px 0 12px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
 .morph-word-raw {
   font-family: "Outfit", sans-serif;
   font-size: 1.6rem;
@@ -470,6 +481,12 @@ h1 {
   background: var(--slot-bg-object);
   border-color: var(--slot-border-object);
   color: var(--slot-color-object);
+}
+
+.slot-pill--infinitive {
+  background: var(--slot-bg-infinitive);
+  border-color: var(--slot-border-infinitive);
+  color: var(--slot-color-infinitive);
 }
 
 .slot-pill--stem {
