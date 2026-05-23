@@ -143,6 +143,17 @@ class FormSerializer(serializers.ModelSerializer):
     def get_sense_public_id(self, obj):
         return obj.sense.public_id if obj.sense is not None else None
 
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        evidence = (
+            obj.provenance.get("derived_form_evidence")
+            if isinstance(obj.provenance, dict)
+            else None
+        )
+        if obj.form_kind == Form.FormKind.DERIVED and evidence:
+            data["derived_form_evidence"] = evidence
+        return data
+
 
 class LemmaReadSerializer(serializers.Serializer):
     def to_representation(self, lemma):

@@ -135,6 +135,8 @@ Extraction rules:
    - "cp", "cf", "qv", "see", and similar references go into cross_references.
 12. Derived forms:
    - Verb-derived forms marked with arrows like ">" or "<-" go into derived_forms.
+   - Preserve the relation marker and short raw note when present, for example
+     {"marker": ">", "forms": ["mbudo", "rubudiko"], "source_note": "> mbudo; rubudiko."}
 13. Etymology:
    - Etymology is not part of this schema. Preserve borrowed-language markers in
      raw_text, and include them in definitions only if removing them would mislead.

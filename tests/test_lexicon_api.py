@@ -295,6 +295,42 @@ def test_search_endpoint_returns_exact_form_match(
 
 
 @pytest.mark.django_db
+def test_lemma_and_search_payloads_expose_derived_form_evidence(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, _, _, form = canonical_lemma
+    evidence = {
+        "marker": ">",
+        "relation": "headword_to_derived_form",
+        "source_note": "> mbudo; rubudiko.",
+        "source_path": "derived_forms[0]",
+    }
+    form.provenance = {
+        **form.provenance,
+        "derived_form_evidence": evidence,
+    }
+    form.save(update_fields=("provenance",))
+    publish_canonical_bundle(canonical_lemma)
+
+    lemma_response = client.get(
+        f"/v1/lemmas/{lemma.public_id}",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    search_response = client.get(
+        "/v1/search",
+        {"q": "mbudo"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert lemma_response.status_code == 200
+    assert search_response.status_code == 200
+    assert lemma_response.json()["data"]["forms"][0]["derived_form_evidence"] == evidence
+    search_result = search_response.json()["data"]["results"][0]
+    assert search_result["form"]["derived_form_evidence"] == evidence
+    assert search_result["lemma"]["forms"][0]["derived_form_evidence"] == evidence
+
+
+@pytest.mark.django_db
 def test_search_endpoint_returns_structured_zero_result(client, api_key, current_release):
     response = client.get(
         "/v1/search",

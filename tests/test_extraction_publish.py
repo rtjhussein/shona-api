@@ -97,6 +97,63 @@ def test_publish_accepts_flat_gpt_derived_forms(hannan_source):
 
 
 @pytest.mark.django_db
+def test_publish_preserves_derived_form_relation_evidence_from_objects(hannan_source):
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_015:entry_054:bhema",
+        raw_text="-bhema [L] v t Puff tobacco. > bhemo. cp -svuta KMZ.",
+        parser_output={
+            "headword": "-bhema",
+            "headword_kind": "verb_stem",
+            "part_of_speech": {"code": "v t", "label": "transitive verb"},
+            "dialects": [],
+            "comparative_bantu_marker": False,
+            "tone_pattern": "L",
+            "senses": [{"number": 1, "definition": "Puff tobacco."}],
+            "derived_forms": [
+                {
+                    "marker": ">",
+                    "forms": ["bhemo"],
+                    "source_note": "> bhemo.",
+                    "raw_source": "> bhemo. cp -svuta KMZ.",
+                },
+                {
+                    "marker": "<-",
+                    "form": "mubhemi",
+                    "source_note": "<- mubhemi.",
+                },
+            ],
+            "parse_metadata": {
+                "parser": "gpt-5.5-thinking",
+                "completeness": "parsed",
+            },
+        },
+        parser_name="gpt-5.5-thinking",
+        parser_status=ExtractionUnit.ParserStatus.PARSED,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    forms_by_text = {form.form_text: form for form in bundle.forms}
+    assert sorted(forms_by_text) == ["bhemo", "mubhemi"]
+    assert forms_by_text["bhemo"].provenance["derived_form_evidence"] == {
+        "marker": ">",
+        "relation": "headword_to_derived_form",
+        "source_note": "> bhemo.",
+        "raw_source": "> bhemo. cp -svuta KMZ.",
+        "source_path": "derived_forms[0]",
+    }
+    assert forms_by_text["mubhemi"].provenance["derived_form_evidence"] == {
+        "marker": "<-",
+        "relation": "derived_form_to_headword",
+        "source_note": "<- mubhemi.",
+        "source_path": "derived_forms[1]",
+    }
+
+
+@pytest.mark.django_db
 def test_publish_prefers_v2_dialect_scoped_tone_records(hannan_source):
     unit = ExtractionUnit.objects.create(
         source=hannan_source,

@@ -559,6 +559,7 @@ def schemas():
                 "form_kind": {"type": "string"},
                 "dialects": string_array,
                 "grammar": string_array,
+                "derived_form_evidence": json_object,
                 "sense_public_id": {
                     "oneOf": [{"type": "string"}, {"type": "null"}]
                 },

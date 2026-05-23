@@ -166,23 +166,28 @@ def publish_reviewed_extraction_unit(
                 )
             )
 
-        forms = [
-            Form.objects.create(
-                lemma=lemma,
+        forms = []
+        for form_payload in _iter_derived_form_payloads(parser_output):
+            form_text = form_payload["form_text"]
+            form_provenance = _record_provenance(
+                provenance,
+                "form",
                 form_text=form_text,
                 form_kind=Form.FormKind.DERIVED,
-                dialects=list(parser_output.get("dialects") or []),
-                grammar=list(_parser_entry_grammar(parser_output)),
-                provenance=_record_provenance(
-                    provenance,
-                    "form",
+            )
+            if form_payload["evidence"]:
+                form_provenance["derived_form_evidence"] = form_payload["evidence"]
+            forms.append(
+                Form.objects.create(
+                    lemma=lemma,
                     form_text=form_text,
                     form_kind=Form.FormKind.DERIVED,
-                ),
-                review_state=ReviewState.PUBLISHED,
+                    dialects=list(parser_output.get("dialects") or []),
+                    grammar=list(_parser_entry_grammar(parser_output)),
+                    provenance=form_provenance,
+                    review_state=ReviewState.PUBLISHED,
+                )
             )
-            for form_text in _iter_derived_form_texts(parser_output)
-        ]
 
         figurative_expressions = _publish_idiomatic_expressions(
             extraction_unit=extraction_unit,
@@ -330,19 +335,92 @@ def _parser_noun_class(parser_output: dict[str, object]) -> NounClass | None:
     return None
 
 
-def _iter_derived_form_texts(parser_output: dict[str, object]) -> list[str]:
-    form_texts: list[str] = []
-    for item in parser_output.get("derived_forms") or []:
+DERIVED_FORM_RELATIONS = {
+    ">": "headword_to_derived_form",
+    "<-": "derived_form_to_headword",
+}
+
+
+def _iter_derived_form_payloads(
+    parser_output: dict[str, object],
+) -> list[dict[str, object]]:
+    form_payloads: list[dict[str, object]] = []
+    for index, item in enumerate(parser_output.get("derived_forms") or []):
         if isinstance(item, str):
             if item.strip():
-                form_texts.append(item.strip())
+                form_payloads.append({"form_text": item.strip(), "evidence": {}})
             continue
         if not isinstance(item, dict):
             continue
-        for form_text in item.get("forms") or []:
-            if isinstance(form_text, str) and form_text.strip():
-                form_texts.append(form_text.strip())
+        evidence = _build_derived_form_evidence(item, source_index=index)
+        for form_text in _derived_form_texts_from_item(item):
+            form_payloads.append({"form_text": form_text, "evidence": evidence})
+    return form_payloads
+
+
+def _derived_form_texts_from_item(item: dict[str, object]) -> list[str]:
+    raw_forms = item.get("forms")
+    candidates: list[object]
+    if isinstance(raw_forms, list):
+        candidates = raw_forms
+    else:
+        candidates = [
+            item.get("form_text"),
+            item.get("form"),
+            item.get("text"),
+        ]
+
+    form_texts: list[str] = []
+    for candidate in candidates:
+        if isinstance(candidate, str) and candidate.strip():
+            form_texts.append(candidate.strip())
+        elif isinstance(candidate, dict):
+            nested_text = (
+                candidate.get("form_text")
+                or candidate.get("form")
+                or candidate.get("text")
+            )
+            if isinstance(nested_text, str) and nested_text.strip():
+                form_texts.append(nested_text.strip())
     return form_texts
+
+
+def _build_derived_form_evidence(
+    item: dict[str, object],
+    *,
+    source_index: int,
+) -> dict[str, object]:
+    marker = _clean_parser_string(
+        item.get("marker") or item.get("relation_marker")
+    )
+    source_note = _clean_parser_string(
+        item.get("source_note")
+        or item.get("raw_source_note")
+        or item.get("note")
+    )
+    raw_source = _clean_parser_string(
+        item.get("raw_source")
+        or item.get("source_text")
+        or item.get("raw_text")
+    )
+    relation = _clean_parser_string(item.get("relation"))
+    if not relation and marker:
+        relation = DERIVED_FORM_RELATIONS.get(marker, "source_marker_relation")
+    if not source_note and raw_source:
+        source_note = raw_source
+
+    evidence: dict[str, object] = {}
+    if marker:
+        evidence["marker"] = marker
+    if relation:
+        evidence["relation"] = relation
+    if source_note:
+        evidence["source_note"] = source_note
+    if raw_source and raw_source != source_note:
+        evidence["raw_source"] = raw_source
+    if evidence:
+        evidence["source_path"] = f"derived_forms[{source_index}]"
+    return evidence
 
 
 def _publish_idiomatic_expressions(

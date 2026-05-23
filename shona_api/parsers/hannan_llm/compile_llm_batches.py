@@ -39,7 +39,9 @@ class PartOfSpeech(BaseModel):
 
 
 class DerivedFormGroup(BaseModel):
+    marker: Optional[str] = None
     forms: List[str]
+    source_note: Optional[str] = None
 
 
 class NounMetadata(BaseModel):

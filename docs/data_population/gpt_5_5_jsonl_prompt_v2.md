@@ -185,7 +185,7 @@ Extraction rules:
 15. Derived forms:
    - Verb-derived forms marked with arrows like ">" or "<-" go into derived_forms.
    - If the marker groups several forms, preserve them as a group object:
-     {"marker": ">", "forms": ["mbudo", "rubudiko"]}
+     {"marker": ">", "forms": ["mbudo", "rubudiko"], "source_note": "> mbudo; rubudiko."}
 16. comparative_bantu_marker:
    - If the entry has the Common Bantu marker before it, set true.
    - Otherwise false.

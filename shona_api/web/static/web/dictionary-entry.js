@@ -267,12 +267,41 @@
                 <strong>${escapeHtml(form.form_text)}</strong>
                 <span>${escapeHtml(humanize(form.form_kind))}</span>
                 <div class="meta-row">${renderArrayChips(form.grammar)}</div>
+                ${renderDerivedFormEvidence(form)}
               </li>
             `;
           })
           .join("")}
       </ul>`
     );
+  }
+
+  function renderDerivedFormEvidence(form) {
+    const evidence = form && form.derived_form_evidence;
+    if (!evidence || typeof evidence !== "object") {
+      return "";
+    }
+
+    const rows = [
+      ["Marker", evidence.marker],
+      ["Relation", evidence.relation ? humanize(evidence.relation) : ""],
+      ["Source note", evidence.source_note],
+      ["Raw source", evidence.raw_source],
+    ]
+      .filter(function (row) {
+        return row[1] !== null && row[1] !== undefined && row[1] !== "";
+      })
+      .map(function (row) {
+        return `
+          <div class="derived-evidence-row">
+            <dt>${escapeHtml(row[0])}</dt>
+            <dd>${escapeHtml(row[1])}</dd>
+          </div>
+        `;
+      })
+      .join("");
+
+    return rows ? `<dl class="derived-evidence">${rows}</dl>` : "";
   }
 
   function renderMetadata(lemma, envelope) {
