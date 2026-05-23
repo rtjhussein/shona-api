@@ -4,6 +4,8 @@ import re
 from copy import deepcopy
 from typing import Any
 
+from shona_api.lexicon.examples import normalize_example_pairs
+
 
 GPT_JSONL_V2_SCHEMA_VERSION = "hannan-gpt-jsonl-v2"
 GPT_JSONL_V3_SCHEMA_VERSION = "hannan-gpt-jsonl-v3"
@@ -422,18 +424,8 @@ def _clean_positive_int_or_none(value: Any) -> int | None:
     return None
 
 
-def _clean_examples(value: Any) -> list[dict[str, str]]:
-    if not isinstance(value, list):
-        return []
-    examples = []
-    for item in value:
-        if not isinstance(item, dict):
-            continue
-        shona = item.get("shona")
-        english = item.get("english")
-        if isinstance(shona, str) and isinstance(english, str):
-            examples.append({"shona": shona.strip(), "english": english.strip()})
-    return examples
+def _clean_examples(value: Any) -> list[dict[str, object]]:
+    return normalize_example_pairs(value)
 
 
 def _clean_cross_references(value: Any) -> list[dict[str, Any]]:

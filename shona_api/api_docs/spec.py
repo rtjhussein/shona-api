@@ -529,10 +529,24 @@ def schemas():
                 "definition": {"type": "string"},
                 "dialects": string_array,
                 "grammar": string_array,
-                "examples": {"type": "array", "items": True},
+                "examples": {
+                    "type": "array",
+                    "items": {"$ref": "#/components/schemas/ExamplePair"},
+                },
                 "cross_references": {"type": "array", "items": True},
             },
             "required": ["public_id", "number", "definition"],
+            "additionalProperties": True,
+        },
+        "ExamplePair": {
+            "type": "object",
+            "properties": {
+                "shona": {"type": "string"},
+                "english": {"type": "string"},
+                "source_note": {"type": "string"},
+                "dialects": string_array,
+            },
+            "required": ["shona", "english"],
             "additionalProperties": True,
         },
         "ToneRecord": {

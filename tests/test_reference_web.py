@@ -70,3 +70,14 @@ def test_dictionary_web_renders_derived_form_evidence():
     assert "derived_form_evidence" in search_js
     assert "derived_form_evidence" in entry_js
     assert "derived-evidence" in css_content
+
+
+def test_dictionary_web_renders_standardized_example_pairs():
+    search_js = SEARCH_JS.read_text(encoding="utf-8")
+    entry_js = ENTRY_JS.read_text(encoding="utf-8")
+    css_content = SEARCH_CSS.read_text(encoding="utf-8")
+
+    assert "exampleTextPart" in search_js
+    assert "exampleTextPart" in entry_js
+    assert "example-shona" in css_content
+    assert "example-english" in css_content

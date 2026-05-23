@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from .examples import normalize_example_pairs
 from .models import Form, Lemma, NounClass, Sense, ToneRecord
 
 
@@ -94,6 +95,11 @@ class SenseSerializer(serializers.ModelSerializer):
             "revision",
             "review_state",
         )
+
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        data["examples"] = normalize_example_pairs(obj.examples)
+        return data
 
 
 class ToneRecordSerializer(serializers.ModelSerializer):

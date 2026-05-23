@@ -574,10 +574,24 @@
       <ul class="example-list">
         ${examples
           .map(function (example) {
-            return `<li>${escapeHtml(exampleText(example))}</li>`;
+            return renderExample(example);
           })
           .join("")}
       </ul>
+    `;
+  }
+
+  function renderExample(example) {
+    const shona = exampleTextPart(example, "shona");
+    const english = exampleTextPart(example, "english");
+    const sourceNote = exampleTextPart(example, "source_note");
+
+    return `
+      <li class="example-item">
+        ${shona ? `<p class="example-shona">${escapeHtml(shona)}</p>` : ""}
+        ${english ? `<p class="example-english">${escapeHtml(english)}</p>` : ""}
+        ${sourceNote ? `<p class="example-source">${escapeHtml(sourceNote)}</p>` : ""}
+      </li>
     `;
   }
 
@@ -714,12 +728,12 @@
     return `<span class="meta-chip">${escapeHtml(value)}</span>`;
   }
 
-  function exampleText(example) {
+  function exampleTextPart(example, key) {
     if (typeof example === "string") {
-      return example;
+      return key === "shona" ? example : "";
     }
     if (example && typeof example === "object") {
-      return example.text || example.shona || example.translation || JSON.stringify(example);
+      return example[key] || "";
     }
     return "";
   }

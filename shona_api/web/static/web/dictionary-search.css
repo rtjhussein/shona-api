@@ -800,14 +800,35 @@ h1 {
   margin: 8px 0 12px;
 }
 
-.example-list li {
+.example-item {
   border-left: 3px solid var(--accent-light);
   padding-left: 14px;
   margin-bottom: 8px;
   font-size: 0.96rem;
   color: var(--muted);
-  font-style: italic;
   line-height: 1.5;
+}
+
+.example-shona,
+.example-english,
+.example-source {
+  margin: 0;
+}
+
+.example-shona {
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.example-english {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.example-source {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .compact-list {

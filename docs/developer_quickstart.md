@@ -96,7 +96,9 @@ The response includes the standard envelope plus:
 
 - `lemma`: headword, normalized headword, POS, noun class when available,
   learner metadata, phonology, provenance, revision, and review state
-- `senses`: definitions, grammar, examples, dialects, and cross references
+- `senses`: definitions, grammar, examples, dialects, and cross references.
+  Hannan examples use a shared object shape with `shona` and `english` keys,
+  plus optional `source_note` or `dialects` when preserved from source data.
 - `tone_records`: tone pattern metadata when available
 - `forms`: exposed forms and grammatical metadata. Hannan-derived forms may
   include `derived_form_evidence` with relation markers such as `>`, relation
