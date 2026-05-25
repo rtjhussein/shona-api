@@ -81,6 +81,13 @@ def build_current_release_missing_response():
     )
 
 
+def _filter_json_array(queryset, field_name, value):
+    from django.db import connection
+    if connection.vendor == 'sqlite':
+        return queryset.filter(**{f"{field_name}__icontains": f'"{value}"'})
+    return queryset.filter(**{f"{field_name}__contains": value})
+
+
 class LemmaReadView(APIView):
     def get(self, request, public_id):
         try:
@@ -159,6 +166,13 @@ class SearchView(APIView):
             release_metadata=release_metadata,
         )
 
+        if not results and not (morphology_analysis and morphology_analysis.get("analyses")):
+            results = self._search_fuzzy(normalized_query, filters=filters)
+
+        if filters.get("random") and results:
+            import random
+            random.shuffle(results)
+
         return Response(
             build_success_envelope(
                 data=self._build_search_payload(
@@ -207,6 +221,47 @@ class SearchView(APIView):
         ]
         return lemma_results + form_results
 
+    def _search_fuzzy(self, normalized_query, *, filters):
+        from django.contrib.postgres.search import TrigramSimilarity
+
+        limit = filters["limit"]
+
+        lemma_queryset = (
+            self._lemma_queryset(filters)
+            .annotate(similarity=TrigramSimilarity("normalized_headword", normalized_query))
+            .filter(similarity__gte=0.3)
+            .order_by("-similarity")
+        )
+        lemma_results = [
+            {
+                "result_type": "lemma",
+                "match_type": "fuzzy_lemma",
+                "lemma": lemma,
+                "form": None,
+            }
+            for lemma in self._filter_lemmas(lemma_queryset, filters)[:limit]
+        ]
+
+        remaining_limit = max(limit - len(lemma_results), 0)
+
+        form_queryset = (
+            self._form_queryset(filters)
+            .annotate(similarity=TrigramSimilarity("normalized_form", normalized_query))
+            .filter(similarity__gte=0.3)
+            .order_by("-similarity")
+        )
+        form_results = [
+            {
+                "result_type": "form",
+                "match_type": "fuzzy_form",
+                "lemma": form.lemma,
+                "form": form,
+            }
+            for form in self._filter_forms(form_queryset, filters)[:remaining_limit]
+        ]
+
+        return lemma_results + form_results
+
     def _lemma_queryset(self, filters):
         queryset = Lemma.objects.filter(
             review_state__in=self.public_review_states,
@@ -222,6 +277,16 @@ class SearchView(APIView):
             queryset = queryset.filter(headword_kind=filters["headword_kind"])
         if filters["pos"]:
             queryset = queryset.filter(part_of_speech_code=filters["pos"])
+        if filters.get("learner_level"):
+            queryset = queryset.filter(learner_level=filters["learner_level"])
+        if filters.get("curriculum_stage"):
+            queryset = queryset.filter(curriculum_stage=filters["curriculum_stage"])
+        if filters.get("frequency_tier"):
+            queryset = queryset.filter(frequency_tier=filters["frequency_tier"])
+        if filters.get("communication_context"):
+            queryset = _filter_json_array(queryset, "communication_contexts", filters["communication_context"])
+        if filters.get("noun_class"):
+            queryset = queryset.filter(noun_class__class_number=filters["noun_class"])
         return queryset
 
     def _form_queryset(self, filters):
@@ -249,6 +314,16 @@ class SearchView(APIView):
             queryset = queryset.filter(lemma__headword_kind=filters["headword_kind"])
         if filters["pos"]:
             queryset = queryset.filter(lemma__part_of_speech_code=filters["pos"])
+        if filters.get("learner_level"):
+            queryset = queryset.filter(lemma__learner_level=filters["learner_level"])
+        if filters.get("curriculum_stage"):
+            queryset = queryset.filter(lemma__curriculum_stage=filters["curriculum_stage"])
+        if filters.get("frequency_tier"):
+            queryset = queryset.filter(lemma__frequency_tier=filters["frequency_tier"])
+        if filters.get("communication_context"):
+            queryset = _filter_json_array(queryset, "lemma__communication_contexts", filters["communication_context"])
+        if filters.get("noun_class"):
+            queryset = queryset.filter(lemma__noun_class__class_number=filters["noun_class"])
         return queryset
 
     def _filter_lemmas(self, queryset, filters):
@@ -275,6 +350,12 @@ class SearchView(APIView):
             "pos": None,
             "dialect": None,
             "limit": DEFAULT_SEARCH_LIMIT,
+            "learner_level": None,
+            "curriculum_stage": None,
+            "frequency_tier": None,
+            "communication_context": None,
+            "noun_class": None,
+            "random": False,
         }
         headword_kind = request.query_params.get("headword_kind", "").strip()
         if headword_kind:
@@ -306,6 +387,50 @@ class SearchView(APIView):
                     allowed=sorted(DIALECT_FILTERS.values()),
                 )
             filters["dialect"] = dialect
+
+        # Pedagogy filters validation
+        for param, choice_class, filter_key in [
+            ("learner_level", Lemma.LearnerLevel, "learner_level"),
+            ("curriculum_stage", Lemma.CurriculumStage, "curriculum_stage"),
+            ("frequency_tier", Lemma.FrequencyTier, "frequency_tier")
+        ]:
+            val = request.query_params.get(param, "").strip()
+            if val:
+                if val not in choice_class.values:
+                    return None, self._invalid_filter_response(
+                        field=param,
+                        value=val,
+                        allowed=choice_class.values,
+                    )
+                filters[filter_key] = val
+
+        allowed_contexts = ["conversation", "narrative", "description", "letter_writing", "school_composition", "formal_speech", "greetings", "family", "environment", "time"]
+        context = request.query_params.get("communication_context", "").strip()
+        if context:
+            if context not in allowed_contexts:
+                return None, self._invalid_filter_response(
+                    field="communication_context",
+                    value=context,
+                    allowed=allowed_contexts,
+                )
+            filters["communication_context"] = context
+
+        noun_class = request.query_params.get("noun_class", "").strip()
+        if noun_class:
+            filters["noun_class"] = noun_class
+
+        raw_random = request.query_params.get("random", "").strip().casefold()
+        if raw_random:
+            if raw_random in ("true", "1", "yes"):
+                filters["random"] = True
+            elif raw_random in ("false", "0", "no"):
+                filters["random"] = False
+            else:
+                return None, self._invalid_filter_response(
+                    field="random",
+                    value=raw_random,
+                    allowed=["true", "false"],
+                )
 
         raw_limit = request.query_params.get("limit", "").strip()
         if raw_limit:
@@ -465,3 +590,163 @@ class SearchView(APIView):
         if filters["limit"] != DEFAULT_SEARCH_LIMIT:
             active["limit"] = filters["limit"]
         return active
+
+
+class LemmaListView(APIView):
+    public_review_states = (ReviewState.PUBLISHED,)
+
+    def get(self, request):
+        try:
+            release_metadata = get_current_release_metadata()
+        except CurrentReleaseNotFound:
+            return build_current_release_missing_response()
+
+        filters, filter_error = self._parse_list_filters(request)
+        if filter_error:
+            return filter_error
+
+        queryset = Lemma.objects.filter(
+            review_state__in=self.public_review_states
+        ).select_related(
+            "noun_class",
+            "noun_class__default_plural_class",
+        ).prefetch_related(
+            "senses",
+            "tone_records__form",
+            "forms__sense",
+        )
+
+        # Apply pedagogy & lexical filters
+        if filters["learner_level"]:
+            queryset = queryset.filter(learner_level=filters["learner_level"])
+        if filters["curriculum_stage"]:
+            queryset = queryset.filter(curriculum_stage=filters["curriculum_stage"])
+        if filters["curriculum_domain"]:
+            queryset = _filter_json_array(queryset, "curriculum_domains", filters["curriculum_domain"])
+        if filters["learning_function"]:
+            queryset = _filter_json_array(queryset, "learning_functions", filters["learning_function"])
+        if filters["communication_context"]:
+            queryset = _filter_json_array(queryset, "communication_contexts", filters["communication_context"])
+        if filters["register_tag"]:
+            queryset = _filter_json_array(queryset, "register_tags", filters["register_tag"])
+        if filters["frequency_tier"]:
+            queryset = queryset.filter(frequency_tier=filters["frequency_tier"])
+        if filters["headword_kind"]:
+            queryset = queryset.filter(headword_kind=filters["headword_kind"])
+        if filters["pos"]:
+            queryset = queryset.filter(part_of_speech_code=filters["pos"])
+        if filters["noun_class"]:
+            queryset = queryset.filter(noun_class__class_number=filters["noun_class"])
+
+        # Handle random ordering vs normal order
+        if filters["random"]:
+            queryset = queryset.order_by("?")
+        else:
+            queryset = queryset.order_by("normalized_headword", "headword")
+
+        # Apply limit/slicing
+        limit = filters["limit"]
+        lemmas = list(queryset[:limit])
+
+        serializer = LemmaCoreSerializer(lemmas, many=True)
+        return Response(
+            build_success_envelope(
+                data={
+                    "count": len(lemmas),
+                    "filters": {k: v for k, v in filters.items() if v is not None and k != "limit"},
+                    "results": serializer.data,
+                },
+                release_metadata=release_metadata,
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    def _parse_list_filters(self, request):
+        filters = {
+            "learner_level": None,
+            "curriculum_stage": None,
+            "curriculum_domain": None,
+            "learning_function": None,
+            "communication_context": None,
+            "register_tag": None,
+            "frequency_tier": None,
+            "headword_kind": None,
+            "pos": None,
+            "noun_class": None,
+            "random": False,
+            "limit": DEFAULT_SEARCH_LIMIT,
+        }
+
+        # Validate standard choices
+        for param, choice_class, filter_key in [
+            ("learner_level", Lemma.LearnerLevel, "learner_level"),
+            ("curriculum_stage", Lemma.CurriculumStage, "curriculum_stage"),
+            ("frequency_tier", Lemma.FrequencyTier, "frequency_tier"),
+            ("headword_kind", Lemma.HeadwordKind, "headword_kind")
+        ]:
+            val = request.query_params.get(param, "").strip()
+            if val:
+                if val not in choice_class.values:
+                    return None, self._invalid_list_filter_response(param, val, choice_class.values)
+                filters[filter_key] = val
+
+        # Validate list/contains filters
+        for param, allowed_values in [
+            ("curriculum_domain", ["orthography", "grammar", "vocabulary", "composition", "comprehension", "register", "oral_communication", "figurative_language", "culture"]),
+            ("learning_function", ["vocabulary", "example_sentence", "dialogue_practice", "writing_guidance", "usage_warning", "cultural_interpretation", "assessment_support"]),
+            ("communication_context", ["conversation", "narrative", "description", "letter_writing", "school_composition", "formal_speech", "greetings", "family", "environment", "time"]),
+            ("register_tag", ["formal", "informal", "respectful", "school_appropriate", "avoid_in_school_context"])
+        ]:
+            val = request.query_params.get(param, "").strip()
+            if val:
+                if val not in allowed_values:
+                    return None, self._invalid_list_filter_response(param, val, allowed_values)
+                filters[param] = val
+
+        # Simple string/POS/Class filters
+        pos = request.query_params.get("pos", "").strip()
+        if pos:
+            if pos not in POS_FILTERS:
+                return None, self._invalid_list_filter_response("pos", pos, sorted(POS_FILTERS))
+            filters["pos"] = pos
+
+        noun_class = request.query_params.get("noun_class", "").strip()
+        if noun_class:
+            filters["noun_class"] = noun_class
+
+        # Validate random boolean
+        raw_random = request.query_params.get("random", "").strip().casefold()
+        if raw_random:
+            if raw_random in ("true", "1", "yes"):
+                filters["random"] = True
+            elif raw_random in ("false", "0", "no"):
+                filters["random"] = False
+            else:
+                return None, self._invalid_list_filter_response("random", raw_random, ["true", "false"])
+
+        # Validate limit
+        raw_limit = request.query_params.get("limit", "").strip()
+        if raw_limit:
+            try:
+                limit = int(raw_limit)
+            except ValueError:
+                return None, self._invalid_list_filter_response("limit", raw_limit, [f"1..{MAX_SEARCH_LIMIT}"])
+            if limit < 1 or limit > MAX_SEARCH_LIMIT:
+                return None, self._invalid_list_filter_response("limit", raw_limit, [f"1..{MAX_SEARCH_LIMIT}"])
+            filters["limit"] = limit
+
+        return filters, None
+
+    def _invalid_list_filter_response(self, field, value, allowed):
+        return Response(
+            build_error_envelope(
+                code="LEMMA_LIST_FILTER_INVALID",
+                message=f"Invalid list filter '{field}'.",
+                detail={
+                    "field": field,
+                    "value": value,
+                    "allowed_values": allowed,
+                },
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
