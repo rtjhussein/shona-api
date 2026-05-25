@@ -79,53 +79,31 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"LLM-assisted tagging completed. Updated {llm_updated_count} lemmas."))
 
     def _run_rule_based_tagging(self, dry_run: bool) -> int:
-        # Predefined core contexts keyword list
-        keywords = {
-            "greetings": re.compile(r"\b(?:mhoro|kwaziwai|greet|welcome|say hello|hello|greeting)\b", re.I),
-            "family": re.compile(r"\b(?:amai|baba|hanzvadzi|child|son|daughter|mother|father|brother|sister|aunt|uncle|family)\b", re.I),
-            "environment": re.compile(r"\b(?:musha|gomo|rwizi|mhuka|sango|river|mountain|animal|forest|tree|rain|sun|weather|nature)\b", re.I),
-            "time": re.compile(r"\b(?:nguva|zuva|mwaka|nhasi|mangwana|time|hour|day|year|yesterday|tomorrow|month)\b", re.I)
-        }
+        from shona_api.lexicon.learner_metadata import apply_rule_based_curriculum_tags
 
         updated_count = 0
         lemmas = Lemma.objects.filter(review_state=ReviewState.PUBLISHED).prefetch_related("senses")
 
         for lemma in lemmas:
-            matched_contexts = []
-            definitions_text = " ".join([sense.definition for sense in lemma.senses.all()])
-            text_to_match = f"{lemma.headword} {lemma.normalized_headword} {definitions_text}"
-
-            for context_key, regex in keywords.items():
-                if regex.search(text_to_match):
-                    matched_contexts.append(context_key)
-
-            if matched_contexts:
-                # Core tagging logic
-                stage = Lemma.CurriculumStage.FORMS_1_2 if any(c in ("greetings", "family", "time") for c in matched_contexts) else Lemma.CurriculumStage.GENERAL_SECONDARY
-                domains = ["vocabulary"]
-                if "greetings" in matched_contexts or "family" in matched_contexts:
-                    domains.append("oral_communication")
-                
-                self.stdout.write(f"Rule-matched '{lemma.headword}': contexts={matched_contexts}, stage={stage}")
-                
-                if not dry_run:
-                    with transaction.atomic():
-                        lemma = Lemma.objects.select_for_update().get(pk=lemma.pk)
-                        lemma.curriculum_stage = stage
-                        lemma.curriculum_domains = list(set(lemma.curriculum_domains + domains))
-                        lemma.learning_functions = list(set(lemma.learning_functions + ["vocabulary"]))
-                        lemma.communication_contexts = list(set(lemma.communication_contexts + matched_contexts))
-                        lemma.register_tags = list(set(lemma.register_tags + ["school_appropriate"]))
-                        
-                        source_link = {
-                            "source_key": "source_curriculum_notes",
-                            "source_locator": "curriculum_notes_forms_1_4.pdf:rule_match",
-                            "review_status": "reviewed",
-                            "mapping_method": "rule_curriculum_mapping_v1",
-                            "note": "Automatically matched based on keyword lexicons."
-                        }
-                        lemma.learner_source_links = [*lemma.learner_source_links, source_link]
-                        lemma.save()
+            if not dry_run:
+                updated = apply_rule_based_curriculum_tags(lemma)
+                if updated:
+                    self.stdout.write(f"Rule-matched and updated: '{lemma.headword}'")
+                    updated_count += 1
+            else:
+                # Dry run matching simulation
+                import re
+                keywords = {
+                    "greetings": re.compile(r"\b(?:mhoro|kwaziwai|greet|welcome|say hello|hello|greeting)\b", re.I),
+                    "family": re.compile(r"\b(?:amai|baba|hanzvadzi|child|son|daughter|mother|father|brother|sister|aunt|uncle|family)\b", re.I),
+                    "environment": re.compile(r"\b(?:musha|gomo|rwizi|mhuka|sango|river|mountain|animal|forest|tree|rain|sun|weather|nature)\b", re.I),
+                    "time": re.compile(r"\b(?:nguva|zuva|mwaka|nhasi|mangwana|time|hour|day|year|yesterday|tomorrow|month)\b", re.I)
+                }
+                definitions_text = " ".join([sense.definition for sense in lemma.senses.all()])
+                text_to_match = f"{lemma.headword} {lemma.normalized_headword} {definitions_text}"
+                matched_contexts = [key for key, rx in keywords.items() if rx.search(text_to_match)]
+                if matched_contexts:
+                    self.stdout.write(f"Rule-matched (dry-run): '{lemma.headword}' with contexts={matched_contexts}")
                     updated_count += 1
         return updated_count
 

@@ -171,3 +171,70 @@ def _is_earlier_appearance(
     if candidate_lesson is None:
         return False
     return candidate_lesson < current_lesson
+
+
+def apply_rule_based_curriculum_tags(lemma) -> bool:
+    """
+    Apply rule-based curriculum stage, contexts, domains, and register tags to a Lemma 
+    based on its headword and sense definitions. Returns True if any updates were applied.
+    """
+    import re
+    from django.db import transaction
+    from .models import Lemma
+
+    keywords = {
+        "greetings": re.compile(r"\b(?:mhoro|kwaziwai|greet|welcome|say hello|hello|greeting)\b", re.I),
+        "family": re.compile(r"\b(?:amai|baba|hanzvadzi|child|son|daughter|mother|father|brother|sister|aunt|uncle|family)\b", re.I),
+        "environment": re.compile(r"\b(?:musha|gomo|rwizi|mhuka|sango|river|mountain|animal|forest|tree|rain|sun|weather|nature)\b", re.I),
+        "time": re.compile(r"\b(?:nguva|zuva|mwaka|nhasi|mangwana|time|hour|day|year|yesterday|tomorrow|month)\b", re.I)
+    }
+
+    matched_contexts = []
+    definitions_text = " ".join([sense.definition for sense in lemma.senses.all()])
+    text_to_match = f"{lemma.headword} {lemma.normalized_headword} {definitions_text}"
+
+    for context_key, regex in keywords.items():
+        if regex.search(text_to_match):
+            matched_contexts.append(context_key)
+
+    if not matched_contexts:
+        return False
+
+    stage = Lemma.CurriculumStage.FORMS_1_2 if any(c in ("greetings", "family", "time") for c in matched_contexts) else Lemma.CurriculumStage.GENERAL_SECONDARY
+    domains = ["vocabulary"]
+    if "greetings" in matched_contexts or "family" in matched_contexts:
+        domains.append("oral_communication")
+
+    # Merge labels helper from this module
+    lemma.curriculum_stage = stage
+    lemma.curriculum_domains = _merge_labels(lemma.curriculum_domains, domains)
+    lemma.learning_functions = _merge_labels(lemma.learning_functions, ["vocabulary"])
+    lemma.communication_contexts = _merge_labels(lemma.communication_contexts, matched_contexts)
+    lemma.register_tags = _merge_labels(lemma.register_tags, ["school_appropriate"])
+
+    # Avoid duplicate rule match source links
+    source_locator = "curriculum_notes_forms_1_4.pdf:rule_match"
+    existing_link = any(link.get("source_locator") == source_locator for link in lemma.learner_source_links)
+    
+    if not existing_link:
+        source_link = {
+            "source_key": "source_curriculum_notes",
+            "source_locator": source_locator,
+            "review_status": "reviewed",
+            "mapping_method": "rule_curriculum_mapping_v1",
+            "note": "Automatically matched based on keyword lexicons (Post-Publish Signal)."
+        }
+        lemma.learner_source_links = [*lemma.learner_source_links, source_link]
+
+    lemma.save(
+        update_fields=[
+            "curriculum_stage",
+            "curriculum_domains",
+            "learning_functions",
+            "communication_contexts",
+            "register_tags",
+            "learner_source_links",
+            "updated_at",
+        ]
+    )
+    return True

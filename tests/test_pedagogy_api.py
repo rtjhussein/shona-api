@@ -209,3 +209,37 @@ def test_search_view_pedagogical_filters(client, api_key, current_release, canon
     )
     assert response.status_code == 200
     assert response.json()["data"]["count"] == 1
+
+
+@pytest.mark.django_db
+def test_post_publish_signal_triggers_on_lemma_publish(current_release):
+    provenance = {"source_key": "source_hannan", "entry_locator": "fixture:signal_test"}
+    # Create as draft
+    lemma = Lemma.objects.create(
+        headword="mhoro",
+        headword_kind=Lemma.HeadwordKind.WORD,
+        part_of_speech_code="interj",
+        review_state=ReviewState.DRAFT,
+        provenance=provenance,
+    )
+    Sense.objects.create(
+        lemma=lemma,
+        number=1,
+        definition="Greeting, hello.",
+        review_state=ReviewState.DRAFT,
+        provenance=provenance,
+    )
+    
+    # Assert initially unmapped
+    assert lemma.curriculum_stage == Lemma.CurriculumStage.UNKNOWN
+    assert not lemma.communication_contexts
+
+    # Publish the lemma
+    lemma.review_state = ReviewState.PUBLISHED
+    lemma.save()
+    
+    # Assert signal triggered rule-based matching
+    lemma.refresh_from_db()
+    assert lemma.curriculum_stage == Lemma.CurriculumStage.FORMS_1_2
+    assert "greetings" in lemma.communication_contexts
+    assert any("Post-Publish Signal" in link.get("note", "") for link in lemma.learner_source_links)
