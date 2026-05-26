@@ -1,0 +1,18 @@
+[github_app]
+pr_commands = [
+    "/agentic_describe",
+    "/agentic_review"
+]
+
+[review_agent]
+comments_location_policy = "both"
+inline_comments_severity_threshold = 3
+issues_user_guidelines = """
+Review for correctness, security, maintainability, regression risk, missing tests, and unclear behavior.
+Prioritize actionable findings that should be fixed before merge.
+Avoid low-signal style-only comments unless they hide a real defect or maintainability risk.
+"""
+compliance_user_guidelines = """
+Treat this repository as needing review before merge.
+Flag changes that bypass tests, reduce observability, weaken auth or validation, expose secrets, or introduce risky dependency/configuration changes.
+"""
