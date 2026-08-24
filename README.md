@@ -4,20 +4,20 @@
 [![Django Version](https://img.shields.io/badge/django-%3E%3D%205.2-green.svg)](https://www.djangoproject.com/)
 [![Built with DRF](https://img.shields.io/badge/built%20with-django%20rest%20framework-red.svg)](https://www.django-rest-framework.org/)
 
-A structured, source-grounded, and high-performance lexical engine and platform for the Shona language. This project provides a robust framework to ingest dictionary source material, including trusted Hannan GPT JSONL batches, perform editorial review, and serve canonical lexical data, rule-based morphology analysis, and figurative expressions through a protected public API and web dashboards.
+A source-grounded Django REST API for Shona lexical data, rule-based morphology analysis, figurative expressions, and editorial review workflows. Shona API ingests trusted dictionary and grammar sources, promotes reviewed entries into a canonical lexicon, and serves versioned linguistic data through protected public API endpoints and staff dashboards.
 
 ---
 
 ## 📖 Table of Contents
-1. [Project Overview](#-project-overview)
-2. [Architecture & Data Pipeline](#-architecture--data-pipeline)
-3. [Core Subsystems & Django Apps](#-core-subsystems--django-apps)
-4. [Local Setup & Quickstart](#%EF%B8%8F-local-setup--quickstart)
+1. [Project Overview](#project-overview)
+2. [Architecture & Data Pipeline](#architecture--data-pipeline)
+3. [Core Subsystems & Django Apps](#core-subsystems--django-apps)
+4. [Local Setup & Quickstart](#local-setup--quickstart)
 5. [Hannan Ingestion Workflows](#hannan-ingestion-workflows)
-6. [API Endpoints Reference](#-api-endpoints-reference)
-7. [Linguistic & Parsing Tools](#%EF%B8%8F-linguistic--parsing-tools)
-8. [Running Tests](#-running-tests)
-9. [Configuration Reference](#-configuration-reference)
+6. [API Endpoints Reference](#api-endpoints-reference)
+7. [Linguistic & Parsing Tools](#linguistic--parsing-tools)
+8. [Running Tests](#running-tests)
+9. [Configuration Reference](#configuration-reference)
 
 ---
 
