@@ -296,6 +296,7 @@ def test_analyze_endpoint_returns_bounded_positive_present_verb_analysis(
             "surface": "buda",
             "lemma_public_id": verb_lemma.public_id,
         },
+        "extensions": [],
         "final_vowel": {
             "surface": "a",
             "value": "a",
@@ -347,6 +348,7 @@ def test_analyze_endpoint_returns_ku_infinitive_analysis(
             "surface": "buda",
             "lemma_public_id": verb_lemma.public_id,
         },
+        "extensions": [],
         "final_vowel": {
             "surface": "a",
             "value": "a",
@@ -1169,3 +1171,529 @@ def test_extension_3_primary_object_concords_analysis_and_generation(
     generated = response.json()["data"]["generated"]
     assert generated["form"] == "ndinovambura"
     assert generated["slots"]["object"]["surface"] == "va"
+
+
+@pytest.fixture
+def transitive_mid_verb_lemma(current_release):
+    return Lemma.objects.create(
+        headword="-tenga",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vt",
+        part_of_speech_label="transitive verb",
+        provenance={
+            "source_key": "source_hannan",
+            "entry_locator": "fixture:tenga",
+        },
+        review_state=ReviewState.APPROVED,
+    )
+
+
+@pytest.fixture
+def monosyllabic_verb_lemma(current_release):
+    return Lemma.objects.create(
+        headword="-pa",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vt",
+        part_of_speech_label="transitive verb",
+        provenance={
+            "source_key": "source_hannan",
+            "entry_locator": "fixture:pa",
+        },
+        review_state=ReviewState.APPROVED,
+    )
+
+
+@pytest.mark.django_db
+def test_analyze_endpoint_verbal_extensions_passive_causative_applicative(
+    client, corpus_api_key, current_release, verb_lemma, transitive_mid_verb_lemma, monosyllabic_verb_lemma
+):
+    # 1. Passive of buda -> budwa
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinobudwa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "w", "type": "passive", "label": "passive extension (-w-)"}
+    ]
+
+    # 2. Causative of buda -> budisa
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinobudisa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "is", "type": "causative", "label": "causative extension (-is- / -es-)"}
+    ]
+
+    # 3. Applicative of buda -> budira
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinobudira"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "ir", "type": "applicative", "label": "applicative extension (-ir- / -er-)"}
+    ]
+
+    # 4. Mid vowel harmony causative of tenga -> tengesa (valid)
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinotengesa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == transitive_mid_verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "es", "type": "causative", "label": "causative extension (-is- / -es-)"}
+    ]
+
+    # 5. Mid vowel harmony violation: tengisa instead of tengesa (invalid -> 422)
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinotengisa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 422
+
+    # 6. High vowel harmony violation: budesa instead of budisa (invalid -> 422)
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinobudesa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 422
+
+    # 7. Stacked suffixes: causative + passive of buda -> budiswa
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinobudiswa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "is", "type": "causative", "label": "causative extension (-is- / -es-)"},
+        {"surface": "w", "type": "passive", "label": "passive extension (-w-)"}
+    ]
+
+    # 8. Monosyllabic passive: pa -> piwa
+    response = client.post(
+        "/v1/analyze",
+        {"text": "ndinopiwa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    analysis = response.json()["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == monosyllabic_verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "iw", "type": "passive", "label": "passive extension (-iw-)"}
+    ]
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_verbal_extensions(
+    client, corpus_api_key, current_release, verb_lemma, transitive_mid_verb_lemma, monosyllabic_verb_lemma
+):
+    # 1. Generate causative (high vowel harmony) of buda -> ndinobudisa
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": ["causative"]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["generated"]["form"] == "ndinobudisa"
+    assert data["generated"]["slots"]["extensions"] == [
+        {"surface": "is", "type": "causative", "label": "causative extension (-is- / -es-)"}
+    ]
+
+    # 2. Generate causative (mid vowel harmony) of tenga -> ndinotengesa
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": transitive_mid_verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": [{"type": "causative"}]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["generated"]["form"] == "ndinotengesa"
+    assert data["generated"]["slots"]["extensions"] == [
+        {"surface": "es", "type": "causative", "label": "causative extension (-is- / -es-)"}
+    ]
+
+    # 3. Generate monosyllabic passive of pa -> ndinopiwa
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": monosyllabic_verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": ["passive"]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["generated"]["form"] == "ndinopiwa"
+    assert data["generated"]["slots"]["extensions"] == [
+        {"surface": "iw", "type": "passive", "label": "passive extension (-iw-)"}
+    ]
+
+    # 4. Generate negative present causative of buda -> handibudise
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "negative",
+                "extensions": ["causative"]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {corpus_api_key}",
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["generated"]["form"] == "handibudise"
+
+
+@pytest.mark.django_db
+def test_analyze_endpoint_returns_neuter_and_reciprocal_extensions(
+    client, api_key, current_release, verb_lemma
+):
+    # 1. Neuter analysis: munobudika
+    response = client.post(
+        "/v1/analyze",
+        {"text": "munobudika"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1  # mu- person (Class 18 mu- is not seeded in this test)
+    analysis = body["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "ik", "type": "neuter", "label": "neuter extension (-ik- / -ek-)"}
+    ]
+
+    # 2. Reciprocal analysis: vanobudana
+    noun_class_2 = NounClass.objects.create(
+        class_number="2",
+        display_order=2,
+        label="Class 2",
+        nominal_prefix="va",
+        subject_concord="va",
+        review_state=ReviewState.APPROVED,
+    )
+    response = client.post(
+        "/v1/analyze",
+        {"text": "vanobudana"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    analysis = body["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "an", "type": "reciprocal", "label": "reciprocal extension (-an-)"}
+    ]
+
+    # 3. Compound extensions: munobudikana (neuter + reciprocal)
+    response = client.post(
+        "/v1/analyze",
+        {"text": "munobudikana"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    analysis = body["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "ik", "type": "neuter", "label": "neuter extension (-ik- / -ek-)"},
+        {"surface": "an", "type": "reciprocal", "label": "reciprocal extension (-an-)"}
+    ]
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_supports_neuter_and_reciprocal_extensions(
+    client, api_key, current_release, verb_lemma
+):
+    # 1. Neuter generation with high-vowel harmony (-ik-): buda -> ndinobudika
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": ["neuter"]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["generated"]["form"] == "ndinobudika"
+    assert body["data"]["generated"]["slots"]["extensions"] == [
+        {"surface": "ik", "type": "neuter", "label": "neuter extension (-ik- / -ek-)"}
+    ]
+
+    # 2. Neuter generation with mid-vowel harmony (-ek-): gova -> ndinogoveka
+    gova_lemma = Lemma.objects.create(
+        headword="-gova",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vt",
+        part_of_speech_label="transitive verb",
+        provenance={"source_key": "source_hannan", "entry_locator": "fixture:gova"},
+        review_state=ReviewState.APPROVED,
+    )
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": gova_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": ["neuter"]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["generated"]["form"] == "ndinogoveka"
+    assert body["data"]["generated"]["slots"]["extensions"] == [
+        {"surface": "ek", "type": "neuter", "label": "neuter extension (-ik- / -ek-)"}
+    ]
+
+    # 3. Reciprocal generation: buda -> ndinobudana
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": ["reciprocal"]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["generated"]["form"] == "ndinobudana"
+    assert body["data"]["generated"]["slots"]["extensions"] == [
+        {"surface": "an", "type": "reciprocal", "label": "reciprocal extension (-an-)"}
+    ]
+
+
+@pytest.mark.django_db
+def test_analyze_endpoint_returns_secondary_causatives_and_reversives(
+    client, api_key, current_release, verb_lemma
+):
+    # Seed the -chema lemma in the isolated test DB
+    Lemma.objects.create(
+        headword="-chema",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vi",
+        part_of_speech_label="intransitive verb",
+        provenance={"source_key": "source_hannan", "entry_locator": "fixture:chema"},
+        review_state=ReviewState.PUBLISHED,
+    )
+
+    # 1. Secondary causative analysis (style 'dz'): kuchemedza
+    response = client.post(
+        "/v1/analyze",
+        {"text": "kuchemedza"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    analysis = body["data"]["analyses"][0]
+    assert analysis["lemma"]["normalized_headword"] == "chema"
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "edz", "type": "causative", "style": "dz", "label": "causative extension (-idz- / -edz-)"}
+    ]
+
+    # 2. Secondary causative analysis (style 'ts'): kubuditsa
+    response = client.post(
+        "/v1/analyze",
+        {"text": "kubuditsa"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    analysis = body["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "its", "type": "causative", "style": "ts", "label": "causative extension (-its- / -ets-)"}
+    ]
+
+    # 3. Reversive analysis (short & long): kupetunura
+    peta_lemma = Lemma.objects.create(
+        headword="-peta",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vt",
+        part_of_speech_label="transitive verb",
+        provenance={"source_key": "source_hannan", "entry_locator": "fixture:peta"},
+        review_state=ReviewState.PUBLISHED,
+    )
+    response = client.post(
+        "/v1/analyze",
+        {"text": "kupetunura"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    analysis = body["data"]["analyses"][0]
+    assert analysis["lemma"]["public_id"] == peta_lemma.public_id
+    assert analysis["slots"]["extensions"] == [
+        {"surface": "unur", "type": "reversive", "style": "long", "label": "reversive extension (-unur- / -onor-)"}
+    ]
+
+
+@pytest.mark.django_db
+def test_generate_endpoint_supports_secondary_causatives_and_reversives(
+    client, api_key, current_release, verb_lemma
+):
+    # 1. Secondary causative generation (style 'dz'): buda -> ndinobudidza
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": [{"type": "causative", "style": "dz"}]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["generated"]["form"] == "ndinobudidza"
+    assert body["data"]["generated"]["slots"]["extensions"] == [
+        {"surface": "idz", "type": "causative", "style": "dz", "label": "causative extension (-idz- / -edz-)"}
+    ]
+
+    # 2. Secondary causative generation (style 'ts'): buda -> ndinobuditsa
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": verb_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": [{"type": "causative", "style": "ts"}]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["generated"]["form"] == "ndinobuditsa"
+    assert body["data"]["generated"]["slots"]["extensions"] == [
+        {"surface": "its", "type": "causative", "style": "ts", "label": "causative extension (-its- / -ets-)"}
+    ]
+
+    # 3. Reversive generation (long with 'o' mid vowel trigger): kora -> ndinokorora
+    kora_lemma = Lemma.objects.create(
+        headword="-kora",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vi",
+        part_of_speech_label="intransitive verb",
+        provenance={"source_key": "source_hannan", "entry_locator": "fixture:kora"},
+        review_state=ReviewState.APPROVED,
+    )
+    response = client.post(
+        "/v1/generate",
+        {
+            "lemma_public_id": kora_lemma.public_id,
+            "features": {
+                "generation_type": "verb_form",
+                "subject": {"type": "person", "person": "first", "number": "singular"},
+                "tense_aspect": "present",
+                "polarity": "positive",
+                "extensions": [{"type": "reversive", "style": "long"}]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["generated"]["form"] == "ndinokororora"
+    assert body["data"]["generated"]["slots"]["extensions"] == [
+        {"surface": "oror", "type": "reversive", "style": "long", "label": "reversive extension (-urur- / -oror-)"}
+    ]
+
+
