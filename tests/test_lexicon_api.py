@@ -771,3 +771,66 @@ def test_search_endpoint_records_morphology_enrichment_failures(
         }
     ]
 
+
+@pytest.mark.django_db
+def test_search_endpoint_falls_back_to_fuzzy_lemma_match(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, *_ = canonical_lemma
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "uda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    assert body["data"]["results"][0]["result_type"] == "lemma"
+    assert body["data"]["results"][0]["match_type"] == "fuzzy_lemma"
+    assert body["data"]["results"][0]["lemma"]["public_id"] == lemma.public_id
+
+
+@pytest.mark.django_db
+def test_search_endpoint_falls_back_to_fuzzy_form_match(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, _, _, form = canonical_lemma
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "mbu"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    assert body["data"]["results"][0]["result_type"] == "form"
+    assert body["data"]["results"][0]["match_type"] == "fuzzy_form"
+    assert body["data"]["results"][0]["lemma"]["public_id"] == lemma.public_id
+    assert body["data"]["results"][0]["form"]["public_id"] == form.public_id
+
+
+@pytest.mark.django_db
+def test_search_endpoint_does_not_trigger_fuzzy_when_exact_succeeds(
+    client, api_key, current_release, canonical_lemma
+):
+    lemma, *_ = canonical_lemma
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "buda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"]["count"] == 1
+    assert body["data"]["results"][0]["match_type"] == "exact_lemma"
+
+

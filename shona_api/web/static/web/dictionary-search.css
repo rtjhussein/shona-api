@@ -44,6 +44,10 @@
   --slot-bg-final: #f8fafc;
   --slot-border-final: #e2e8f0;
   --slot-color-final: #475569;
+  
+  --slot-bg-extension: #f5f3ff;
+  --slot-border-extension: #ddd6fe;
+  --slot-color-extension: #7c3aed;
 }
 
 * {
@@ -565,6 +569,12 @@ h1 {
   background: var(--slot-bg-final);
   border-color: var(--slot-border-final);
   color: var(--slot-color-final);
+}
+
+.slot-pill--extension {
+  background: var(--slot-bg-extension);
+  border-color: var(--slot-border-extension);
+  color: var(--slot-color-extension);
 }
 
 .morph-details-teaser {
@@ -1128,4 +1138,97 @@ h1 {
   .kv-list {
     grid-template-columns: 1fr;
   }
+}
+
+/* Premium Morpheme Ribbon styling */
+.morpheme-ribbon {
+  display: flex;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  margin-top: 4px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+
+.morpheme-segment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  flex: 1;
+  text-align: center;
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  min-width: 54px;
+}
+
+.morpheme-segment:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+}
+
+.morpheme-segment:last-child {
+  border-right: none;
+}
+
+.segment-text {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.12rem;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.segment-label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* Color coding for premium contiguous morpheme segments */
+.morpheme-segment--polarity {
+  background: var(--slot-bg-polarity);
+  color: var(--slot-color-polarity);
+}
+
+.morpheme-segment--infinitive {
+  background: var(--slot-bg-infinitive);
+  color: var(--slot-color-infinitive);
+}
+
+.morpheme-segment--subject {
+  background: var(--slot-bg-subject);
+  color: var(--slot-color-subject);
+}
+
+.morpheme-segment--tense {
+  background: var(--slot-bg-tense);
+  color: var(--slot-color-tense);
+}
+
+.morpheme-segment--object {
+  background: var(--slot-bg-object);
+  color: var(--slot-color-object);
+}
+
+.morpheme-segment--stem {
+  background: var(--slot-bg-stem);
+  color: var(--slot-color-stem);
+}
+
+.morpheme-segment--extension {
+  background: var(--slot-bg-extension);
+  color: var(--slot-color-extension);
+}
+
+.morpheme-segment--final_vowel {
+  background: var(--slot-bg-final);
+  color: var(--slot-color-final);
 }

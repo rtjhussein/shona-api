@@ -1,7 +1,6 @@
 import logging
 
 from django.http import Http404
-from django.db.models import Prefetch
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
@@ -17,8 +16,16 @@ from shona_api.releases.services import (
     get_current_release_setup_detail,
 )
 
-from .models import Form, Lemma
-from .search import SEARCH_NORMALIZER_VERSION, normalize_search_query
+from .models import Lemma
+from .search import (
+    DEFAULT_SEARCH_LIMIT,
+    MAX_SEARCH_LIMIT,
+    SEARCH_NORMALIZER_VERSION,
+    filter_json_array,
+    normalize_search_query,
+    search_public_records,
+    search_public_records_fuzzy,
+)
 from .serializers import (
     FormSerializer,
     LemmaCoreSerializer,
@@ -31,8 +38,6 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SEARCH_LIMIT = 20
-MAX_SEARCH_LIMIT = 50
 HEADWORD_KIND_FILTERS = {
     Lemma.HeadwordKind.WORD,
     Lemma.HeadwordKind.NOUN,
@@ -79,13 +84,6 @@ def build_current_release_missing_response():
         ),
         status=status.HTTP_503_SERVICE_UNAVAILABLE,
     )
-
-
-def _filter_json_array(queryset, field_name, value):
-    from django.db import connection
-    if connection.vendor == 'sqlite':
-        return queryset.filter(**{f"{field_name}__icontains": f'"{value}"'})
-    return queryset.filter(**{f"{field_name}__contains": value})
 
 
 class LemmaReadView(APIView):
@@ -189,160 +187,10 @@ class SearchView(APIView):
         )
 
     def _search(self, normalized_query, *, filters):
-        limit = filters["limit"]
-        lemma_results = [
-            {
-                "result_type": "lemma",
-                "match_type": "exact_lemma",
-                "lemma": lemma,
-                "form": None,
-            }
-            for lemma in self._filter_lemmas(
-                self._lemma_queryset(filters).filter(
-                    normalized_headword=normalized_query,
-                ),
-                filters,
-            )[:limit]
-        ]
-        remaining_limit = max(limit - len(lemma_results), 0)
-        form_results = [
-            {
-                "result_type": "form",
-                "match_type": "exact_form",
-                "lemma": form.lemma,
-                "form": form,
-            }
-            for form in self._filter_forms(
-                self._form_queryset(filters).filter(
-                    normalized_form=normalized_query,
-                ),
-                filters,
-            )[:remaining_limit]
-        ]
-        return lemma_results + form_results
+        return search_public_records(normalized_query, filters=filters)
 
     def _search_fuzzy(self, normalized_query, *, filters):
-        from django.contrib.postgres.search import TrigramSimilarity
-
-        limit = filters["limit"]
-
-        lemma_queryset = (
-            self._lemma_queryset(filters)
-            .annotate(similarity=TrigramSimilarity("normalized_headword", normalized_query))
-            .filter(similarity__gte=0.3)
-            .order_by("-similarity")
-        )
-        lemma_results = [
-            {
-                "result_type": "lemma",
-                "match_type": "fuzzy_lemma",
-                "lemma": lemma,
-                "form": None,
-            }
-            for lemma in self._filter_lemmas(lemma_queryset, filters)[:limit]
-        ]
-
-        remaining_limit = max(limit - len(lemma_results), 0)
-
-        form_queryset = (
-            self._form_queryset(filters)
-            .annotate(similarity=TrigramSimilarity("normalized_form", normalized_query))
-            .filter(similarity__gte=0.3)
-            .order_by("-similarity")
-        )
-        form_results = [
-            {
-                "result_type": "form",
-                "match_type": "fuzzy_form",
-                "lemma": form.lemma,
-                "form": form,
-            }
-            for form in self._filter_forms(form_queryset, filters)[:remaining_limit]
-        ]
-
-        return lemma_results + form_results
-
-    def _lemma_queryset(self, filters):
-        queryset = Lemma.objects.filter(
-            review_state__in=self.public_review_states,
-        ).select_related(
-            "noun_class",
-            "noun_class__default_plural_class",
-        ).prefetch_related(
-            "senses",
-            "tone_records__form",
-            "forms__sense",
-        )
-        if filters["headword_kind"]:
-            queryset = queryset.filter(headword_kind=filters["headword_kind"])
-        if filters["pos"]:
-            queryset = queryset.filter(part_of_speech_code=filters["pos"])
-        if filters.get("learner_level"):
-            queryset = queryset.filter(learner_level=filters["learner_level"])
-        if filters.get("curriculum_stage"):
-            queryset = queryset.filter(curriculum_stage=filters["curriculum_stage"])
-        if filters.get("frequency_tier"):
-            queryset = queryset.filter(frequency_tier=filters["frequency_tier"])
-        if filters.get("communication_context"):
-            queryset = _filter_json_array(queryset, "communication_contexts", filters["communication_context"])
-        if filters.get("noun_class"):
-            queryset = queryset.filter(noun_class__class_number=filters["noun_class"])
-        return queryset
-
-    def _form_queryset(self, filters):
-        queryset = (
-            Form.objects.filter(
-                review_state__in=self.public_review_states,
-                lemma__review_state__in=self.public_review_states,
-            )
-            .select_related(
-                "lemma",
-                "lemma__noun_class",
-                "lemma__noun_class__default_plural_class",
-                "sense",
-            )
-            .prefetch_related(
-                Prefetch(
-                    "lemma__forms",
-                    queryset=Form.objects.select_related("sense"),
-                ),
-                "lemma__senses",
-                "lemma__tone_records__form",
-            )
-        )
-        if filters["headword_kind"]:
-            queryset = queryset.filter(lemma__headword_kind=filters["headword_kind"])
-        if filters["pos"]:
-            queryset = queryset.filter(lemma__part_of_speech_code=filters["pos"])
-        if filters.get("learner_level"):
-            queryset = queryset.filter(lemma__learner_level=filters["learner_level"])
-        if filters.get("curriculum_stage"):
-            queryset = queryset.filter(lemma__curriculum_stage=filters["curriculum_stage"])
-        if filters.get("frequency_tier"):
-            queryset = queryset.filter(lemma__frequency_tier=filters["frequency_tier"])
-        if filters.get("communication_context"):
-            queryset = _filter_json_array(queryset, "lemma__communication_contexts", filters["communication_context"])
-        if filters.get("noun_class"):
-            queryset = queryset.filter(lemma__noun_class__class_number=filters["noun_class"])
-        return queryset
-
-    def _filter_lemmas(self, queryset, filters):
-        lemmas = list(queryset)
-        dialect = filters["dialect"]
-        if dialect:
-            lemmas = [lemma for lemma in lemmas if dialect in (lemma.dialects or [])]
-        return lemmas
-
-    def _filter_forms(self, queryset, filters):
-        forms = list(queryset)
-        dialect = filters["dialect"]
-        if dialect:
-            forms = [
-                form
-                for form in forms
-                if dialect in (form.lemma.dialects or [])
-            ]
-        return forms
+        return search_public_records_fuzzy(normalized_query, filters=filters)
 
     def _parse_filters(self, request):
         filters = {
@@ -622,13 +470,13 @@ class LemmaListView(APIView):
         if filters["curriculum_stage"]:
             queryset = queryset.filter(curriculum_stage=filters["curriculum_stage"])
         if filters["curriculum_domain"]:
-            queryset = _filter_json_array(queryset, "curriculum_domains", filters["curriculum_domain"])
+            queryset = filter_json_array(queryset, "curriculum_domains", filters["curriculum_domain"])
         if filters["learning_function"]:
-            queryset = _filter_json_array(queryset, "learning_functions", filters["learning_function"])
+            queryset = filter_json_array(queryset, "learning_functions", filters["learning_function"])
         if filters["communication_context"]:
-            queryset = _filter_json_array(queryset, "communication_contexts", filters["communication_context"])
+            queryset = filter_json_array(queryset, "communication_contexts", filters["communication_context"])
         if filters["register_tag"]:
-            queryset = _filter_json_array(queryset, "register_tags", filters["register_tag"])
+            queryset = filter_json_array(queryset, "register_tags", filters["register_tag"])
         if filters["frequency_tier"]:
             queryset = queryset.filter(frequency_tier=filters["frequency_tier"])
         if filters["headword_kind"]:

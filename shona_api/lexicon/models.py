@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 
 from shona_api.editorial.models import ReviewState
@@ -220,6 +221,11 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
             models.Index(fields=("review_state", "headword_kind")),
             models.Index(fields=("learner_level", "frequency_tier")),
             models.Index(fields=("first_appearance_source_key", "first_appearance_lesson")),
+            GinIndex(
+                fields=["normalized_headword"],
+                name="lemma_headword_trgm_idx",
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self):
@@ -379,6 +385,11 @@ class Form(PhonologyFieldsMixin, CanonicalRecord):
         indexes = [
             models.Index(fields=("normalized_form", "form_kind")),
             models.Index(fields=("review_state", "form_kind")),
+            GinIndex(
+                fields=["normalized_form"],
+                name="form_text_trgm_idx",
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self):

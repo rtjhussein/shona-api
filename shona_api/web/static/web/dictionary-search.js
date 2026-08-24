@@ -362,52 +362,123 @@
     `;
   }
 
+  function segmentWord(word, slots, lemma) {
+    const segments = [];
+    let remaining = word.toLowerCase();
+    
+    const prefixes = [];
+    if (slots.polarity && slots.polarity.surface) {
+      prefixes.push({ type: "polarity", surface: slots.polarity.surface, label: "polarity", desc: slots.polarity.label });
+    }
+    if (slots.infinitive_prefix && slots.infinitive_prefix.surface) {
+      prefixes.push({ type: "infinitive", surface: slots.infinitive_prefix.surface, label: "infinitive", desc: slots.infinitive_prefix.label });
+    }
+    if (slots.subject && slots.subject.surface) {
+      if (!(slots.polarity && slots.polarity.surface === "ha" && slots.subject.surface === "ha")) {
+        let subjectLabel = "subject";
+        if (slots.subject.type === "noun_class" && slots.subject.class_number) {
+          subjectLabel = `subject (cl. ${slots.subject.class_number})`;
+        } else if (slots.subject.type === "person" && slots.subject.person && slots.subject.number) {
+          const shortNum = slots.subject.number === "singular" ? "sg" : "pl";
+          const shortPerson = slots.subject.person === "first" ? "1st" : slots.subject.person === "second" ? "2nd" : "3rd";
+          subjectLabel = `subject (${shortPerson} ${shortNum})`;
+        }
+        prefixes.push({ type: "subject", surface: slots.subject.surface, label: subjectLabel, desc: slots.subject.label });
+      }
+    }
+    if (slots.tense_aspect && slots.tense_aspect.surface) {
+      prefixes.push({ type: "tense", surface: slots.tense_aspect.surface, label: "tense / aspect", desc: slots.tense_aspect.label });
+    }
+    if (slots.object && slots.object.surface) {
+      let objectLabel = "object";
+      if (slots.object.type === "noun_class" && slots.object.class_number) {
+        objectLabel = `object (cl. ${slots.object.class_number})`;
+      } else if (slots.object.type === "person" && slots.object.person && slots.object.number) {
+        const shortNum = slots.object.number === "singular" ? "sg" : "pl";
+        const shortPerson = slots.object.person === "first" ? "1st" : slots.object.person === "second" ? "2nd" : "3rd";
+        objectLabel = `object (${shortPerson} ${shortNum})`;
+      }
+      prefixes.push({ type: "object", surface: slots.object.surface, label: objectLabel, desc: slots.object.label });
+    }
+    
+    const matchedPrefixes = [];
+    for (const pref of prefixes) {
+      const ps = pref.surface.toLowerCase();
+      if (remaining.startsWith(ps)) {
+        remaining = remaining.slice(ps.length);
+        matchedPrefixes.push(pref);
+      } else {
+        const psMinusVowel = ps.slice(0, -1);
+        if (psMinusVowel && remaining.startsWith(psMinusVowel)) {
+          remaining = remaining.slice(psMinusVowel.length);
+          matchedPrefixes.push({ ...pref, surface: psMinusVowel });
+        }
+      }
+    }
+    
+    const suffixes = [];
+    if (slots.final_vowel && slots.final_vowel.surface) {
+      suffixes.push({ type: "final_vowel", surface: slots.final_vowel.surface, label: "final vowel", desc: slots.final_vowel.label || "final mood vowel" });
+    }
+    if (Array.isArray(slots.extensions)) {
+      const reversedExts = [...slots.extensions].reverse();
+      for (const ext of reversedExts) {
+        suffixes.push({ type: "extension", surface: ext.surface, label: ext.type || "extension", desc: ext.label });
+      }
+    }
+    
+    const matchedSuffixes = [];
+    for (const suff of suffixes) {
+      const ss = suff.surface.toLowerCase();
+      if (remaining.endsWith(ss)) {
+        remaining = remaining.slice(0, -ss.length);
+        matchedSuffixes.push(suff);
+      }
+    }
+    matchedSuffixes.reverse();
+    
+    const stemHeadword = lemma.headword || lemma.normalized_headword || "";
+    const cleanStem = stemHeadword.startsWith("-") ? stemHeadword.slice(1) : stemHeadword;
+    const stemLabel = cleanStem ? `Root: -${cleanStem}` : "Verb Root";
+    
+    const rootSegment = {
+      type: "stem",
+      surface: remaining || cleanStem || "stem",
+      label: "verb root",
+      desc: stemLabel
+    };
+    
+    return [...matchedPrefixes, rootSegment, ...matchedSuffixes];
+  }
+
   function renderMorphologyAnalysis(analysis, query) {
     const lemma = analysis.lemma || {};
     const slots = analysis.slots || {};
+    const word = query ? query.normalized : "";
     
-    // Render individual slot pills dynamically
-    let slotsHtml = "";
+    const segments = segmentWord(word, slots, lemma);
     
-    if (slots.infinitive_prefix && slots.infinitive_prefix.surface) {
-      slotsHtml += renderSlotPill(
-        "infinitive",
-        slots.infinitive_prefix.surface,
-        "infinitive / prefix",
-        slots.infinitive_prefix.label
-      );
-    }
-    if (slots.polarity && slots.polarity.surface) {
-      slotsHtml += renderSlotPill("polarity", slots.polarity.surface, "polarity / negative", slots.polarity.label);
-    }
-    if (slots.subject && slots.subject.surface) {
-      const details = slots.subject.class_number ? `Noun Class ${slots.subject.class_number}` : `${slots.subject.person} person ${slots.subject.number}`;
-      slotsHtml += renderSlotPill("subject", slots.subject.surface, "subject / concord", `${slots.subject.label} (${details})`);
-    }
-    if (slots.tense_aspect && slots.tense_aspect.surface) {
-      slotsHtml += renderSlotPill("tense", slots.tense_aspect.surface, "tense / aspect", slots.tense_aspect.label);
-    }
-    if (slots.object && slots.object.surface) {
-      const details = slots.object.class_number ? `Noun Class ${slots.object.class_number}` : `${slots.object.person} person ${slots.object.number}`;
-      slotsHtml += renderSlotPill("object", slots.object.surface, "object / concord", `${slots.object.label} (${details})`);
-    }
-    if (slots.verb_stem && slots.verb_stem.surface) {
-      slotsHtml += renderSlotPill("stem", slots.verb_stem.surface, "verb stem", `Stem: ${lemma.headword || lemma.normalized_headword}`);
-    }
-    if (slots.final_vowel && slots.final_vowel.surface) {
-      slotsHtml += renderSlotPill("final_vowel", slots.final_vowel.surface, "final vowel", `Mood marker: ${slots.final_vowel.value}`);
-    }
+    const ribbonHtml = `
+      <div class="morpheme-ribbon">
+        ${segments.map(function (seg) {
+          return `
+            <div class="morpheme-segment morpheme-segment--${seg.type}" title="${escapeAttribute(seg.desc)}">
+              <span class="segment-text">${escapeHtml(seg.surface)}</span>
+              <span class="segment-label">${escapeHtml(seg.label)}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
 
     return `
       <div class="morphology-card" data-lemma-id="${escapeAttribute(lemma.public_id)}">
         <div class="morph-word-row">
-          <span class="morph-word-raw">${escapeHtml(query ? query.normalized : "")}</span>
+          <span class="morph-word-raw">${escapeHtml(word)}</span>
           <span class="confidence-tag">confidence ${Math.round(analysis.confidence * 100)}%</span>
         </div>
         <p class="morph-analysis-type">${escapeHtml(morphologyAnalysisLabel(analysis))}</p>
-        <div class="morph-slots-row">
-          ${slotsHtml}
-        </div>
+        ${ribbonHtml}
         <div class="morph-details-teaser">
           Linked stem: <strong>${escapeHtml(lemma.headword)}</strong> (${escapeHtml(lemma.part_of_speech_code || "verb")}).
           <span class="morph-action-link">View stem details &rarr;</span>
@@ -420,16 +491,17 @@
     if (analysis.analysis_type === "infinitive") {
       return "ku- infinitive linked to a reviewed verb stem";
     }
+    const slots = analysis.slots || {};
+    if (slots.subject) {
+      if (slots.subject.type === "noun_class" && slots.subject.class_number) {
+        return `inflected verb breakdown (Noun Class ${slots.subject.class_number} Subject)`;
+      } else if (slots.subject.type === "person" && slots.subject.person && slots.subject.number) {
+        const pStr = slots.subject.person.charAt(0).toUpperCase() + slots.subject.person.slice(1);
+        const nStr = slots.subject.number.charAt(0).toUpperCase() + slots.subject.number.slice(1);
+        return `inflected verb breakdown (${pStr} Person ${nStr} Subject)`;
+      }
+    }
     return "inflected verb breakdown";
-  }
-
-  function renderSlotPill(type, surface, slotTypeLabel, description) {
-    return `
-      <div class="slot-pill slot-pill--${type}" title="${escapeAttribute(description)}">
-        <span class="slot-surface">${escapeHtml(surface)}</span>
-        <span class="slot-label">${escapeHtml(slotTypeLabel)}</span>
-      </div>
-    `;
   }
 
   function renderResultCard(result) {
