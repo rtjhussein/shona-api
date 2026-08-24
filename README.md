@@ -251,12 +251,20 @@ python manage.py generate_openapi_spec
 
 ## 🧪 Running Tests
 
-A highly comprehensive suite of **175 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, and rule-based morphology.
+A highly comprehensive suite of **219 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, and rule-based morphology.
 
-To execute tests against the fast-running local test configuration (which defaults to SQLite):
+The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
+
 ```powershell
+# Full suite (~20s locally)
 pytest
+
+# Rebuild the cached test database after changing models or migrations
+pytest --create-db
 ```
+
+> [!NOTE]
+> The test schema is cached between runs (`--reuse-db`). After editing models or adding migrations, pass `--create-db` once so the cached schema picks up the change.
 
 ---
 

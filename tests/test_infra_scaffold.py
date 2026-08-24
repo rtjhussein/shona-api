@@ -4,14 +4,19 @@ from django.conf import settings
 
 
 def test_redis_cache_and_celery_broker_are_configured_from_shared_url():
-    assert settings.REDIS_URL == "redis://localhost:6379/0"
-    assert settings.CACHES["default"]["BACKEND"] == "django_redis.cache.RedisCache"
-    assert settings.CACHES["default"]["LOCATION"] == settings.REDIS_URL
-    assert settings.CACHES["default"]["OPTIONS"]["CLIENT_CLASS"] == (
+    # Assert on the base wiring itself: test settings intentionally swap
+    # CACHES for LocMemCache, so the effective settings object is the wrong
+    # lens for this contract.
+    base = importlib.import_module("config.settings.base")
+
+    assert base.REDIS_URL == "redis://localhost:6379/0"
+    assert base.CACHES["default"]["BACKEND"] == "django_redis.cache.RedisCache"
+    assert base.CACHES["default"]["LOCATION"] == base.REDIS_URL
+    assert base.CACHES["default"]["OPTIONS"]["CLIENT_CLASS"] == (
         "django_redis.client.DefaultClient"
     )
-    assert settings.CELERY_BROKER_URL == settings.REDIS_URL
-    assert settings.CELERY_RESULT_BACKEND == settings.REDIS_URL
+    assert base.CELERY_BROKER_URL == base.REDIS_URL
+    assert base.CELERY_RESULT_BACKEND == base.REDIS_URL
 
 
 def test_celery_app_initializes_from_django_settings():

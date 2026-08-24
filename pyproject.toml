@@ -31,6 +31,7 @@ where = ["."]
 include = ["config*", "shona_api*"]
 
 [tool.pytest.ini_options]
+addopts = "--ds=config.settings.test --reuse-db"
 DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py", "*_test.py", "tests.py"]
 testpaths = ["tests"]
