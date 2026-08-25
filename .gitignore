@@ -26,3 +26,4 @@ shona_api/parsers/hannan_llm/**/*.jsonl
 shona_api/parsers/hannan_llm/**/*.png
 shona_api/parsers/hannan_llm/**/*.jpg
 shona_api/parsers/hannan_llm/**/*.jpeg
+.freebuff/
