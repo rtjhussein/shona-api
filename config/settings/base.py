@@ -17,7 +17,10 @@ env = environ.Env(
 
 env_file = BASE_DIR / ".env"
 if env_file.exists():
-    environ.Env.read_env(str(env_file))
+    # .env is authoritative on machines that have one: a stale shell-exported
+    # variable (e.g. DATABASE_URL pointing at a retired database file) must
+    # not silently override the project's declared configuration.
+    environ.Env.read_env(str(env_file), overwrite=True)
 
 SECRET_KEY = env("SECRET_KEY", default="dev-only-change-me")
 DEBUG = env("DEBUG")

@@ -7,7 +7,10 @@ PASSWORD_HASHERS = [
 ]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 DATABASES = {
-    "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'test.sqlite3'}")
+    "default": {
+        **env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db' / 'shona.sqlite3'}"),
+        "TEST": {"NAME": str(BASE_DIR / "db" / "test-cache.sqlite3")},
+    }
 }
 CACHES = {
     "default": {

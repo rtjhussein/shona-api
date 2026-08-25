@@ -163,7 +163,16 @@ celery -A config worker --loglevel=INFO
 
 ---
 
-## Hannan Ingestion Workflows
+ ## Hannan Ingestion Workflows
+ 
+ The Hannan data pipeline supports two staff-facing ingestion modes from `/data-progress/ingestion/`:
+
+> [!NOTE]
+> The Shona-English section is fully populated (775/775 pages, ~40k published
+> entries). The population run combined the historical GPT-5.5 JSONL batches
+> with a vision-extraction sweep; see
+> `docs/data_population/ox_vision_sweep.md` for the pipeline, tooling, and
+> how to re-run any stage.
 
 The Hannan data pipeline supports two staff-facing ingestion modes from `/data-progress/ingestion/`:
 
