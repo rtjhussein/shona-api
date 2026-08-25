@@ -73,6 +73,8 @@ def test_published_corpus_qa_clean_corpus_returns_zero_issues(current_release):
         "morphology_inputs": 1,
     }
     assert report["summary"]["issues"] == 0
+    assert report["summary"]["errors"] == 0
+    assert report["summary"]["info_notes"] == 0
     assert report["issues"] == []
 
 
@@ -99,6 +101,7 @@ def test_published_corpus_qa_categorizes_unsearchable_lemma_and_form(
     assert report["status"] == "failed"
     categories = {issue["category"] for issue in report["issues"]}
     assert {"lemma_unsearchable", "form_unsearchable"} <= categories
+    assert all(issue["severity"] == "error" for issue in report["issues"])
 
 
 @pytest.mark.django_db
@@ -126,6 +129,10 @@ def test_published_corpus_qa_categorizes_ambiguous_headword_search(current_relea
         second.public_id,
     }
     assert all(issue["record_type"] == "lemma" for issue in ambiguous)
+    assert all(issue["severity"] == "info" for issue in ambiguous)
+    assert report["status"] == "passed_with_notes"
+    assert report["summary"]["errors"] == 0
+    assert report["summary"]["info_notes"] == len(ambiguous)
 
 
 @pytest.mark.django_db
@@ -154,6 +161,7 @@ def test_published_corpus_qa_categorizes_morphology_unsupported(
             "expected_lemma_public_id": lemma.public_id,
             "actual_lemma_public_id": None,
             "message": "ANALYSIS_UNSUPPORTED: No supported analysis matched.",
+            "severity": "error",
         }
     ]
 
@@ -181,5 +189,94 @@ def test_published_corpus_qa_categorizes_morphology_error(
             "expected_lemma_public_id": lemma.public_id,
             "actual_lemma_public_id": None,
             "message": "RuntimeError: boom",
+            "severity": "error",
         }
     ]
+
+
+@pytest.mark.django_db
+def test_published_corpus_qa_skip_morphology_bypasses_analysis_replays(
+    current_release,
+    monkeypatch,
+):
+    lemma, *_ = create_published_entry()
+
+    def broken(raw_text, *, rule_set_version):
+        raise RuntimeError("morphology must not run")
+
+    monkeypatch.setattr("shona_api.lexicon.qa.analyze_text", broken)
+
+    report = run_qa_command(skip_morphology=True)
+
+    assert report["status"] == "passed"
+    assert report["summary"]["checked"]["morphology_inputs"] == 0
+    assert report["issues"] == []
+
+
+@pytest.mark.django_db
+def test_published_corpus_qa_homograph_resolution_is_info_not_error(
+    current_release,
+    monkeypatch,
+):
+    lemma, *_ = create_published_entry(headword="-buda", form_text=None)
+    homograph, *_ = create_published_entry(
+        headword="buda",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        form_text=None,
+    )
+    assert homograph.normalized_headword == lemma.normalized_headword
+
+    def resolve_to_homograph(raw_text, *, rule_set_version):
+        return {
+            "analyses": [
+                {"lemma": {"public_id": homograph.public_id}},
+            ]
+        }
+
+    monkeypatch.setattr(
+        "shona_api.lexicon.qa.analyze_text", resolve_to_homograph
+    )
+
+    report = run_qa_command()
+
+    categories = {issue["category"] for issue in report["issues"]}
+    assert "wrong_lemma" not in categories
+    homograph_issues = [
+        issue
+        for issue in report["issues"]
+        if issue["category"] == "ambiguous_result"
+        and issue["record_type"] == "lemma"
+    ]
+    assert homograph_issues
+    assert all(issue["severity"] == "info" for issue in homograph_issues)
+    assert report["status"] == "passed_with_notes"
+
+
+@pytest.mark.django_db
+def test_published_corpus_qa_different_stem_resolution_is_error(
+    current_release,
+    monkeypatch,
+):
+    lemma, *_ = create_published_entry(headword="-buda", form_text=None)
+    other, *_ = create_published_entry(
+        headword="-bona",
+        form_text=None,
+    )
+
+    def resolve_to_other(raw_text, *, rule_set_version):
+        return {
+            "analyses": [
+                {"lemma": {"public_id": other.public_id}},
+            ]
+        }
+
+    monkeypatch.setattr("shona_api.lexicon.qa.analyze_text", resolve_to_other)
+
+    report = run_qa_command()
+
+    wrong = [
+        issue for issue in report["issues"] if issue["category"] == "wrong_lemma"
+    ]
+    assert wrong
+    assert all(issue["severity"] == "error" for issue in wrong)
+    assert report["status"] == "failed"

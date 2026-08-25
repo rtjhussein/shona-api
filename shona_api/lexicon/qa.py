@@ -28,6 +28,11 @@ ISSUE_CATEGORIES = (
     "ambiguous_result",
 )
 
+# Categories that reflect corpus scale (homographs, shared verb stems,
+# multiple plausible hits) rather than a data defect. They are reported but
+# do not fail the run.
+INFO_CATEGORIES = frozenset({"ambiguous_result"})
+
 
 @dataclass(frozen=True)
 class CorpusQAIssue:
@@ -40,6 +45,7 @@ class CorpusQAIssue:
     message: str
     actual_lemma_public_ids: list[str] | None = None
     actual_form_public_ids: list[str] | None = None
+    severity: str = "error"
 
     def to_dict(self) -> dict[str, object]:
         payload = {
@@ -50,6 +56,7 @@ class CorpusQAIssue:
             "expected_lemma_public_id": self.expected_lemma_public_id,
             "actual_lemma_public_id": self.actual_lemma_public_id,
             "message": self.message,
+            "severity": self.severity,
         }
         if self.actual_lemma_public_ids is not None:
             payload["actual_lemma_public_ids"] = self.actual_lemma_public_ids
@@ -58,7 +65,11 @@ class CorpusQAIssue:
         return payload
 
 
-def run_published_corpus_qa(*, limit: int | None = None) -> dict[str, object]:
+def run_published_corpus_qa(
+    *,
+    limit: int | None = None,
+    include_morphology: bool = True,
+) -> dict[str, object]:
     issues: list[CorpusQAIssue] = []
     try:
         release_metadata = get_current_release_metadata()
@@ -204,7 +215,7 @@ def run_published_corpus_qa(*, limit: int | None = None) -> dict[str, object]:
         )
 
     morphology_checked = 0
-    if release_metadata is not None:
+    if include_morphology and release_metadata is not None:
         for lemma in lemmas:
             if (
                 lemma.public_id in visible_lemma_ids
@@ -218,6 +229,7 @@ def run_published_corpus_qa(*, limit: int | None = None) -> dict[str, object]:
                     public_id=lemma.public_id,
                     raw_input=f"ku{lemma.normalized_headword}",
                     expected_lemma_public_id=lemma.public_id,
+                    expected_normalized_headword=lemma.normalized_headword,
                     rule_set_version=release_metadata["rule_set_version"],
                 )
 
@@ -230,15 +242,29 @@ def run_published_corpus_qa(*, limit: int | None = None) -> dict[str, object]:
                     public_id=form.public_id,
                     raw_input=form.form_text,
                     expected_lemma_public_id=form.lemma.public_id,
+                    expected_normalized_headword=form.lemma.normalized_headword,
                     rule_set_version=release_metadata["rule_set_version"],
                 )
 
     issue_counts = {category: 0 for category in ISSUE_CATEGORIES}
+    error_count = 0
+    info_count = 0
     for issue in issues:
         issue_counts[issue.category] = issue_counts.get(issue.category, 0) + 1
+        if issue.severity == "info":
+            info_count += 1
+        else:
+            error_count += 1
+
+    if error_count:
+        status = "failed"
+    elif info_count:
+        status = "passed_with_notes"
+    else:
+        status = "passed"
 
     return {
-        "status": "passed" if not issues else "failed",
+        "status": status,
         "release": release_metadata,
         "summary": {
             "checked": {
@@ -248,6 +274,8 @@ def run_published_corpus_qa(*, limit: int | None = None) -> dict[str, object]:
                 "morphology_inputs": morphology_checked,
             },
             "issues": len(issues),
+            "errors": error_count,
+            "info_notes": info_count,
             "issue_counts": issue_counts,
             "limit": limit,
         },
@@ -302,6 +330,7 @@ def _check_lemma_search_result(*, issues, lemma, normalized_query, search_filter
                 actual_lemma_public_id=_first_other_id(distinct_lemma_ids, lemma.public_id),
                 actual_lemma_public_ids=distinct_lemma_ids,
                 message="Headword search returns multiple plausible lemmas.",
+                severity="info",
             )
         )
 
@@ -365,6 +394,7 @@ def _check_form_search_result(*, issues, form, normalized_query, search_filters)
                 actual_lemma_public_ids=distinct_lemma_ids,
                 actual_form_public_ids=distinct_form_ids,
                 message="Form search returns multiple plausible records.",
+                severity="info",
             )
         )
 
@@ -376,6 +406,7 @@ def _check_morphology_result(
     public_id,
     raw_input,
     expected_lemma_public_id,
+    expected_normalized_headword,
     rule_set_version,
 ):
     try:
@@ -448,6 +479,35 @@ def _check_morphology_result(
 
     distinct_lemma_ids = sorted(set(lemma_ids))
     if expected_lemma_public_id not in distinct_lemma_ids:
+        # Homograph stems: when every resolved lemma shares the expected
+        # headword, the analyzer simply cannot disambiguate between
+        # same-spelling entries. That is corpus scale, not a wrong analysis.
+        resolved_headwords = set(
+            Lemma.objects.filter(public_id__in=distinct_lemma_ids).values_list(
+                "normalized_headword", flat=True
+            )
+        )
+        if resolved_headwords == {expected_normalized_headword}:
+            issues.append(
+                CorpusQAIssue(
+                    category="ambiguous_result",
+                    record_type=record_type,
+                    public_id=public_id,
+                    query=raw_input,
+                    expected_lemma_public_id=expected_lemma_public_id,
+                    actual_lemma_public_id=_first_other_id(
+                        distinct_lemma_ids,
+                        expected_lemma_public_id,
+                    ),
+                    actual_lemma_public_ids=distinct_lemma_ids,
+                    message=(
+                        "Morphology analysis resolves only to homographs of the "
+                        "expected headword."
+                    ),
+                    severity="info",
+                )
+            )
+            return
         issues.append(
             CorpusQAIssue(
                 category="wrong_lemma",
@@ -474,6 +534,7 @@ def _check_morphology_result(
                 ),
                 actual_lemma_public_ids=distinct_lemma_ids,
                 message="Morphology analysis returns multiple plausible lemmas.",
+                severity="info",
             )
         )
 

@@ -24,7 +24,18 @@ class Command(BaseCommand):
         parser.add_argument(
             "--fail-on-issues",
             action="store_true",
-            help="Exit nonzero when the QA report contains issues.",
+            help=(
+                "Exit nonzero when the QA report contains error-severity "
+                "issues (info-level notes do not fail the run)."
+            ),
+        )
+        parser.add_argument(
+            "--skip-morphology",
+            action="store_true",
+            help=(
+                "Skip morphology analysis replays. Search and visibility "
+                "checks still run; use for fast CI-scale passes."
+            ),
         )
 
     def handle(self, *args, **options):
@@ -32,10 +43,14 @@ class Command(BaseCommand):
         if limit is not None and limit < 1:
             raise CommandError("--limit must be a positive integer.")
 
-        report = run_published_corpus_qa(limit=limit)
+        report = run_published_corpus_qa(
+            limit=limit,
+            include_morphology=not options["skip_morphology"],
+        )
         self.stdout.write(json.dumps(report, indent=2, sort_keys=True))
 
-        if options["fail_on_issues"] and report["summary"]["issues"]:
+        if options["fail_on_issues"] and report["summary"]["errors"]:
             raise CommandError(
-                f"Published corpus QA found {report['summary']['issues']} issue(s)."
+                f"Published corpus QA found {report['summary']['errors']} "
+                f"error-severity issue(s)."
             )
