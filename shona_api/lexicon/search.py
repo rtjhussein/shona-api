@@ -6,7 +6,11 @@ from shona_api.editorial.models import ReviewState
 from .models import Form, Lemma
 
 
-SEARCH_NORMALIZER_VERSION = "shona-orthography-normalizer-v1"
+from shona_api.phonology.orthography import strip_annotation_markers
+
+SEARCH_NORMALIZER_VERSION = "shona-orthography-normalizer-v2"
+
+
 DEFAULT_SEARCH_LIMIT = 20
 MAX_SEARCH_LIMIT = 50
 PUBLIC_REVIEW_STATES = (ReviewState.PUBLISHED,)
@@ -14,8 +18,10 @@ PUBLIC_REVIEW_STATES = (ReviewState.PUBLISHED,)
 
 def normalize_search_query(value):
     normalized = " ".join(value.strip().split()).casefold()
-    return normalized.removeprefix("-")
-
+    # Annotation glyphs (dagger/asterisk) and hyphens are stripped from the
+    # query start for the same reason Lemma.save / Form.save strip them from
+    # stored normalized fields: they are typography, not part of the word.
+    return strip_annotation_markers(normalized)
 
 def filter_json_array(queryset, field_name, value):
     if connection.vendor == "sqlite":

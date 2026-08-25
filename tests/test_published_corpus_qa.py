@@ -87,14 +87,14 @@ def test_published_corpus_qa_categorizes_unsearchable_lemma_and_form(
 
     from shona_api.lexicon import qa as lexicon_qa
 
-    real_search = lexicon_qa.search_public_records
+    real_normalize = lexicon_qa.normalize_search_query
 
-    def hide_expected_records(normalized_query, *, filters=None):
-        if normalized_query in {"buda", "mbudo"}:
-            return []
-        return real_search(normalized_query, filters=filters)
+    def hide_expected_records(value):
+        if value in {"-buda", "mbudo"}:
+            return "missing-query"
+        return real_normalize(value)
 
-    monkeypatch.setattr(lexicon_qa, "search_public_records", hide_expected_records)
+    monkeypatch.setattr(lexicon_qa, "normalize_search_query", hide_expected_records)
 
     report = run_qa_command()
 
