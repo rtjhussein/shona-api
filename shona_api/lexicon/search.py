@@ -2,11 +2,9 @@ from django.db import connection
 from django.db.models import Prefetch
 
 from shona_api.editorial.models import ReviewState
+from shona_api.phonology.orthography import normalize_orthography
 
 from .models import Form, Lemma
-
-
-from shona_api.phonology.orthography import strip_annotation_markers
 
 SEARCH_NORMALIZER_VERSION = "shona-orthography-normalizer-v2"
 
@@ -17,11 +15,9 @@ PUBLIC_REVIEW_STATES = (ReviewState.PUBLISHED,)
 
 
 def normalize_search_query(value):
-    normalized = " ".join(value.strip().split()).casefold()
-    # Annotation glyphs (dagger/asterisk) and hyphens are stripped from the
-    # query start for the same reason Lemma.save / Form.save strip them from
-    # stored normalized fields: they are typography, not part of the word.
-    return strip_annotation_markers(normalized)
+    """Normalize a search query with the canonical orthography helper."""
+    return normalize_orthography(value)
+
 
 def filter_json_array(queryset, field_name, value):
     if connection.vendor == "sqlite":

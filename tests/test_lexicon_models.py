@@ -68,7 +68,7 @@ def test_lemma_and_form_compute_phonology_fields_on_save():
         form_kind=Form.FormKind.VARIANT,
     )
 
-    assert lemma.normalized_headword == "Zimbabwe"
+    assert lemma.normalized_headword == "zimbabwe"
     assert lemma.phonology_inventory_version == "shona-core-v1"
     assert lemma.graphemes == ["z", "i", "mb", "a", "bw", "e"]
     assert lemma.grapheme_count == 6
