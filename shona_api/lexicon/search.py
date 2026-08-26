@@ -2,19 +2,21 @@ from django.db import connection
 from django.db.models import Prefetch
 
 from shona_api.editorial.models import ReviewState
+from shona_api.phonology.orthography import normalize_orthography
 
 from .models import Form, Lemma
 
+SEARCH_NORMALIZER_VERSION = "shona-orthography-normalizer-v2"
 
-SEARCH_NORMALIZER_VERSION = "shona-orthography-normalizer-v1"
+
 DEFAULT_SEARCH_LIMIT = 20
 MAX_SEARCH_LIMIT = 50
 PUBLIC_REVIEW_STATES = (ReviewState.PUBLISHED,)
 
 
 def normalize_search_query(value):
-    normalized = " ".join(value.strip().split()).casefold()
-    return normalized.removeprefix("-")
+    """Normalize a search query with the canonical orthography helper."""
+    return normalize_orthography(value)
 
 
 def filter_json_array(queryset, field_name, value):

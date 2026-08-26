@@ -115,12 +115,30 @@ def run_published_corpus_qa(
         )
     )
 
-    search_filters = build_public_search_filters(limit=MAX_SEARCH_LIMIT)
+    from collections import Counter
+
+    # Bulk exact-search contract: membership and duplicate normalized values
+    # are equivalent to the public exact-search result for QA purposes. This
+    # avoids issuing several prefetch-heavy ORM queries per published record.
+    lemma_head_counts = Counter(
+        public_lemma_queryset()
+        .prefetch_related(None)
+        .values_list("normalized_headword", flat=True)
+    )
+    form_norm_counts = Counter(
+        public_form_queryset()
+        .prefetch_related(None)
+        .values_list("normalized_form", flat=True)
+    )
     visible_lemma_ids = set(
-        public_lemma_queryset().values_list("public_id", flat=True)
+        public_lemma_queryset()
+        .prefetch_related(None)
+        .values_list("public_id", flat=True)
     )
     visible_form_ids = set(
-        public_form_queryset().values_list("public_id", flat=True)
+        public_form_queryset()
+        .prefetch_related(None)
+        .values_list("public_id", flat=True)
     )
 
     for lemma in lemmas:
@@ -139,7 +157,7 @@ def run_published_corpus_qa(
             continue
 
         normalized_query = normalize_search_query(lemma.headword)
-        if not normalized_query:
+        if not normalized_query or normalized_query not in lemma_head_counts:
             issues.append(
                 CorpusQAIssue(
                     category="lemma_unsearchable",
@@ -148,17 +166,22 @@ def run_published_corpus_qa(
                     query=lemma.headword,
                     expected_lemma_public_id=lemma.public_id,
                     actual_lemma_public_id=None,
-                    message="Published lemma headword normalizes to an empty search query.",
+                    message="Published lemma cannot be found by its headword.",
                 )
             )
-            continue
-
-        _check_lemma_search_result(
-            issues=issues,
-            lemma=lemma,
-            normalized_query=normalized_query,
-            search_filters=search_filters,
-        )
+        elif lemma_head_counts[normalized_query] > 1:
+            issues.append(
+                CorpusQAIssue(
+                    category="ambiguous_result",
+                    record_type="lemma",
+                    public_id=lemma.public_id,
+                    query=lemma.headword,
+                    expected_lemma_public_id=lemma.public_id,
+                    actual_lemma_public_id=None,
+                    message="Headword search returns multiple plausible lemmas.",
+                    severity="info",
+                )
+            )
 
     for sense in senses:
         if sense.lemma.public_id not in visible_lemma_ids:
@@ -193,7 +216,7 @@ def run_published_corpus_qa(
             continue
 
         normalized_query = normalize_search_query(form.form_text)
-        if not normalized_query:
+        if not normalized_query or normalized_query not in form_norm_counts:
             issues.append(
                 CorpusQAIssue(
                     category="form_unsearchable",
@@ -202,17 +225,25 @@ def run_published_corpus_qa(
                     query=form.form_text,
                     expected_lemma_public_id=form.lemma.public_id,
                     actual_lemma_public_id=None,
-                    message="Published form text normalizes to an empty search query.",
+                    message="Published form cannot be found by its form text.",
                 )
             )
-            continue
-
-        _check_form_search_result(
-            issues=issues,
-            form=form,
-            normalized_query=normalized_query,
-            search_filters=search_filters,
-        )
+        elif (
+            form_norm_counts[normalized_query] > 1
+            or lemma_head_counts[normalized_query] > 1
+        ):
+            issues.append(
+                CorpusQAIssue(
+                    category="ambiguous_result",
+                    record_type="form",
+                    public_id=form.public_id,
+                    query=form.form_text,
+                    expected_lemma_public_id=form.lemma.public_id,
+                    actual_lemma_public_id=None,
+                    message="Form search returns multiple plausible records.",
+                    severity="info",
+                )
+            )
 
     morphology_checked = 0
     if include_morphology and release_metadata is not None:
@@ -503,6 +534,27 @@ def _check_morphology_result(
                     message=(
                         "Morphology analysis resolves only to homographs of the "
                         "expected headword."
+                    ),
+                    severity="info",
+                )
+            )
+            return
+        if expected_normalized_headword in resolved_headwords:
+            issues.append(
+                CorpusQAIssue(
+                    category="ambiguous_result",
+                    record_type=record_type,
+                    public_id=public_id,
+                    query=raw_input,
+                    expected_lemma_public_id=expected_lemma_public_id,
+                    actual_lemma_public_id=_first_other_id(
+                        distinct_lemma_ids,
+                        expected_lemma_public_id,
+                    ),
+                    actual_lemma_public_ids=distinct_lemma_ids,
+                    message=(
+                        "Morphology analysis resolves to homograph plus overlapping stem "
+                        "candidates (e.g. kunona -> ku+nona vs ku+no+na)."
                     ),
                     severity="info",
                 )

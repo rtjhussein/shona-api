@@ -30,11 +30,13 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
+            "--exact-only",
             "--skip-morphology",
+            dest="skip_morphology",
             action="store_true",
             help=(
-                "Skip morphology analysis replays. Search and visibility "
-                "checks still run; use for fast CI-scale passes."
+                "Run exact-search and visibility checks only; skip morphology "
+                "analysis replays for fast CI-scale passes."
             ),
         )
 

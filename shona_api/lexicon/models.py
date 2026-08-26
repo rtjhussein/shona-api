@@ -5,6 +5,7 @@ from django.db import models
 
 from shona_api.editorial.models import ReviewState
 from shona_api.phonology import compute_phonology_fields
+from shona_api.phonology.orthography import normalize_orthography
 from shona_api.records.models import CanonicalRecord
 
 
@@ -249,7 +250,7 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
-        self.normalized_headword = self.headword.removeprefix("-").strip()
+        self.normalized_headword = normalize_orthography(self.headword)
         self.apply_phonology_fields(self.normalized_headword)
         self.include_computed_update_fields(kwargs, "normalized_headword")
         super().save(*args, **kwargs)
@@ -396,7 +397,7 @@ class Form(PhonologyFieldsMixin, CanonicalRecord):
         return f"{self.form_text} ({self.form_kind})"
 
     def save(self, *args, **kwargs):
-        self.normalized_form = self.form_text.removeprefix("-").strip()
+        self.normalized_form = normalize_orthography(self.form_text)
         self.apply_phonology_fields(self.normalized_form)
         self.include_computed_update_fields(kwargs, "normalized_form")
         super().save(*args, **kwargs)

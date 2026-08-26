@@ -274,7 +274,7 @@ def test_search_endpoint_returns_exact_lemma_match(
     assert body["data"]["query"] == {
         "raw": " -BUDA ",
         "normalized": "buda",
-        "normalizer": "shona-orthography-normalizer-v1",
+        "normalizer": "shona-orthography-normalizer-v2",
     }
     assert body["data"]["count"] == 1
     assert body["data"]["results"][0]["result_type"] == "lemma"

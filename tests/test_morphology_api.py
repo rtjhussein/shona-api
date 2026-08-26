@@ -260,7 +260,7 @@ def test_analyze_endpoint_returns_bounded_positive_present_verb_analysis(
     assert body["data"]["query"] == {
         "raw": "NdINobuda",
         "normalized": "ndinobuda",
-        "normalizer": "shona-orthography-normalizer-v1",
+        "normalizer": "shona-orthography-normalizer-v2",
     }
     assert body["data"]["count"] == 1
     analysis = body["data"]["analyses"][0]

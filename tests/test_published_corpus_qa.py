@@ -87,14 +87,14 @@ def test_published_corpus_qa_categorizes_unsearchable_lemma_and_form(
 
     from shona_api.lexicon import qa as lexicon_qa
 
-    real_search = lexicon_qa.search_public_records
+    real_normalize = lexicon_qa.normalize_search_query
 
-    def hide_expected_records(normalized_query, *, filters=None):
-        if normalized_query in {"buda", "mbudo"}:
-            return []
-        return real_search(normalized_query, filters=filters)
+    def hide_expected_records(value):
+        if value in {"-buda", "mbudo"}:
+            return "missing-query"
+        return real_normalize(value)
 
-    monkeypatch.setattr(lexicon_qa, "search_public_records", hide_expected_records)
+    monkeypatch.setattr(lexicon_qa, "normalize_search_query", hide_expected_records)
 
     report = run_qa_command()
 
@@ -280,3 +280,42 @@ def test_published_corpus_qa_different_stem_resolution_is_error(
     assert wrong
     assert all(issue["severity"] == "error" for issue in wrong)
     assert report["status"] == "failed"
+
+@pytest.mark.django_db
+def test_published_corpus_qa_overlapping_homograph_plus_stem_is_info(
+    current_release,
+    monkeypatch,
+):
+    # kunona-style: analyses return homograph of expected (same headword,
+    # different id) plus a different stem that is a substring overlap (na vs nona).
+    lemma, *_ = create_published_entry(headword="-nona", form_text=None)
+    homograph, *_ = create_published_entry(
+        headword="-nona",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        form_text=None,
+    )
+    assert homograph.normalized_headword == "nona"
+    other, *_ = create_published_entry(headword="-na", form_text=None)
+
+    def resolve_to_both(raw_text, *, rule_set_version):
+        return {
+            "analyses": [
+                {"lemma": {"public_id": homograph.public_id}},
+                {"lemma": {"public_id": other.public_id}},
+            ]
+        }
+
+    monkeypatch.setattr("shona_api.lexicon.qa.analyze_text", resolve_to_both)
+
+    report = run_qa_command()
+
+    categories = {issue["category"] for issue in report["issues"]}
+    assert "wrong_lemma" not in categories
+    overlapping = [
+        issue
+        for issue in report["issues"]
+        if issue["category"] == "ambiguous_result" and "overlapping" in issue["message"]
+    ]
+    assert overlapping
+    assert all(issue["severity"] == "info" for issue in overlapping)
+    assert report["status"] == "passed_with_notes"
