@@ -23,3 +23,19 @@ def strip_annotation_markers(value: str) -> str:
     start of a headword, and mid-word hyphens are meaningful.
     """
     return value.strip().lstrip(ANNOTATION_MARKER_CHARS)
+
+
+def normalize_orthography(value: str) -> str:
+    """Canonical orthography normalization for storage and search.
+
+    Collapse whitespace, casefold for case-insensitive Shona lookup, then
+    strip Hannan annotation markers (``†``, ``*``, leading ``-``). The same
+    function is used by ``Lemma.save``/``Form.save`` and
+    ``lexicon.search.normalize_search_query`` so query and stored values
+    never diverge.
+
+    ``†Bhaibheri`` -> ``bhaibheri``; ``  Agasiti `` -> ``agasiti``;
+    ``kwaMutare`` -> ``kwamutare``; ``mowa  danga`` -> ``mowa danga``.
+    """
+    collapsed = " ".join(value.strip().split())
+    return strip_annotation_markers(collapsed.casefold())
