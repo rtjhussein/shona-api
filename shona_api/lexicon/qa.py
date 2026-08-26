@@ -539,6 +539,27 @@ def _check_morphology_result(
                 )
             )
             return
+        if expected_normalized_headword in resolved_headwords:
+            issues.append(
+                CorpusQAIssue(
+                    category="ambiguous_result",
+                    record_type=record_type,
+                    public_id=public_id,
+                    query=raw_input,
+                    expected_lemma_public_id=expected_lemma_public_id,
+                    actual_lemma_public_id=_first_other_id(
+                        distinct_lemma_ids,
+                        expected_lemma_public_id,
+                    ),
+                    actual_lemma_public_ids=distinct_lemma_ids,
+                    message=(
+                        "Morphology analysis resolves to homograph plus overlapping stem "
+                        "candidates (e.g. kunona -> ku+nona vs ku+no+na)."
+                    ),
+                    severity="info",
+                )
+            )
+            return
         issues.append(
             CorpusQAIssue(
                 category="wrong_lemma",
