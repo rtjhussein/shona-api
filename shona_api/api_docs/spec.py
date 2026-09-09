@@ -247,7 +247,17 @@ def build_openapi_spec():
                     "summary": "Analyze a supported v1 Shona form.",
                     "description": (
                         "Supports simple ku- infinitives built from reviewed verb "
-                        "stems plus bounded present positive/negative verb forms."
+                        "stems plus bounded present positive/negative verb forms, "
+                        "including verb extensions under height harmony and reversive "
+                        "vowel copy (see the verbal extension rule cards). Ambiguous "
+                        "forms return competing no-object and object readings, "
+                        "deduplicated and ordered deterministically. Derivations "
+                        "whose per-lemma distribution is not source-verified "
+                        "(causative -idz-/-its-, short reversive) are excluded from "
+                        "inferred analyses; surfaces resolve only as their own "
+                        "reviewed lemmas. The serving release must declare the "
+                        "implemented morphology rules version, otherwise the "
+                        "endpoint returns 503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED."
                     ),
                     "operationId": "analyzeForm",
                     "requestBody": json_body(
@@ -272,6 +282,20 @@ def build_openapi_spec():
                 "post": {
                     "tags": ["Morphology"],
                     "summary": "Generate a supported v1 Shona verb form.",
+                    "description": (
+                        "Generates bounded present positive/negative verb forms from "
+                        "a reviewed verb-stem lemma, including verb extensions "
+                        "(passive, causative, applicative, neuter, reciprocal, "
+                        "reversive, repetitive) with strict style, order, and "
+                        "combination validation. Extension allomorphs whose lexical "
+                        "distribution is not source-verified (causative styles dz "
+                        "and ts; reversive style short) are refused with 422 "
+                        "EXTENSION_UNVERIFIED, and the analyzer excludes the same "
+                        "unverified derivations from its inferred analyses. The "
+                        "serving release must declare the implemented morphology "
+                        "rules version, otherwise the endpoint returns 503 "
+                        "MORPHOLOGY_RULES_VERSION_UNSUPPORTED."
+                    ),
                     "operationId": "generateForm",
                     "requestBody": json_body(
                         {"$ref": "#/components/schemas/GenerateRequest"},
@@ -289,6 +313,7 @@ def build_openapi_spec():
                             },
                         },
                     ),
+
                     "responses": {
                         "200": success_response(
                             "Generated form.",
@@ -385,7 +410,11 @@ def rate_limit_response():
 
 
 def current_release_response():
-    return error_response("Current data release is not configured.")
+    return error_response(
+        "Current data release is not configured, or its rule_set_version does "
+        "not match the morphology rules this deployment implements "
+        "(MORPHOLOGY_RULES_VERSION_UNSUPPORTED)."
+    )
 
 
 def rate_limit_headers():

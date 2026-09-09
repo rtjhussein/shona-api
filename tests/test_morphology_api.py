@@ -6,6 +6,7 @@ from pathlib import Path
 from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Lemma, NounClass
+from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
 from shona_api.releases.models import DataRelease
 
 
@@ -30,7 +31,7 @@ def current_release():
     return DataRelease.objects.create(
         version="2026.05.0",
         label="May 2026 release",
-        rule_set_version="morphology-rules-v2",
+        rule_set_version=MORPHOLOGY_RULES_VERSION,
         is_current=True,
     )
 
@@ -450,15 +451,25 @@ def test_analyze_endpoint_explains_passive_extension_like_future_lane(
     assert response.status_code == 422
     body = response.json()
     assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
+    # The lane message changed under morphology-rules-v3: extensions are analyzed
+    # in v1 now, so an unmatched extension-like surface reports a harmony/lexical
+    # miss instead of a "future review lane".
     assert body["error"]["detail"]["future_lanes"] == [
         {
             "code": "passive_or_extension_like",
             "message": (
-                "This looks like a passive or extension-like verb surface. "
-                "Those forms are a future review lane and are not analyzed in v1."
+                "This surface contains extension-like material but no supported "
+                "v1 construction matched it. Check vowel harmony and the lexical "
+                "stem; the supported extension boundary is documented in the "
+                "verbal extension rule cards."
             ),
             "support_status": "not_supported",
-            "rule_card_ids": ["fortune.verbal.extensions.001"],
+            "rule_card_ids": [
+                "fortune.verbal.extensions.001",
+                "fortune.verbal.reversive.001",
+                "fortune.verbal.repetitive.001",
+                "fortune.verbal.extensions.retained.001",
+            ],
         }
     ]
 
@@ -1100,7 +1111,10 @@ def test_extension_3_primary_object_concords_analysis_and_generation(
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["data"]["count"] == 1
+    # Finding 2: both "mu" object concords (3rd-singular and 2nd-plural)
+    # prefix the stem, so both feature readings are returned, 3rd singular
+    # first (PERSON_OBJECT_CONCORDS order); the exact -ambura reading is kept.
+    assert body["data"]["count"] == 2
     analysis = body["data"]["analyses"][0]
     assert analysis["rule_id"] == "fortune.concord.object.001"
     assert analysis["lemma"]["public_id"] == vowel_verb_lemma.public_id
@@ -1113,6 +1127,11 @@ def test_extension_3_primary_object_concords_analysis_and_generation(
         "number": "singular",
     }
     assert analysis["slots"]["verb_stem"]["surface"] == "ambura"
+    second = body["data"]["analyses"][1]
+    assert second["slots"]["object"]["person"] == "second"
+    assert second["slots"]["object"]["number"] == "plural"
+    assert second["lemma"]["public_id"] == vowel_verb_lemma.public_id
+
 
     # 2. Generation of ndinomuambura
     response = client.post(
@@ -1448,21 +1467,19 @@ def test_analyze_endpoint_returns_neuter_and_reciprocal_extensions(
         {"surface": "an", "type": "reciprocal", "label": "reciprocal extension (-an-)"}
     ]
 
-    # 3. Compound extensions: munobudikana (neuter + reciprocal)
+    # 3. Compound stack outside the documented sequence convention
+    # (neuter applied before reciprocal): the shared analyzer/generator
+    # policy rejects the sequence, so the surface is unsupported.
     response = client.post(
         "/v1/analyze",
         {"text": "munobudikana"},
         content_type="application/json",
         HTTP_AUTHORIZATION=f"Api-Key {api_key}",
     )
-    assert response.status_code == 200
+    assert response.status_code == 422
     body = response.json()
-    analysis = body["data"]["analyses"][0]
-    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
-    assert analysis["slots"]["extensions"] == [
-        {"surface": "ik", "type": "neuter", "label": "neuter extension (-ik- / -ek-)"},
-        {"surface": "an", "type": "reciprocal", "label": "reciprocal extension (-an-)"}
-    ]
+    assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
+
 
 
 @pytest.mark.django_db
@@ -1548,10 +1565,12 @@ def test_generate_endpoint_supports_neuter_and_reciprocal_extensions(
 
 
 @pytest.mark.django_db
-def test_analyze_endpoint_returns_secondary_causatives_and_reversives(
+def test_analyze_endpoint_excludes_unverified_secondary_causative_derivations(
     client, api_key, current_release, verb_lemma
 ):
-    # Seed the -chema lemma in the isolated test DB
+    """Supervisor blocker: publishing -buda or -chema does not authorize the
+    -idz-/-its- derivations. The analyzer excludes those readings; the
+    structured 422 explains the evidence gate."""
     Lemma.objects.create(
         headword="-chema",
         headword_kind=Lemma.HeadwordKind.VERB_STEM,
@@ -1561,37 +1580,31 @@ def test_analyze_endpoint_returns_secondary_causatives_and_reversives(
         review_state=ReviewState.PUBLISHED,
     )
 
-    # 1. Secondary causative analysis (style 'dz'): kuchemedza
-    response = client.post(
-        "/v1/analyze",
-        {"text": "kuchemedza"},
-        content_type="application/json",
-        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
-    )
-    assert response.status_code == 200
-    body = response.json()
-    analysis = body["data"]["analyses"][0]
-    assert analysis["lemma"]["normalized_headword"] == "chema"
-    assert analysis["slots"]["extensions"] == [
-        {"surface": "edz", "type": "causative", "style": "dz", "label": "causative extension (-idz- / -edz-)"}
-    ]
+    for text in ("kuchemedza", "kubuditsa", "kubudidza"):
+        response = client.post(
+            "/v1/analyze",
+            {"text": text},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 422, text
+        error = response.json()["error"]
+        assert error["code"] == "ANALYSIS_UNSUPPORTED", text
+        lane_codes = [
+            lane["code"] for lane in error["detail"]["future_lanes"]
+        ]
+        assert "unverified_extension_derivation" in lane_codes, text
 
-    # 2. Secondary causative analysis (style 'ts'): kubuditsa
-    response = client.post(
-        "/v1/analyze",
-        {"text": "kubuditsa"},
-        content_type="application/json",
-        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
-    )
-    assert response.status_code == 200
-    body = response.json()
-    analysis = body["data"]["analyses"][0]
-    assert analysis["lemma"]["public_id"] == verb_lemma.public_id
-    assert analysis["slots"]["extensions"] == [
-        {"surface": "its", "type": "causative", "style": "ts", "label": "causative extension (-its- / -ets-)"}
-    ]
 
-    # 3. Reversive analysis (short & long): kupetunura
+@pytest.mark.django_db
+def test_analyze_endpoint_returns_long_reversive_with_vowel_copy(
+    client, api_key, current_release
+):
+    # Reversive analysis with vowel copy: kupetenura.
+    # Corrected under morphology-rules-v3: Fortune Vol. 1 section 2.10.2.3.3(c)
+    # gives -pfek- -> -pfekenur-, so an e-radical like -peta- takes -enur-, not
+    # the old u/o-only -unur-. The previous kupetunura expectation encoded the
+    # implementation bug and is now an unsupported surface (422, below).
     peta_lemma = Lemma.objects.create(
         headword="-peta",
         headword_kind=Lemma.HeadwordKind.VERB_STEM,
@@ -1602,7 +1615,7 @@ def test_analyze_endpoint_returns_secondary_causatives_and_reversives(
     )
     response = client.post(
         "/v1/analyze",
-        {"text": "kupetunura"},
+        {"text": "kupetenura"},
         content_type="application/json",
         HTTP_AUTHORIZATION=f"Api-Key {api_key}",
     )
@@ -1611,61 +1624,59 @@ def test_analyze_endpoint_returns_secondary_causatives_and_reversives(
     analysis = body["data"]["analyses"][0]
     assert analysis["lemma"]["public_id"] == peta_lemma.public_id
     assert analysis["slots"]["extensions"] == [
-        {"surface": "unur", "type": "reversive", "style": "long", "label": "reversive extension (-unur- / -onor-)"}
+        {"surface": "enur", "type": "reversive", "style": "long", "label": "reversive extension (-anur- / -enur- / -inur- / -onor- / -unur-)"}
     ]
+
+    # The old u/o-only surface violates vowel copy and no longer analyzes.
+    response = client.post(
+        "/v1/analyze",
+        {"text": "kupetunura"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert response.status_code == 422
 
 
 @pytest.mark.django_db
-def test_generate_endpoint_supports_secondary_causatives_and_reversives(
+def test_generate_endpoint_refuses_unverified_secondary_causatives(
     client, api_key, current_release, verb_lemma
 ):
-    # 1. Secondary causative generation (style 'dz'): buda -> ndinobudidza
-    response = client.post(
-        "/v1/generate",
-        {
-            "lemma_public_id": verb_lemma.public_id,
-            "features": {
-                "generation_type": "verb_form",
-                "subject": {"type": "person", "person": "first", "number": "singular"},
-                "tense_aspect": "present",
-                "polarity": "positive",
-                "extensions": [{"type": "causative", "style": "dz"}]
+    """Finding 4: dz/ts causative allomorphs are evidence-gated on both sides:
+    generation refuses them with a structured EXTENSION_UNVERIFIED error
+    instead of a warning."""
+    for style in ("dz", "ts"):
+        response = client.post(
+            "/v1/generate",
+            {
+                "lemma_public_id": verb_lemma.public_id,
+                "features": {
+                    "generation_type": "verb_form",
+                    "subject": {"type": "person", "person": "first", "number": "singular"},
+                    "tense_aspect": "present",
+                    "polarity": "positive",
+                    "extensions": [{"type": "causative", "style": style}]
+                },
             },
-        },
-        content_type="application/json",
-        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["data"]["generated"]["form"] == "ndinobudidza"
-    assert body["data"]["generated"]["slots"]["extensions"] == [
-        {"surface": "idz", "type": "causative", "style": "dz", "label": "causative extension (-idz- / -edz-)"}
-    ]
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 422, style
+        body = response.json()
+        assert body["error"]["code"] == "EXTENSION_UNVERIFIED", style
+        assert body["error"]["detail"]["extension_type"] == "causative", style
+        assert body["error"]["detail"]["style"] == style, style
 
-    # 2. Secondary causative generation (style 'ts'): buda -> ndinobuditsa
-    response = client.post(
-        "/v1/generate",
-        {
-            "lemma_public_id": verb_lemma.public_id,
-            "features": {
-                "generation_type": "verb_form",
-                "subject": {"type": "person", "person": "first", "number": "singular"},
-                "tense_aspect": "present",
-                "polarity": "positive",
-                "extensions": [{"type": "causative", "style": "ts"}]
-            },
-        },
-        content_type="application/json",
-        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["data"]["generated"]["form"] == "ndinobuditsa"
-    assert body["data"]["generated"]["slots"]["extensions"] == [
-        {"surface": "its", "type": "causative", "style": "ts", "label": "causative extension (-its- / -ets-)"}
-    ]
 
-    # 3. Reversive generation (long with 'o' mid vowel trigger): kora -> ndinokorora
+@pytest.mark.django_db
+def test_generate_endpoint_reversive_long_round_trips(
+    client, api_key, current_release, verb_lemma
+):
+    # Reversive generation (long with vowel copy): kora -> ndinokoronora.
+    # Corrected under morphology-rules-v3: Fortune Vol. 1 section 2.10.2.3.3(c)
+    # gives -roy- -> -royonor-, so an o-radical takes -onor-. The previous
+    # ndinokororora expectation mislabeled the repetitive extension (-oror-,
+    # section (b)) as reversive; ndinokororora is now generated via
+    # {"type": "repetitive"} instead.
     kora_lemma = Lemma.objects.create(
         headword="-kora",
         headword_kind=Lemma.HeadwordKind.VERB_STEM,
@@ -1691,9 +1702,9 @@ def test_generate_endpoint_supports_secondary_causatives_and_reversives(
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["data"]["generated"]["form"] == "ndinokororora"
+    assert body["data"]["generated"]["form"] == "ndinokoronora"
     assert body["data"]["generated"]["slots"]["extensions"] == [
-        {"surface": "oror", "type": "reversive", "style": "long", "label": "reversive extension (-urur- / -oror-)"}
+        {"surface": "onor", "type": "reversive", "style": "long", "label": "reversive extension (-anur- / -enur- / -inur- / -onor- / -unur-)"}
     ]
 
 

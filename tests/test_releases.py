@@ -6,6 +6,7 @@ from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Lemma
 from shona_api.releases.models import DataRelease
 from shona_api.releases.services import (
+    CURRENT_RELEASE_SETUP_COMMAND,
     CurrentReleaseNotFound,
     ensure_current_release_available,
     get_current_release,
@@ -154,11 +155,7 @@ def test_protected_language_endpoint_reports_missing_current_release(client):
                 "DataRelease before serving protected language endpoints."
             ),
             "detail": {
-                "setup_command": (
-                    "python manage.py ensure_current_release --version "
-                    "2026.05.local --label \"Local development release\" "
-                    "--rule-set-version morphology-rules-v2"
-                )
+                "setup_command": CURRENT_RELEASE_SETUP_COMMAND,
             },
         },
     }

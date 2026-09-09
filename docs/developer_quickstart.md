@@ -9,14 +9,18 @@ future backlog items.
 ```powershell
 python -m pip install -e ".[dev]"
 python manage.py migrate
-python manage.py ensure_current_release --version 2026.05.local --label "Local development release" --rule-set-version morphology-rules-v2
+python manage.py ensure_current_release --version 2026.05.local --label "Local development release" --rule-set-version morphology-rules-v3
 python manage.py runserver
 ```
 
 Protected language endpoints require exactly one current `DataRelease` so the
 response envelope can expose `data_release` and `rule_set_version`. If no
 current release exists, the API returns `CURRENT_RELEASE_NOT_CONFIGURED` with
-the setup command above in `error.detail.setup_command`.
+the setup command above in `error.detail.setup_command`. The release must also
+declare the morphology rules version this deployment implements
+(`morphology-rules-v3`): otherwise analyze and generate return `503
+MORPHOLOGY_RULES_VERSION_UNSUPPORTED`, and search keeps serving lexical
+results while reporting `morphology_enrichment.status = "unavailable"`.
 
 The OpenAPI spec is published at:
 
@@ -174,15 +178,12 @@ Example:
 
 It also supports single-token positive present verb forms shaped as:
 
-```text
-subject_concord + no + verb_stem
-```
-
 Unsupported forms return `ANALYSIS_UNSUPPORTED` with detail about the supported
-shape. Infinitive generation, infinitive complements, extensions, tone, and
-complex verbal morphology remain outside v1 support. Passive or extension-like
-surfaces may include a future-lane explanation and rule-card ID in
-`error.detail.future_lanes`.
+shape. Infinitive generation, infinitive complements, tone, and complex verbal
+morphology remain outside v1 support, and ambiguous present forms return
+competing no-object and object readings ordered by confidence. Passive or
+extension-like surfaces may include a future-lane explanation and rule-card ID
+in `error.detail.future_lanes`.
 
 ## 7. Generate a supported morphology form
 
@@ -206,9 +207,12 @@ Content-Type: application/json
 }
 ```
 
-Generation v1 supports reviewed verb-stem lemmas and the same
-`subject_concord + no + verb_stem` shape. Unsupported feature requests return
-`GENERATION_UNSUPPORTED`.
+Generation v1 supports reviewed verb-stem lemmas, the same
+`subject_concord + no + [object_concord] + verb_stem` shape, and the documented
+verb extensions. Evidence-gated allomorphs (causative styles `dz` and `ts`,
+reversive style `short`) return `422 EXTENSION_UNVERIFIED`; other unsupported
+feature requests return `GENERATION_UNSUPPORTED`. See
+`docs/morphology/generate_endpoint.md` for the full extension contract.
 
 ## 8. Response envelope
 
@@ -218,7 +222,7 @@ Protected public API success responses use:
 {
   "api_version": "v1",
   "data_release": "2026.05.0",
-  "rule_set_version": "morphology-rules-v2",
+  "rule_set_version": "morphology-rules-v3",
   "generated_at": "2026-05-12T12:00:00Z",
   "data": {}
 }

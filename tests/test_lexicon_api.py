@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Form, Lemma, Sense, ToneRecord
+from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
 from shona_api.releases.models import DataRelease
 
 
@@ -24,7 +25,7 @@ def current_release():
     return DataRelease.objects.create(
         version="2026.05.0",
         label="May 2026 release",
-        rule_set_version="morphology-rules-v2",
+        rule_set_version=MORPHOLOGY_RULES_VERSION,
         is_current=True,
     )
 
@@ -711,15 +712,25 @@ def test_search_zero_result_exposes_unsupported_shape_future_lane(
     assert response.status_code == 200
     enrichment = response.json()["data"]["zero_result"]["morphology_enrichment"]
     assert enrichment["status"] == "unsupported"
+    # Lane message updated under morphology-rules-v3 alongside the analyze
+    # endpoint: the bare stem still has no supported construction, but the hint
+    # no longer calls extensions a future lane.
     assert enrichment["detail"]["future_lanes"] == [
         {
             "code": "passive_or_extension_like",
             "message": (
-                "This looks like a passive or extension-like verb surface. "
-                "Those forms are a future review lane and are not analyzed in v1."
+                "This surface contains extension-like material but no supported "
+                "v1 construction matched it. Check vowel harmony and the lexical "
+                "stem; the supported extension boundary is documented in the "
+                "verbal extension rule cards."
             ),
             "support_status": "not_supported",
-            "rule_card_ids": ["fortune.verbal.extensions.001"],
+            "rule_card_ids": [
+                "fortune.verbal.extensions.001",
+                "fortune.verbal.reversive.001",
+                "fortune.verbal.repetitive.001",
+                "fortune.verbal.extensions.retained.001",
+            ],
         }
     ]
 

@@ -9,7 +9,14 @@ from shona_api.lexicon.views import (
 )
 from shona_api.releases.services import CurrentReleaseNotFound, get_current_release_metadata
 
-from .services import AnalysisFailure, GenerationFailure, analyze_text, generate_form
+from .services import (
+    AnalysisFailure,
+    GenerationFailure,
+    RulesVersionError,
+    analyze_text,
+    ensure_rules_version_supported,
+    generate_form,
+)
 
 
 class AnalyzeView(APIView):
@@ -31,9 +38,19 @@ class AnalyzeView(APIView):
             return build_current_release_missing_response()
 
         try:
+            ensure_rules_version_supported(release_metadata["rule_set_version"])
             payload = analyze_text(
                 raw_text,
                 rule_set_version=release_metadata["rule_set_version"],
+            )
+        except RulesVersionError as exc:
+            return Response(
+                build_error_envelope(
+                    code=exc.code,
+                    message=str(exc),
+                    detail=exc.detail,
+                ),
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         except AnalysisFailure as exc:
             return Response(
@@ -90,10 +107,20 @@ class GenerateView(APIView):
             return build_current_release_missing_response()
 
         try:
+            ensure_rules_version_supported(release_metadata["rule_set_version"])
             payload = generate_form(
                 lemma_public_id=lemma_public_id.strip(),
                 features=features,
                 rule_set_version=release_metadata["rule_set_version"],
+            )
+        except RulesVersionError as exc:
+            return Response(
+                build_error_envelope(
+                    code=exc.code,
+                    message=str(exc),
+                    detail=exc.detail,
+                ),
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         except GenerationFailure as exc:
             return Response(
