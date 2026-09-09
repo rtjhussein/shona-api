@@ -1,68 +1,192 @@
 {
   "rule_card_schema_version": "2026-05-23",
   "rule_id": "fortune.verbal.infinitive.001",
-  "title": "ku- infinitive and nominal verb forms",
+  "title": "ku- infinitive constructions: positive, negative, object-marked and reflexive",
   "source_key": "source_fortune",
-  "source_locator": "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, PDF pages 90-91 (printed pp. 78-79)",
+  "source_locator": "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, PDF pages 90-91 (printed pp. 78-79); verb hiatus retention witnesses: ku-chi-end-a (Fortune p. 90); akaenda/akaona (Fortune, Hannan, FSI); kuasakura (ku-a-sakura, class-6 object), kwaakaita/kwaakaenda, raakanga/zvaakanga, Usaenda (sa- + vowel stem), ndakamuona/kumuona (object + vowel stem) (Hannan); kuita (FSI p. 162); Ndaatora (nda-a-tor-a, class-6 object), Ndamuona/Ndavaona (FSI p. 166), Mwambovaona (FSI p. 189), tisina kumuona (negative infinitive + object, FSI p. 333). Excluded: kaana (Bemba, Fortune p. 21); nominal a + a > a coalescence of section 3.3.9 (mano/meno/meso, PDF p. 64) is explicitly nominal and does not transfer to verbs.",
   "rule_domain": "verbal_constructions",
   "rule_type": "construction_slot",
-  "rule_summary": "Draft lane for Fortune-backed review of ku- prefixed infinitive or nominal verb forms before public analysis support.",
-  "affected_rule_set": "morphology-rules-v2",
+  "rule_summary": "Class-15 ku- infinitive lane for morphology-rules-v4: ku + reviewed verb stem, with optional sa- negation, at most one object concord or the reflexive zvi prefix, and the shared evidence-gated extension operations. Negative infinitives keep terminal -a (kusaziva), unlike finite negatives. Object and reflexive zvi readings are reported distinctly, never merged. Two a-vowel boundaries are deferred pending evidence (sa- before an a-initial concord/stem; a-final concord before an a-initial stem): such constructions return structured unsupported responses, never inferred readings.",
+  "affected_rule_set": "morphology-rules-v4",
   "inputs": {
     "lexical_category": "verb",
     "headword_kind": "verb_stem",
-    "surface_shape": "ku + verb stem"
+    "surface_shape": "ku + [sa] + [object_concord | zvi-reflexive] + verb_stem",
+    "generation_features": {
+      "generation_type": "infinitive",
+      "polarity": "positive | negative (default positive)",
+      "object": "structured person/noun-class object feature or null",
+      "reflexive": "boolean, default false",
+      "extensions": "shared extension list contract with evidence gating and sequence policy"
+    }
   },
   "conditions": {
     "dialects": [],
     "source_scope": "standard unless source says otherwise",
-    "review_blockers": []
+    "review_blockers": [],
+    "generation_requires_terminal_a": "verb-stem lemmas whose normalized stem does not end in -a (divergent stems such as -ti, -nzi) are refused at generation; they resolve only as their own reviewed lemmas at analysis",
+    "single_object_or_reflexive": "at most one object concord or reflexivity per construction; double-object and reflexive-plus-object combinations are unsupported (no rule in the available volume)",
+    "shared_extension_policy": "extension evidence gating (dz/ts causative, short reversive) and the causative < applicative < reciprocal < reversive < repetitive < neuter < passive product sequence apply unchanged from morphology-rules-v3",
+    "deferred_vowel_boundaries": "sa- immediately followed by an a-initial object concord or an a-initial stem, and an a-final object concord immediately followed by an a-initial stem, are deferred pending applicable evidence (deferred_pending_evidence, never presented as ungrammatical): generation refuses them with 422 GENERATION_UNSUPPORTED and analysis infers no reading across them, while independently supported readings of the same surface stay available",
+    "feature_allowlist": "infinitive generation accepts only generation_type, polarity, object, reflexive, and extensions; any other top-level feature field returns 422 GENERATION_UNSUPPORTED instead of being ignored",
+    "deferred": [
+      "sa- before an a-initial object concord or stem (e.g. ku + sa + a + ziva, ku + sa + ambura)",
+      "a-final object concord before an a-initial stem (e.g. ku + va + ambura, ku + a + ambura)",
+      "progressive/exclusive formatives -cha-/-chi- (attested on p. 90 but out of this slice)",
+      "multiword complements (e.g. ku-sa-zvi-ziv-a izvi complement izvi)",
+      "nominal plural generation, tone generation"
+    ]
   },
   "outputs": {
     "analysis_fields": [
       "analysis_type",
       "slots.infinitive_prefix",
-      "slots.verb_stem"
+      "slots.polarity",
+      "slots.object",
+      "slots.reflexive",
+      "slots.verb_stem",
+      "slots.extensions",
+      "slots.final_vowel"
+    ],
+    "generation_fields": [
+      "generated.form",
+      "generated.slots.polarity",
+      "generated.slots.object",
+      "generated.slots.reflexive",
+      "generated.slots.verb_stem",
+      "generated.slots.extensions",
+      "generated.slots.final_vowel"
     ],
     "model_fields": []
   },
   "evidence": {
     "examples": [
       {
+        "surface": "kuzvitora",
+        "lemma_headword": "-tora",
+        "status": "source_attested",
+        "note": "Fortune 3.3.18(2)(a): object prefix example glossed 'to take them'."
+      },
+      {
+        "surface": "kuzviziva",
+        "lemma_headword": "-ziva",
+        "status": "source_attested",
+        "note": "Fortune 3.3.18(2)(a): reflexive prefix example glossed 'to know oneself'; the text lists object and reflexive prefixes together but glosses them apart."
+      },
+      {
+        "surface": "kusaziva",
+        "lemma_headword": "-ziva",
+        "status": "source_attested",
+        "note": "Fortune 3.3.18(2)(b): negative prefix /-sa-/ example glossed 'not to know'."
+      },
+      {
+        "surface": "kusazviziva",
+        "lemma_headword": "-ziva",
+        "status": "source_attested",
+        "note": "Fortune p. 91 analysis ku-sa-zvi-ziv-a (with complement izvi, 'not to know this'): negative sa- combined with the zvi object prefix. The same surface with a reflexive zvi reading is a constructed combination, reported as a second analysis."
+      },
+      {
         "surface": "kubuda",
         "lemma_headword": "-buda",
         "status": "api_fixture",
-        "note": "Public analyzer fixture using the approved ku + reviewed verb-stem shape."
+        "note": "Public analyzer/generator fixture using the approved ku + reviewed verb-stem shape."
       },
       {
         "surface": "kuambura",
         "lemma_headword": "-ambura",
         "status": "api_fixture",
-        "note": "Public analyzer fixture using the approved ku + reviewed verb-stem shape."
+        "note": "Vowel-initial fixture; ku + vowel-initial stems keep hiatus (cf. kuasakura, kuenda)."
+      },
+      {
+        "surface": "nokusaziva",
+        "lemma_headword": "-ziva",
+        "status": "corroborated",
+        "note": "Hannan dictionary text attests the negative infinitive after na- (nokusaziva, 'through not knowing how to hold the teapot') and the -ziva- radical in inflected use (Ndinokuzivai, 'I know you'), corroborating the Fortune construction with independent lexical material."
+      },
+      {
+        "surface": "kuzivira",
+        "lemma_headword": "-ziva",
+        "status": "constructed_combination",
+        "note": "Fixture combination of the attested -ziva radical with the source-backed applicative allomorph; both endpoints must agree on it (round-trip)."
+      },
+      {
+        "surface": "kusaambura",
+        "lemma_headword": "-ambura",
+        "status": "deferred_pending_evidence",
+        "note": "sa- before a-initial stem is deferred pending applicable evidence: generation refuses it and analysis infers no sa + ambura reading (a reviewed -sambura still analyzes as positive ku + sambura)."
+      },
+      {
+        "surface": "kuaziva",
+        "lemma_headword": "-ziva",
+        "status": "constructed_combination",
+        "note": "Positive class-6 object infinitive ku + a + ziva; no contraction applies (cf. source-attested ku + vowel sequences kuita, kuenda), and analysis recovers the object reading directly."
+      },
+      {
+        "surface": "kusaaziva",
+        "lemma_headword": "-ziva",
+        "status": "deferred_pending_evidence",
+        "note": "sa- before a-initial object concord is deferred pending applicable evidence: generation refuses ku + sa + a + ziva and analysis infers no such reading; kusaziva keeps exactly its source-attested no-object meaning."
+      },
+      {
+        "surface": "Ndaatora",
+        "lemma_headword": "-tora",
+        "status": "corroborated",
+        "note": "FSI p. 225 (Unit 21, Object prefixes): nda-a-tor-a answering 'Watorepi magwere?' (class 6); the class-6 object concord a- is retained after nda- in a verb, with hiatus."
+      },
+      {
+        "surface": "tisina kumuona",
+        "lemma_headword": "-ona",
+        "status": "corroborated",
+        "note": "FSI p. 333 (Unit 31): ti-sin-a ku-mu-on-a 'we left him without seeing him'; negative infinitive with object concord mu- before vowel stem -ona, hiatus retained. Also ndakamuona/kumuona (Hannan), Ndamuona/Ndavaona (FSI p. 166), Mwambovaona (FSI p. 189)."
       }
     ],
     "counterexamples": [
       {
         "surface": "ndinokuda",
-        "note": "The same surface segment ku can be an object concord in supported v1 forms."
+        "note": "The same surface segment ku can be an object concord in supported finite verb forms, not an infinitive prefix."
+      },
+      {
+        "surface": "kuchaziva",
+        "note": "Progressive -cha- infinitive (Fortune 3.3.18(2)(c)) is source-visible but outside this slice; it must 422, not silently analyze as cha + stem."
+      },
+      {
+        "surface": "kuti",
+        "note": "Divergent stem -ti takes no terminal -a (Fortune footnote p. 78): analysis resolves it only as its own reviewed lemma, generation refuses it."
+      },
+      {
+        "surface": "kusambura",
+        "note": "Contracted spelling with the sa- + stem vowel merged: verbs retain hiatus (kusaambura), so this surface is produced by no v1 construction and must 422."
+      },
+      {
+        "surface": "kusaaziva",
+        "note": "Deferred sa- + a-concord boundary: analysis infers no class-6 object reading (deferred_infinitive_boundary lane); the surface has no other supported reading."
+      },
+      {
+        "surface": "kuvaambura",
+        "note": "Deferred a-final-concord + a-stem boundary: analysis infers no va + ambura reading (deferred_infinitive_boundary lane)."
       }
     ],
     "notes": [
       "Do not treat every ku segment as an infinitive prefix.",
-      "Do not generate infinitive forms from this card."
+      "Do not merge a reflexive zvi reading into an object-concord slot.",
+      "Terminal vowel stays -a under sa- negation; do not apply the finite ha-/-e mutation here.",
+      "Every sa-/zvi-/object reading must resolve to a reviewed stem; a lexical stem that merely begins with those letters never authorizes the construction.",
+      "Rule-set history: extension allomorph, evidence-gate and sequence rules are unchanged from morphology-rules-v3; v4 adds only the infinitive negation/object/reflexive/generation lane described here.",
+      "Two a-vowel boundaries are deferred pending applicable evidence (sa- before an a-initial concord/stem; a-final concord before an a-initial stem): neither concatenated nor contracted spellings authorize an inferred reading there; independently supported readings of the same surface stay available.",
+      "Infinitive generation accepts only its five documented feature fields; anything else is a structured 422, never silently ignored."
     ]
   },
   "qa": {
-    "extraction_confidence": 0.72,
+    "extraction_confidence": 0.8,
     "review_state": "approved",
-    "review_decision": "approved_for_simple_analyzer_only",
-    "reviewer_notes": "Source locator supports a class 15 ku- infinitive lane. Public support is limited to simple ku + reviewed verb stem analysis."
+    "review_decision": "approved_for_public_infinitive_slice_except_deferred_vowel_boundaries",
+    "reviewer_notes": "Section 3.3.18 directly attests positive, negative, object-marked, reflexive, and negative+object ku- constructions on the -tor-/-ziv- radicals. Vowel-contact witnesses (kuasakura, kwaakaita, akaenda/akaona, Usaenda, Ndaatora, ndakamuona/kumuona, tisina kumuona) support retention at attested contacts but do not establish the sa-/a-concord, sa-/a-stem, or a-concord/a-stem boundaries, which are deferred pending applicable evidence: generation refuses them (deferred_pending_evidence) and analysis infers no reading across them, while independently supported readings stay available. Excluded with reasons: kaana (Bemba, Fortune p21), saakadzama (adverbial sa-, not negative), zvaakatya (-atya stem unverified), yaanwa and Mwamboaona (ambiguous parses); nominal a + a > a (3.3.9) is explicitly nominal and not transferred. Supported extension combinations must round-trip. Progressive/exclusive formatives and divergent-stem generation stay out of scope."
   },
   "api_safety": {
     "analyzer_consumes": true,
-    "generator_consumes": false,
+    "generator_consumes": true,
     "public_endpoint_safe": true,
     "requires_review_before_public": false,
-    "backward_compatibility": "Adds a new matched analysis for simple ku- infinitives without changing existing finite verb analysis or generation."
+    "backward_compatibility": "Additive under morphology-rules-v4 except the two deferred a-vowel boundaries: simple ku- readings gain a polarity object (positive) and a reflexive null slot; generation_type infinitive is new; finite verb_form shapes, extension rules, evidence gates, and the sequence convention are unchanged. Deferred-boundary requests that previously generated or analyzed now return structured unsupported responses with deferred_pending_evidence. Releases declaring older rule versions receive 503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED; no release records are rewritten."
   }
 }

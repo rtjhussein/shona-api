@@ -246,12 +246,15 @@ def build_openapi_spec():
                     "tags": ["Morphology"],
                     "summary": "Analyze a supported v1 Shona form.",
                     "description": (
-                        "Supports simple ku- infinitives built from reviewed verb "
-                        "stems plus bounded present positive/negative verb forms, "
+                        "Supports ku- infinitives built from reviewed verb stems "
+                        "(optionally negative with sa-, and with at most one object "
+                        "concord or the reflexive zvi prefix) plus bounded present "
+                        "positive/negative verb forms, "
                         "including verb extensions under height harmony and reversive "
                         "vowel copy (see the verbal extension rule cards). Ambiguous "
-                        "forms return competing no-object and object readings, "
-                        "deduplicated and ordered deterministically. Derivations "
+                        "forms return competing no-object, object-concord, and "
+                        "reflexive-zvi readings, deduplicated and ordered "
+                        "deterministically. Derivations "
                         "whose per-lemma distribution is not source-verified "
                         "(causative -idz-/-its-, short reversive) are excluded from "
                         "inferred analyses; surfaces resolve only as their own "
@@ -283,15 +286,20 @@ def build_openapi_spec():
                     "tags": ["Morphology"],
                     "summary": "Generate a supported v1 Shona verb form.",
                     "description": (
-                        "Generates bounded present positive/negative verb forms from "
-                        "a reviewed verb-stem lemma, including verb extensions "
+                        "Generates ku- infinitives (positive/negative, with an "
+                        "optional object concord or reflexive zvi) and bounded "
+                        "present positive/negative verb forms from a reviewed "
+                        "verb-stem lemma, including verb extensions "
                         "(passive, causative, applicative, neuter, reciprocal, "
                         "reversive, repetitive) with strict style, order, and "
-                        "combination validation. Extension allomorphs whose lexical "
-                        "distribution is not source-verified (causative styles dz "
-                        "and ts; reversive style short) are refused with 422 "
-                        "EXTENSION_UNVERIFIED, and the analyzer excludes the same "
-                        "unverified derivations from its inferred analyses. The "
+                        "combination validation. The infinitive branch accepts "
+                        "only its five documented feature fields and rejects "
+                        "anything else with 422 GENERATION_UNSUPPORTED. Extension "
+                        "allomorphs whose lexical distribution is not "
+                        "source-verified (causative styles dz and ts; reversive "
+                        "style short) are refused with 422 EXTENSION_UNVERIFIED, "
+                        "and the analyzer excludes the same unverified "
+                        "derivations from its inferred analyses. The "
                         "serving release must declare the implemented morphology "
                         "rules version, otherwise the endpoint returns 503 "
                         "MORPHOLOGY_RULES_VERSION_UNSUPPORTED."
@@ -469,7 +477,7 @@ def schemas():
                 "data_release": {"type": "string", "example": "2026.05.0"},
                 "rule_set_version": {
                     "type": "string",
-                    "example": "morphology-rules-v2",
+                    "example": "morphology-rules-v4",
                 },
                 "generated_at": {
                     "type": "string",
@@ -524,7 +532,7 @@ def schemas():
             "properties": {
                 "status": {
                     "type": "string",
-                    "enum": ["matched", "unsupported", "failed"],
+                    "enum": ["matched", "unsupported", "unavailable", "failed"],
                 },
                 "count": {"type": "integer"},
                 "code": {"type": "string"},

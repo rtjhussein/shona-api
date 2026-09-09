@@ -25,6 +25,7 @@ from django.core.cache import caches
 from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Lemma
+from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
 from shona_api.releases.models import DataRelease
 
 
@@ -44,7 +45,7 @@ def current_release():
     return DataRelease.objects.create(
         version="2026.09.0",
         label="Extension correction release",
-        rule_set_version="morphology-rules-v3",
+        rule_set_version=MORPHOLOGY_RULES_VERSION,
         is_current=True,
     )
 

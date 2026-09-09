@@ -28,6 +28,11 @@ input.
 
 The `features` value must be an object. Free-text descriptions are rejected with
 `GENERATION_FEATURES_REQUIRED`.
+Infinitive generation uses `generation_type: "infinitive"` (see item 6 below)
+with exactly five accepted feature fields (`generation_type`, `polarity`,
+`object`, `reflexive`, `extensions`); anything else — finite-only
+`subject`/`tense_aspect`, `mood`, or any other grammatical field — is rejected
+with `422 GENERATION_UNSUPPORTED` instead of being ignored.
 
 ### Supported Features:
 
@@ -91,8 +96,40 @@ The `features` value must be an object. Free-text descriptions are rejected with
      and styles on style-less types also return `422` instead of silently
      choosing a default.
 
-5. **Phonological Coalescence**:
-   - Automatically collapses duplicate `a` vowels at subject-concord, object-concord, or stem boundaries (e.g. `va` + `ambura` -> `vambura`).
+5. **Phonological Coalescence (finite present generation only)**:
+   - Automatically collapses duplicate `a` vowels at subject-concord, object-concord, or stem boundaries (e.g. `va` + `ambura` -> `vambura`). This is the prior-v1 finite joining rule, unchanged. Infinitives instead retain hiatus — see item 6.
+
+6. **Infinitive Generation (morphology-rules-v4)**:
+   - Shape: `ku + [sa] + [object_concord | zvi-reflexive] + verb_stem`
+     (`kuziva`, `kusaziva`, `kuzvitora`, `kuzviziva`, `kusazviziva`) under
+     rule ID `fortune.verbal.infinitive.001` (Fortune Vol. 1, section 3.3.18,
+     PDF pp. 90-91).
+   - `polarity`: `positive` (default) or `negative` (`sa-`); unlike finite
+     negatives the terminal vowel stays `-a`.
+   - `object` reuses the structured object feature (person or reviewed
+     noun-class concords); `reflexive: true` selects the reflexive `zvi`
+     prefix, reported in `slots.reflexive`, never merged into `slots.object`.
+     At most one of object/reflexive; requesting both is `422`.
+   - Only five top-level feature fields are accepted (`generation_type`,
+     `polarity`, `object`, `reflexive`, `extensions`); `subject`,
+     `tense_aspect`, `mood`, and anything else return `422
+     GENERATION_UNSUPPORTED` with the offending field in `error.detail`.
+     Divergent stems without terminal `-a` (e.g. `-ti`) are refused with a
+     structured `lemma_stem` error instead of a fabricated surface.
+   - Extensions, evidence gating, and sequence policy are shared with finite
+     generation and analysis, so supported infinitives round-trip (`kuzivira`,
+     `kusazvizivira`, `kuazivira`). Two `a`-vowel boundaries are deferred
+     pending applicable evidence (`deferred_pending_evidence`, never
+     presented as ungrammatical): `sa-` before an `a`-initial object concord
+     or stem, and an `a`-final object concord before an `a`-initial stem.
+     Deferred requests return `422 GENERATION_UNSUPPORTED` naming the
+     boundary, and analysis infers no reading across it
+     (`deferred_infinitive_boundary` lane); independently supported readings
+     stay available. Witnesses for the surrounding retention pattern:
+     `kuasakura`, `akaenda`, `Usaenda`, `Ndaatora` (FSI p225), `kumuona`
+     and `tisina kumuona` (FSI p333). See the infinitive rule card.
+   - Deferred: the two `a`-vowel boundaries above; progressive/exclusive
+     `-cha-`/`-chi-` infinitives, multiword complements, nominal plurals, tone.
 
 ## Response
 
@@ -133,8 +170,7 @@ message only mentions extensions when none were requested.
   forms resolve only as their own reviewed verb-stem lemmas
 
 ## Rule-set activation
-
-The implemented morphology rules are `morphology-rules-v3` (see the rule
+The implemented morphology rules are `morphology-rules-v4` (see the rule
 cards' `affected_rule_set` and `MORPHOLOGY_RULES_VERSION` in
 `shona_api/morphology/services.py`). The version returned to API consumers is
 validated, not echoed: analyze and generate return `503
@@ -142,6 +178,11 @@ MORPHOLOGY_RULES_VERSION_UNSUPPORTED` when the current `DataRelease` declares
 any other `rule_set_version`, and search keeps serving lexical results while
 reporting `morphology_enrichment.status = "unavailable"` with the same code.
 To serve corrected behaviour, create or promote a `DataRelease` with
-`--rule-set-version morphology-rules-v3`. Incoming version labels are never
+`--rule-set-version morphology-rules-v4`. Incoming version labels are never
 silently rewritten, and no live release records are mutated by this change.
+
+Rule-set history: v4 keeps the v3 extension, evidence-gate, and sequence
+rules unchanged and adds only the infinitive negation/object/reflexive and
+generation lane described above (see the infinitive rule card
+`fortune.verbal.infinitive.001`).
 

@@ -141,3 +141,82 @@ both generation and inferred analysis until reviewed evidence exists; no
 independent linguistic review of the enabled patterns has occurred; sequence
 conventions remain a product policy. This correction pass does not claim the
 whole morphology milestone is complete.
+
+---
+
+## Status update: 2026-09-09 infinitive generation and richer analysis (morphology-rules-v4)
+
+The historical sections above are preserved as written. This section records
+the bounded infinitive milestone: source-backed infinitive generation plus
+negative/object/reflexive infinitive analysis. It is an implementation and
+evidence report, not independent linguistic certification.
+
+Source evidence (validated directly against the local PDF, not inherited from
+the handoff): Fortune Vol. 1, section 3.3.18 Noun Class 15, PDF pp. 90-91
+(printed pp. 78-79), attests `kuzvitora` (object, "to take them"),
+`kuzviziva` (reflexive, "to know oneself"), `kusaziva` (negative, "not to
+know"), and the combined analysis `ku-sa-zvi-ziv-a` ("not to know this").
+The same pages mark the deferred boundary: progressive/exclusive `-cha-` /
+`-chi-` formatives and divergent `-ti` / `-nzi` stems without terminal `-a`.
+Hannan dictionary text corroborates the `-ziva-` radical in inflected use
+(`Ndinokuzivai`) and the negative infinitive after `na-` (`nokusaziva`).
+
+Implemented under `morphology-rules-v4` (`MORPHOLOGY_RULES_VERSION` in
+`shona_api/morphology/services.py`): `POST /v1/generate` accepts
+`features.generation_type: "infinitive"` with `polarity`, the reused
+structured `object` feature, explicit `reflexive: true`, and the shared
+extension contract; finite-only `subject` / `tense_aspect` are rejected
+instead of ignored, and reflexive-plus-object is rejected (no source-backed
+rule). Negative infinitives keep terminal `-a`. Analysis reports `polarity`,
+`object`, and `reflexive` slots under the unchanged
+`fortune.verbal.infinitive.001` rule ID; a shared-surface `zvi` keeps its
+reflexive and object readings as separate analyses. Extension evidence gates,
+the sequence convention, lexicon-aware segmentation, and deterministic bounds
+are shared with the finite paths so generation and analysis cannot drift.
+Regressions: `tests/test_morphology_infinitives.py` (source-attested forms,
+ambiguity, round-trips, extensions, hiatus, collisions, divergent stems,
+malformed payloads, search enrichment, v3-mismatch handling).
+
+Rule-set history: v4 keeps the v3 extension, evidence-gate, and sequence
+rules byte-identical (those cards still read `morphology-rules-v3`); only the
+infinitive card moved to `morphology-rules-v4`. Releases declaring older rule
+versions receive `503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED` on analyze and
+generate, and search reports `morphology_enrichment.status = "unavailable"`.
+Simple `ku-` readings gained `polarity` (positive) and `reflexive` (null)
+slots, and the `kuambura` corpus entry moved from unsupported to supported
+(positive/negative infinitive cases).
+
+Remaining limits, stated honestly: negative-plus-reflexive sharing the
+`kusazviziva` surface, extension-bearing infinitives, and hiatus forms are
+constructed combinations of attested parts (labeled as such in the rule
+card), not verbatim source forms; no independent linguistic review of the
+enabled patterns has occurred. This milestone does not claim morphology as a
+whole is finished.
+
+### Correction: deferred a-vowel boundaries and strict feature fields
+
+Supervisor review of the v4 slice exposed two gaps. First, infinitive vowel
+contacts (`kusaaziva`, `kusaambura`, `kuvaambura`) had been generated with
+hiatus on a cross-prefix inference the supervisor did not accept: the
+demonstrated witnesses (rule card: `kuasakura`, `akaenda`, `Usaenda`,
+`Ndaatora`, `kumuona`, `tisina kumuona`) establish retention at attested
+contacts but not the `sa-`/`a`-concord, `sa-`/`a`-stem, or
+`a`-concord/`a`-stem boundaries. Those two boundaries are now deferred
+pending applicable evidence, without claiming ungrammaticality: generation
+refuses them with structured `422 GENERATION_UNSUPPORTED`
+(`deferred_pending_evidence` naming the boundary), analysis infers no
+reading across them (`deferred_infinitive_boundary` lane), and
+independently supported readings stay available (`kusaziva` no-object,
+`kuaziva`, reviewed `-sambura` as `ku + sambura`). Contracted spellings
+(`kusambura`, `kuvambura`) remain 422s. Excluded from evidence with
+reasons: `kaana` (Bemba), `saakadzama` (adverbial `sa-`), `zvaakatya`
+(stem unverified). Second, unknown top-level feature fields (e.g. `mood`)
+were silently ignored; infinitive generation now enforces an explicit
+five-field allowlist with structured `422 GENERATION_UNSUPPORTED`.
+Regressions cover each deferred boundary (including extension-bearing
+cases), preserved readings, the `-sambura` lexical case, search
+enrichment, and the allowlist boundary. Known tension, out of scope:
+finite present generation keeps its prior-v1 `a`-coalescence joining rule
+(e.g. `vanovambura`) from the accepted extension milestone; the hiatus
+witnesses collected here suggest that rule deserves its own supervisor
+review, but this correction does not change finite behavior.
