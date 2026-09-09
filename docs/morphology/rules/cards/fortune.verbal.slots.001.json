@@ -1,0 +1,154 @@
+{
+  "rule_card_schema_version": "2026-05-23",
+  "rule_id": "fortune.verbal.slots.001",
+  "title": "finite present verb-form slots: positive, negative and object-marked shapes with the finite vowel-boundary policy",
+  "source_key": "source_fortune",
+  "source_locator": "Fortune Grammatical Constructions, Vol. 1: subject and object prefix series table (Series X/XI, printed pp. 16-17), inflected-verb-phrase morphophonemics 2.10.2.4 (ha- prefix unchanged, sp allomorphs with tense sign /-a-/ listed as Series IV at printed p. 26), and negative principal present inflection TC VII (printed p. 25) with 2.10.2.4(b) ha-ndi-ziv-e (Zezuru -e terminal). Retention witnesses for adjacent a vowels in verb forms: Hannan concord list p. 25, \"-a- ... oc 6. Ndakaaona: I saw them\" (tense sign + class-6 object); Hannan p. 26, \"-ambura ... Umba yaambura: the house is on fire\" (tense sign + a-initial radical); FSI Unit 15 object-prefix drills, Ndaagadzira/Vaagadzira/Yaagadzira (PDF p. 169), Ndinoada/Ndinouda (PDF p. 170), Havaazivi \"they don't know them\" (PDF p. 171; subject + class-6 object); FSI p. 225 Ndaatora. Negative terminal witnesses: FSI Unit 12, Note 1 (printed p. 118; /-i/ in some dialects, /-e/ in others; pro-verb stems keep their final vowels; FSI's own forms are -i) and Unit 13, Note 1 (printed p. 126; -sa- past negatives keep -a); Hannan front matter TABLE OF VERB FORMS, Present Indicative negative (PDF pp. 14-15): \"Handidyi St. Sh.\" vs \"Handidye Z\"; Hannan p. 774 -ziva entry \"Handimuzivi: I do not know him\". The only single-a witness, FSI \"Majaha arara\" (PDF p. 41), is the fused hodiernal subject+tense form (Series X allomorph with tense sign /-a-/), not a subject|stem boundary. Excluded: Fortune 3.3.9 nominal coalescence a + a > a (mano/meno/meso, PDF p. 64) is explicitly nominal and does not transfer to verbs.",
+  "rule_domain": "verbal_constructions",
+  "rule_type": "construction_slot",
+  "rule_summary": "Finite present lane for morphology-rules-v5: positive subject_concord + no + [object_concord] + verb_stem, negative ha + subject_concord + [object_concord] + verb_stem_ending_in_i, with plain morpheme concatenation and no vowel contraction. The negated -no- present terminal replaces a lexical stem's final -a with -i (Standard Shona; FSI Unit 12 Note 1, Hannan front matter \"Handidyi St. Sh.\"); the Zezuru -e spelling (Fortune TC VII ha-ndi-ziv-e, Hannan \"Handidye Z\") stays an analyzed dialect variant of the same construction and is never blacklisted; divergent stems without terminal -a (-ti/-nzi, Fortune 3.3.18) are taken as-is, and the defective pro-verb -na (own -ne/-na paradigm) is refused instead of inventing a terminal. Adjacent identical a vowels are retained at attested contacts (ha + subject concord, subject concord + a-initial object concord, tense sign before object concord or stem, per the retention witnesses above). The unattested contacts (an a-final subject or object concord immediately before an a-initial stem, evaluated on the stem as built after extensions) are deferred pending evidence: generation refuses them with 422 GENERATION_UNSUPPORTED (field finite_boundary, reason deferred_pending_evidence, stable boundary codes subject_before_a_initial_stem / object_before_a_initial_stem) and analysis infers no reading across them, recording a deferred_finite_boundary lane only when the excluded reading would have resolved lexically. This replaces the prior-v1 a-coalescence joining rule (va + ambura -> vambura), which had no source locator and is contradicted by every adjacent attested witness.",
+  "affected_rule_set": "morphology-rules-v5",
+  "inputs": {
+    "lexical_category": "verb",
+    "headword_kind": "verb_stem",
+    "surface_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i",
+    "generation_features": {
+      "generation_type": "verb_form",
+      "subject": "person or reviewed noun_class subject",
+      "tense_aspect": "present",
+      "polarity": "positive | negative",
+      "object": "optional structured object feature",
+      "extensions": "optional shared extension gate (unchanged from morphology-rules-v3)"
+    }
+  },
+  "conditions": {
+    "dialects": [],
+    "source_scope": "standard unless source says otherwise",
+    "review_blockers": [],
+    "no_contraction": "morphemes concatenate plainly; the prior-v1 duplicate-a collapse at subject|stem and object|stem boundaries is removed because no available source attests it",
+    "retained_contacts": "ha + subject concord (haana/haakodzi-type), subject concord + a-initial object concord (Havaazivi), tense sign + object concord or stem (Ndakaaona, yaambura, Vaagadzira) keep adjacent a vowels",
+    "deferred_vowel_boundaries": "an a-final subject or object concord immediately followed by an a-initial stem is deferred pending applicable evidence (deferred_pending_evidence, never presented as ungrammatical): generation refuses it with a stable boundary code and analysis infers no reading across it; independently supported readings of the same surface stay available",
+    "extension_stem_evaluation": "the boundary is evaluated on the actual morphemes: the stem as built after extensions (and after the negative terminal -a > -i mutation), never on substrings of the finished word",
+    "negative_terminal_vowel": "negated -no- present terminal: lexical stems ending in -a take -i (Standard Shona; FSI Unit 12 Note 1; Hannan front matter \"Handidyi St. Sh.\"; -ziva entry \"Handimuzivi\"); FSI Unit 13 Note 1 keeps the -sa- lane unmutated and out of scope; Zezuru -e spellings (Fortune TC VII; Hannan \"Handidye Z\") are analyzed dialect variants, never generated or blacklisted; divergent stems (-ti/-nzi) keep their non-a terminal; the defective pro-verb -na is refused with reason defective_pro_verb_stem because its own -ne/-na paradigm is not derivable, and analysis mirrors the refusal: no ni/ne reading is inferred from -na (mutated lookup, object-marked, or extension-decomposed paths), surfaces report an excluded_defective_pro_verb_stem lane, search enrichment follows, and an independently reviewed stem (e.g. -ni) still resolves the same surface",
+    "shared_extension_policy": "extension evidence gating (dz/ts causative, short reversive) and the causative < applicative < reciprocal < reversive < repetitive < neuter < passive product sequence apply unchanged from morphology-rules-v3"
+  },
+  "outputs": {
+    "analysis_fields": [
+      "analysis_type verb_form with subject, tense_aspect (null), polarity, object, verb_stem, extensions, final_vowel slots"
+    ],
+    "generation_fields": [
+      "form, normalized, rule_id, lemma, slots, phonology, warnings"
+    ],
+    "model_fields": []
+  },
+  "evidence": {
+    "examples": [
+      {
+        "surface": "ndinoambura",
+        "lemma_headword": "-ambura",
+        "status": "api_fixture",
+        "note": "Positive present, no object (Hannan p. 26 -ambura)."
+      },
+      {
+        "surface": "vanoambura",
+        "lemma_headword": "-ambura",
+        "status": "api_fixture",
+        "note": "Class 2 subject + tense marker no separates subject and stem; no concord|stem vowel contact."
+      },
+      {
+        "surface": "ndinomuambura",
+        "lemma_headword": "-ambura",
+        "status": "api_fixture",
+        "note": "Non-identical object|stem contact (u|a) retained, cf. FSI Ndamuona/Ndinoada."
+      },
+      {
+        "surface": "ndinoabadanudza",
+        "lemma_headword": "-badanudza",
+        "status": "api_fixture",
+        "note": "Class 6 object before a consonant-initial stem; no|object contact o|a retained (FSI Ndinoada, PDF p. 170)."
+      },
+      {
+        "surface": "havaabadanudzi",
+        "lemma_headword": "-badanudza",
+        "status": "api_fixture",
+        "note": "Negative: subject concord + a-initial object concord contact a|a retained (FSI Havaazivi, PDF p. 171); terminal -i per the negated -no- present rule."
+      },
+      {
+        "surface": "haabadanudzi",
+        "lemma_headword": "-badanudza",
+        "status": "api_fixture",
+        "note": "Negative prefix + class 1 subject concord a|a retained (Hannan Mabhuku haakodzi; FSI Haanayo samples); terminal -i."
+      },
+      {
+        "surface": "havaazivi",
+        "lemma_headword": "-ziva",
+        "status": "source_attested_and_api_fixture",
+        "note": "FSI Unit 15, PDF p. 171 \"Havaazivi: they don't know them\" (ha-va-a-ziv-i): retained subject|object contact with the Standard Shona -i terminal; generated and analyzed."
+      },
+      {
+        "surface": "handimuzivi",
+        "lemma_headword": "-ziva",
+        "status": "source_attested_and_api_fixture",
+        "note": "Hannan p. 774 -ziva entry \"Handimuzivi: I do not know him\": object concord mu + -i terminal."
+      },
+      {
+        "surface": "handibudi",
+        "lemma_headword": "-buda",
+        "status": "api_fixture",
+        "note": "Generated -i terminal, matching the Hannan paradigm pattern \"Handidyi St. Sh.\" (PDF pp. 14-15)."
+      },
+      {
+        "surface": "handibude",
+        "lemma_headword": "-buda",
+        "status": "analyzed_dialect_variant",
+        "note": "Zezuru -e spelling (Fortune TC VII; Hannan \"Handidye Z\"): analyzed as a dialect variant of the same negated -no- present construction, never generated and never blacklisted."
+      },
+      {
+        "surface": "handiti",
+        "lemma_headword": "-ti",
+        "status": "api_fixture",
+        "note": "Divergent stem (Fortune 3.3.18): non-a terminal retained as-is, no terminal appended."
+      }
+    ],
+    "counterexamples": [
+      {
+        "surface": "vanovambura",
+        "note": "The prior-v1 contracted spelling: produced by no source-backed construction. The va + ambura construction crosses the deferred object boundary; generation refuses the request and analysis infers no reading (deferred_finite_boundary lane). A reviewed -mbura would still analyze as the plain va + mbura reading of the same letters."
+      },
+      {
+        "surface": "havamburi",
+        "note": "Prior-v1 subject-coalesced negative (the Zezuru -e spelling havambure alike); the a-final subject concord + a-initial stem contact is deferred (subject_before_a_initial_stem)."
+      },
+      {
+        "surface": "haamburi",
+        "note": "Class 1 negative + a-initial stem; same deferred subject boundary."
+      },
+      {
+        "surface": "haambure",
+        "note": "Class 1 negative + a-initial stem; same deferred subject boundary."
+      },
+      {
+        "surface": "ndinoaambura",
+        "note": "Class 6 object + a-initial stem in the positive: the cl6 object spelling a- immediately before an a-initial stem has no witness (Hannan's cl6 object example Ndakaaona precedes the vowel-initial radical -ona, an a|o contact); deferred."
+      }
+    ],
+    "notes": [
+      "Fortune's coalescence statement (3.3.9) covers nominal prefixes only; verbal morphophonemics (2.10.2) contains no contraction rule.",
+      "FSI Majaha arara (PDF p. 41) spells the fused 3rd-person hodiernal subject+tense form with one a; the API's finite shapes never realize a subject|tense-sign boundary, so that witness transfers nothing.",
+      "Object concord + vowel-initial stem retention is attested only for non-identical contacts (Ndamuona u|o, Ndavaona a|o, Ndaiona i|o, Ndinoada o|a, Ndakamuona u|o); the identical a|a contact is deferred."
+    ]
+  },
+  "qa": {
+    "extraction_confidence": 0.85,
+    "review_state": "published",
+    "review_decision": "published_for_finite_vowel_boundary_correction",
+    "reviewer_notes": "The finite joining rule shipped in the negation/object-marker milestone contracted a-a at subject|stem and object|stem boundaries with no source locator. Source review found the opposite pattern at every attested verbal contact: Ndaatora/Ndakaaona/Ndinoada (FSI Unit 15 drills, Hannan concord list), yaambura (Hannan p. 26, tense sign + a-initial radical), Havaazivi (subject + cl6 object), haana/haakodzi-type negative forms. The contracted spellings vanish from generation, analysis excludes the coalesced readings, and the deferred contacts mirror the accepted infinitive deferral discipline (no contraction invented, no universal retention invented). Supported alternatives (mu/va objects before consonant stems, cl2 subjects, retained ha/sc and sc/oc contacts) are regression-covered. Follow-up correction in the same unreleased v5: the negated -no- present terminal was also wrong in the prior rules (final -a replaced by -e, with -e appended to non-a stems, no source locator). FSI Unit 12 Note 1 and Hannan's front-matter paradigm establish a dialect split: Standard Shona -i (Handidyi St. Sh.; FSI Handizivi/Handitauri/Havaazivi; Hannan -ziva Handimuzivi) versus Zezuru -e (Fortune TC VII ha-ndi-ziv-e; Hannan \"Handidye Z\"). Generation now emits -i, analysis accepts both attested spellings (terminal restored to -a for the lexical lookup, plus an identity lookup for divergent stems), divergent stems keep their non-a terminal, and the defective pro-verb -na is refused (defective_pro_verb_stem) because its own -ne/-na paradigm is not derivable from a terminal rule. Consistency fix in the same unreleased v5: the -na refusal previously covered generation only, while analysis still derived handini/handine from -na through the terminal-restore lookup (and search exposed them as matched). The exclusion now applies to every inferred negative candidate whose resolved lemma is the defective pro-verb (exact, object-marked, and extension-decomposed paths), recorded as an excluded_defective_pro_verb_stem future lane; independent reviewed stems on the same surface are untouched."
+  },
+  "api_safety": {
+    "analyzer_consumes": true,
+    "generator_consumes": true,
+    "public_endpoint_safe": true,
+    "requires_review_before_public": false,
+    "backward_compatibility": "Breaking under morphology-rules-v5 for the previously contracted finite spellings (vanovambura, ndinovambura, havambure, havavambure, haambe-type, cl6-object spellings that lost their marker): generation now returns 422 GENERATION_UNSUPPORTED with field finite_boundary, reason deferred_pending_evidence and a stable boundary code, and analysis returns 422 with a deferred_finite_boundary lane instead of the coalesced reading. Also breaking in the same unreleased v5: generated negated -no- present forms change terminal from the prior unsupported -e to the source-backed Standard Shona -i (handibude-type pins become handibudi); the Zezuru -e spellings stay analyzable. Supported shapes, negation behavior, extension rules, evidence gates, sequence policy, infinitive rules (v4 card) and lexical search are unchanged. Releases declaring older rule versions receive 503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED; no release records are rewritten."
+  }
+}

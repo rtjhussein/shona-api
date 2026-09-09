@@ -96,10 +96,59 @@ with `422 GENERATION_UNSUPPORTED` instead of being ignored.
      and styles on style-less types also return `422` instead of silently
      choosing a default.
 
-5. **Phonological Coalescence (finite present generation only)**:
-   - Automatically collapses duplicate `a` vowels at subject-concord, object-concord, or stem boundaries (e.g. `va` + `ambura` -> `vambura`). This is the prior-v1 finite joining rule, unchanged. Infinitives instead retain hiatus — see item 6.
+5. **Finite Vowel Boundaries (morphology-rules-v5)**:
+   - Morphemes concatenate plainly; duplicate `a` vowels are no longer
+     collapsed at subject-concord or object-concord boundaries. The prior-v1
+     coalescence (`va` + `ambura` -> `vambura`) had no source locator and is
+     removed. See rule card `fortune.verbal.slots.001`.
+   - Retained (attested) contacts keep both vowels: the negative prefix
+     before the subject concord (`ha` + class 1 `a` -> `haa...`, cf. Hannan
+     `Mabhuku haakodzi`), the subject concord before an `a`-initial object
+     concord (`va` + `a` -> `vaa...`, cf. FSI `Havaazivi`), and the tense
+     marker before an object concord or stem (`no` + class 6 `a` ->
+     `noa...`, cf. FSI `Ndinoada`, Hannan `Umba yaambura`).
+  - Deferred pending evidence (`deferred_pending_evidence`, never presented
+    as ungrammatical): an `a`-final subject or object concord immediately
+    before an `a`-initial stem (evaluated on the stem as built after
+    extensions and the negative terminal mutation). No available source
+    witnesses that contact, and neither contraction nor universal hiatus is
+    invented for it. Generation returns `422 GENERATION_UNSUPPORTED` with
+    `error.detail.field = "finite_boundary"`, the stable boundary code
+    (`subject_before_a_initial_stem` or `object_before_a_initial_stem`) and
+    `reason: deferred_pending_evidence`; analysis infers no reading across
+    the boundary and reports a `deferred_finite_boundary` lane when the
+    excluded reading would have resolved lexically; search enrichment
+    follows the analysis policy. Independently supported readings of the
+    same surface stay available, and a completed spelling is never
+    blacklisted merely for resembling an unsupported derivation.
+  - Negated `-no-` present terminal: the final `-a` of a lexical stem becomes
+    `-i` in the generated dialect. Sources: FSI Unit 12, Note 1 ("The final
+    vowel of the stem is /-i/ in some dialects, /-e/ in others"; FSI's own
+    forms are `-i`: `Handízíví`, `Handítaúrí`, `Haváazíví`); FSI Unit 13,
+    Note 1 (`-sa-` past negatives keep `-a`, scoping the mutation to the
+    `-no-` lane); Hannan front matter, Present Indicative negative
+    `Handidyi St. Sh.` versus Zezuru `Handidye Z`, and the `-ziva` entry
+    `Handimuzivi`. The Zezuru `-e` spelling (Fortune TC VII
+    `ha-ndí-zív-é`) remains an analyzed dialect variant of the same
+    construction and is never blacklisted. Stems that do not end in `-a`
+    (divergent stems `-ti`/`-nzi`, Fortune 3.3.18) are taken as-is. The
+    defective pro-verb `-na` (own `-ne`/`-na` paradigm) is refused with
+    `GENERATION_UNSUPPORTED` / `defective_pro_verb_stem` instead of
+    inventing a terminal. Analysis mirrors the refusal: the ordinary terminal
+    rule infers no `ni`/`ne` reading from `-na` (through the mutated lookup,
+    the object-marked path, or an extension decomposition), so those surfaces
+    get `ANALYSIS_UNSUPPORTED` with an `excluded_defective_pro_verb_stem`
+    future lane naming the excluded stem; search enrichment follows the
+    analyzer and never reports them as matched. The surface is not
+    blacklisted: an independently reviewed stem (for example a reviewed
+    `-ni`) still resolves `handini` and its object-marked forms.
+  - Examples: positive class 2 object + `-ambura` (`vanovambura`,
+    `vanovaambura`) and negative class 2 subject + `-ambura` (`havamburi`)
+    are refused; `ndinomuambura`, `ndinoabadanudza`, `havaabadanudzi` and
+    `haabadanudzi` keep generating and analyzing (the `-e` spellings
+    `havaabadanudze`/`haabadanudze` still analyze as Zezuru variants).
 
-6. **Infinitive Generation (morphology-rules-v4)**:
+6. **Infinitive Generation (morphology-rules-v4 lane, unchanged in v5)**:
    - Shape: `ku + [sa] + [object_concord | zvi-reflexive] + verb_stem`
      (`kuziva`, `kusaziva`, `kuzvitora`, `kuzviziva`, `kusazviziva`) under
      rule ID `fortune.verbal.infinitive.001` (Fortune Vol. 1, section 3.3.18,
@@ -170,7 +219,7 @@ message only mentions extensions when none were requested.
   forms resolve only as their own reviewed verb-stem lemmas
 
 ## Rule-set activation
-The implemented morphology rules are `morphology-rules-v4` (see the rule
+The implemented morphology rules are `morphology-rules-v5` (see the rule
 cards' `affected_rule_set` and `MORPHOLOGY_RULES_VERSION` in
 `shona_api/morphology/services.py`). The version returned to API consumers is
 validated, not echoed: analyze and generate return `503
@@ -178,11 +227,12 @@ MORPHOLOGY_RULES_VERSION_UNSUPPORTED` when the current `DataRelease` declares
 any other `rule_set_version`, and search keeps serving lexical results while
 reporting `morphology_enrichment.status = "unavailable"` with the same code.
 To serve corrected behaviour, create or promote a `DataRelease` with
-`--rule-set-version morphology-rules-v4`. Incoming version labels are never
+`--rule-set-version morphology-rules-v5`. Incoming version labels are never
 silently rewritten, and no live release records are mutated by this change.
 
-Rule-set history: v4 keeps the v3 extension, evidence-gate, and sequence
-rules unchanged and adds only the infinitive negation/object/reflexive and
-generation lane described above (see the infinitive rule card
-`fortune.verbal.infinitive.001`).
+Rule-set history: v5 keeps the v4 infinitive rules and the v3 extension,
+evidence-gate, and sequence rules unchanged and corrects only the finite
+joining rule (see the finite rule card `fortune.verbal.slots.001`); v4 added
+the infinitive negation/object/reflexive and generation lane (see the
+infinitive rule card `fortune.verbal.infinitive.001`).
 

@@ -593,13 +593,14 @@ def test_search_endpoint_returns_structured_zero_result(client, api_key, current
             "status": "unsupported",
             "code": "ANALYSIS_UNSUPPORTED",
             "message": (
-                "No supported v1 analysis matched the input. Supported v1 forms "
-                "are ku- infinitive forms (ku + [sa] + [object_concord | "
-                "zvi-reflexive] + reviewed verb stem), positive "
-                "present verb forms (subject concord + 'no' + [object_concord] "
-                "+ verb_stem), and negative present verb forms (ha- + subject "
-                "concord + [object_concord] + verb_stem ending in -e)."
-            ),
+                    "No supported v1 analysis matched the input. Supported v1 forms "
+                    "are ku- infinitive forms (ku + [sa] + [object_concord | "
+                    "zvi-reflexive] + reviewed verb stem), positive "
+                    "present verb forms (subject concord + 'no' + [object_concord] "
+                    "+ verb_stem), and negative present verb forms (ha- + subject "
+                    "concord + [object_concord] + verb_stem ending in -i, with "
+                    "the attested Zezuru -e spelling analyzed as a dialect variant)."
+                ),
         },
     }
 

@@ -11,7 +11,7 @@ GENERATOR_VERSION = "shona-morphology-generator-v1"
 # The rule-set version implemented by this code. Public endpoints validate the
 # serving release's rule_set_version against it (Finding 5 policy): responses
 # never echo a version label the engine does not execute.
-MORPHOLOGY_RULES_VERSION = "morphology-rules-v4"
+MORPHOLOGY_RULES_VERSION = "morphology-rules-v5"
 RULES_VERSION_ERROR_CODE = "MORPHOLOGY_RULES_VERSION_UNSUPPORTED"
 SUPPORTED_RULE_ID = "fortune.verbal.slots.001"
 INFINITIVE_RULE_ID = "fortune.verbal.infinitive.001"
@@ -40,7 +40,7 @@ _MAX_INFINITIVE_ANALYSES = 12
 SUPPORTED_ANALYSIS_SHAPE = (
     "ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb_stem / "
     "subject_concord + no + [object_concord] + verb_stem / "
-    "ha + subject_concord + [object_concord] + verb_stem_ending_in_e"
+    "ha + subject_concord + [object_concord] + verb_stem_ending_in_i"
 )
 SUPPORTED_ANALYSIS_RULE_IDS = [
     INFINITIVE_RULE_ID,
@@ -179,8 +179,8 @@ _MAX_STEM_CANDIDATES = 8
 _MAX_EXTENSION_DEPTH = 3
 _MAX_ANALYSES = 25
 # Bounded ambiguity budget per subject candidate: at most this many distinct
-# readings (no-object + object concords x coalescence x stem candidates) are
-# collected before the remaining segmentations are skipped (Finding 2 bounds).
+# readings (no-object + object concords x stem candidates) are collected before
+# the remaining segmentations are skipped (Finding 2 bounds).
 _MAX_ANALYSES_PER_SUBJECT = 12
 
 
@@ -359,18 +359,22 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
 
     analyses: list[dict[str, object]] = []
     infinitive_deferred: list[str] = []
+    finite_deferred: list[str] = []
+    pro_verb_exclusions: list[str] = []
     analyses.extend(_analyze_ku_infinitive(normalized, infinitive_deferred))
 
     analyses.extend([
         analysis
         for candidate in candidates
-        for analysis in _analyze_present_positive(normalized, candidate)
+        for analysis in _analyze_present_positive(normalized, candidate, finite_deferred)
     ])
 
     analyses.extend([
         analysis
         for candidate in neg_candidates
-        for analysis in _analyze_present_negative(normalized, candidate)
+        for analysis in _analyze_present_negative(
+            normalized, candidate, finite_deferred, pro_verb_exclusions
+        )
     ])
 
     if not analyses:
@@ -379,7 +383,9 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
             "supported_shape": SUPPORTED_ANALYSIS_SHAPE,
             "supported_rule_ids": SUPPORTED_ANALYSIS_RULE_IDS,
         }
-        future_lanes = _unsupported_future_lanes(normalized, infinitive_deferred)
+        future_lanes = _unsupported_future_lanes(
+            normalized, infinitive_deferred, finite_deferred, pro_verb_exclusions
+        )
         if future_lanes:
             detail["future_lanes"] = future_lanes
         raise AnalysisFailure(
@@ -390,7 +396,8 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
                 "zvi-reflexive] + reviewed verb stem), positive present verb "
                 "forms (subject concord + 'no' + [object_concord] + verb_stem), "
                 "and negative present verb forms (ha- + subject concord + "
-                "[object_concord] + verb_stem ending in -e)."
+                "[object_concord] + verb_stem ending in -i, with the attested "
+                "Zezuru -e spelling analyzed as a dialect variant)."
             ),
             detail=detail,
         )
@@ -450,25 +457,60 @@ def generate_form(
             subject_candidate["surface"] = "a"
 
         sc = subject_candidate["surface"]
+        if canonical_headword in _PRO_VERB_STEMS:
+            raise GenerationFailure(
+                code="GENERATION_UNSUPPORTED",
+                message=(
+                    "Unsupported v1 generation feature: lemma_stem. The "
+                    "defective pro-verb stem does not participate in the "
+                    "negated -no- present terminal rule, so no supported "
+                    "finite negative shape applies to it."
+                ),
+                detail={
+                    "field": "lemma_stem",
+                    "received": lemma.headword,
+                    "reason": "defective_pro_verb_stem",
+                    "supported": [
+                        "lexical verb stems whose negated -no- present "
+                        "terminal is derivable; the defective pro-verb -na "
+                        "carries its own -ne/-na paradigm (Hannan front "
+                        "matter; FSI Unit 12: pro-verb stems keep their "
+                        "final vowels) and its attested forms resolve only "
+                        "as their own reviewed lemmas"
+                    ],
+                    "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i",
+                    "supported_rule_ids": [
+                        SUPPORTED_RULE_ID,
+                        "fortune.verbal.negation.001",
+                        "fortune.concord.object.001",
+                    ],
+                },
+            )
         if stem_val.endswith("a"):
-            stem_mutated = stem_val[:-1] + "e"
+            # Negated -no- present terminal: final -a becomes -i (Standard
+            # Shona: Hannan front-matter paradigm "Handidyi St. Sh.", FSI
+            # Unit 12 Handízíví/Handítaúrí; the Zezuru -e variant
+            # "Handidye Z" / Fortune ha-ndí-zív-é is analyzed as a dialect
+            # spelling, not generated). Stems that do not end in -a
+            # (divergent stems such as -ti, -nzi, Fortune 3.3.18) are taken
+            # as-is; no terminal is appended.
+            stem_mutated = stem_val[:-1] + "i"
         else:
-            stem_mutated = stem_val + "e"
-        
-        # Apply coalescence/contraction rule
+            stem_mutated = stem_val
+
+        boundary = _finite_boundary_deferred(
+            polarity="negative",
+            subject_surface=sc,
+            object_surface=object_candidate["surface"] if has_object else None,
+            stem_surface=stem_mutated,
+        )
+        if boundary is not None:
+            raise _deferred_finite_generation(boundary=boundary, features=features)
+
         if has_object:
-            oc = object_candidate["surface"]
-            if oc.endswith("a") and stem_mutated.startswith("a"):
-                oc_surface = oc[:-1]
-            else:
-                oc_surface = oc
-            form = f"ha{sc}{oc_surface}{stem_mutated}"
+            form = f"ha{sc}{object_candidate['surface']}{stem_mutated}"
         else:
-            if sc.endswith("a") and stem_mutated.startswith("a"):
-                sc_surface = sc[:-1]
-            else:
-                sc_surface = sc
-            form = f"ha{sc_surface}{stem_mutated}"
+            form = f"ha{sc}{stem_mutated}"
 
         confidence = min(subject_candidate["confidence"], object_candidate["confidence"]) if has_object else subject_candidate["confidence"]
         rule_id = "fortune.concord.object.001" if has_object else "fortune.verbal.negation.001"
@@ -495,8 +537,8 @@ def generate_form(
                 },
                 "extensions": applied_extensions,
                 "final_vowel": {
-                    "surface": "e",
-                    "value": "e",
+                    "surface": stem_mutated[-1],
+                    "value": stem_mutated[-1],
                 },
             },
             "phonology": compute_phonology_fields(form),
@@ -505,14 +547,16 @@ def generate_form(
         sc = subject_candidate["surface"]
         if has_object:
             oc = object_candidate["surface"]
-            if oc.endswith("a") and stem_val.startswith("a"):
-                oc_surface = oc[:-1]
-            else:
-                oc_surface = oc
-            form = f"{sc}{SUPPORTED_TENSE_ASPECT_MARKER}{oc_surface}{stem_val}"
+            boundary = _finite_boundary_deferred(
+                polarity="positive",
+                object_surface=oc,
+                stem_surface=stem_val,
+            )
+            if boundary is not None:
+                raise _deferred_finite_generation(boundary=boundary, features=features)
+            form = f"{sc}{SUPPORTED_TENSE_ASPECT_MARKER}{oc}{stem_val}"
         else:
             form = f"{sc}{SUPPORTED_TENSE_ASPECT_MARKER}{stem_val}"
-
         confidence = min(subject_candidate["confidence"], object_candidate["confidence"]) if has_object else subject_candidate["confidence"]
         rule_id = "fortune.concord.object.001" if has_object else SUPPORTED_RULE_ID
 
@@ -601,7 +645,7 @@ def generate_form(
             "supported_shape": (
                 "subject_concord + no + [object_concord] + verb_stem"
                 if polarity == "positive" else
-                "ha + subject_concord + [object_concord] + verb_stem_ending_in_e"
+                "ha + subject_concord + [object_concord] + verb_stem_ending_in_i"
             ),
             "supported_rule_ids": [generated["rule_id"], *_rule_ids_for_extensions(applied_extensions)],
             "normalizer": SEARCH_NORMALIZER_VERSION,
@@ -875,9 +919,31 @@ def _analyze_ku_infinitive(
 
 
 def _unsupported_future_lanes(
-    normalized: str, deferred_boundaries: list[str] | tuple[str, ...] = ()
+    normalized: str,
+    deferred_boundaries: list[str] | tuple[str, ...] = (),
+    finite_deferred_boundaries: list[str] | tuple[str, ...] = (),
+    pro_verb_exclusions: list[str] | tuple[str, ...] = (),
 ) -> list[dict[str, object]]:
     lanes = []
+    if pro_verb_exclusions:
+        lanes.append(
+            {
+                "code": "excluded_defective_pro_verb_stem",
+                "message": (
+                    "This surface matches a negated -no- present reading "
+                    "derived through the ordinary terminal-vowel rule from the "
+                    f"defective pro-verb stem {sorted(set(pro_verb_exclusions))[0]} "
+                    "(its own -ne/-na paradigm; FSI Unit 12: pro-verb stems "
+                    "keep their final vowels). That reading is not inferred "
+                    "and is not claimed to be ungrammatical; the surface "
+                    "still resolves through an independently reviewed "
+                    "lexical stem."
+                ),
+                "support_status": "not_supported",
+                "excluded_stem_headwords": sorted(set(pro_verb_exclusions)),
+                "rule_card_ids": [SUPPORTED_RULE_ID],
+            }
+        )
     for boundary in deferred_boundaries:
         lanes.append(
             {
@@ -893,7 +959,27 @@ def _unsupported_future_lanes(
                 "rule_card_ids": [INFINITIVE_RULE_ID],
             }
         )
-    if not deferred_boundaries and normalized.startswith("ku") and len(normalized) > 2:
+    for boundary in finite_deferred_boundaries:
+        lanes.append(
+            {
+                "code": "deferred_finite_boundary",
+                "message": (
+                    "This surface matches a finite present construction across "
+                    "a vowel boundary deferred pending linguistic evidence "
+                    f"({boundary}); it is not claimed to be ungrammatical, "
+                    "and no reading is inferred for it."
+                ),
+                "support_status": "deferred_pending_evidence",
+                "boundary": boundary,
+                "rule_card_ids": [SUPPORTED_RULE_ID],
+            }
+        )
+    if (
+        not deferred_boundaries
+        and not finite_deferred_boundaries
+        and normalized.startswith("ku")
+        and len(normalized) > 2
+    ):
         lanes.append(
             {
                 "code": "ku_infinitive_unmatched_stem",
@@ -1378,6 +1464,10 @@ def _analyze_segmentations(
     verb_stem: str,
     stem_options_for,
     build_analysis,
+    boundary_evaluator=None,
+    deferred: list[str] | None = None,
+    exclude_pro_verb_stems: bool = False,
+    pro_verb_exclusions: list[str] | None = None,
 ) -> list[dict[str, object]]:
     analyses: list[dict[str, object]] = []
     seen: set[tuple[object, ...]] = set()
@@ -1387,7 +1477,39 @@ def _analyze_segmentations(
         lookup_stem: str,
         object_candidate: dict[str, object] | None,
     ) -> None:
-        for lemma, extensions in _get_stem_candidates(lookup_stem):
+        if boundary_evaluator is not None:
+            boundary = boundary_evaluator(stem_surface, object_candidate)
+            if boundary is not None:
+                # The deferred construction is recorded only when this reading
+                # actually resolves to reviewed lexical material, matching the
+                # infinitive lane: analysis excludes only the unsupported
+                # inferred construction, never the surface.
+                if _get_stem_candidates(lookup_stem):
+                    if deferred is not None and boundary not in deferred:
+                        deferred.append(boundary)
+                return
+        candidates = _get_stem_candidates(lookup_stem)
+        if exclude_pro_verb_stems:
+            # The negated -no- present terminal rule must not derive a
+            # reading from a defective pro-verb stem: generation refuses it,
+            # so analysis infers no such reading either. A negative reading
+            # can only reach one of these lemmas through the mutated-lookup
+            # or decomposition paths (the exact path requires the reading
+            # itself, which never carries the citation terminal), so every
+            # such candidate here is an ordinary-rule derivation. Independent
+            # lemmas resolving on the same surface are untouched.
+            kept: list[tuple[object, list[dict[str, object]]]] = []
+            for lemma, extensions in candidates:
+                if lemma.normalized_headword in _PRO_VERB_STEMS:
+                    if (
+                        pro_verb_exclusions is not None
+                        and lemma.headword not in pro_verb_exclusions
+                    ):
+                        pro_verb_exclusions.append(lemma.headword)
+                    continue
+                kept.append((lemma, extensions))
+            candidates = kept
+        for lemma, extensions in candidates:
             features_key = (
                 lemma.public_id,
                 stem_surface,
@@ -1429,25 +1551,8 @@ def _analyze_segmentations(
     return analyses
 
 
-def _positive_stem_options(
-    verb_stem: str, object_candidate: dict[str, object] | None
-) -> list[tuple[str, str]]:
-    """Segmentation readings for the positive present stem slot."""
-    if object_candidate is None:
-        return [(verb_stem, verb_stem)]
-    oc_surface = object_candidate["surface"]
-    rest = verb_stem.removeprefix(oc_surface)
-    options = []
-    if rest:
-        options.append((rest, rest))
-    if oc_surface.endswith("a"):
-        options.append(("a" + rest, "a" + rest))
-    return options
-
-
-
 def _analyze_present_positive(
-    normalized: str, subject_candidate: dict[str, object]
+    normalized: str, subject_candidate: dict[str, object], deferred: list[str] | None = None
 ) -> list[dict[str, object]]:
     subject_surface = subject_candidate["surface"]
     prefix = f"{subject_surface}{SUPPORTED_TENSE_ASPECT_MARKER}"
@@ -1458,14 +1563,44 @@ def _analyze_present_positive(
     if not verb_stem:
         return []
 
+    def stem_options(
+        stem: str, object_candidate: dict[str, object] | None
+    ) -> list[tuple[str, str]]:
+        """Segmentation readings for the positive present stem slot.
+
+        Plain strip reading first; when the object concord ends in "a" the
+        contraction-recovery expansion ("a" + rest) is also emitted so the
+        shared boundary evaluator can record the unattested coalesced contact
+        when it resolves (morphology-rules-v5), instead of analyzing it.
+        """
+        if object_candidate is None:
+            return [(stem, stem)]
+        oc_surface = object_candidate["surface"]
+        rest = stem.removeprefix(oc_surface)
+        options = []
+        if rest:
+            options.append((rest, rest))
+        if oc_surface.endswith("a"):
+            options.append(("a" + rest, "a" + rest))
+        return options
+
     return _analyze_segmentations(
         normalized=normalized,
         subject_candidate=subject_candidate,
         verb_stem=verb_stem,
-        stem_options_for=_positive_stem_options,
+        stem_options_for=stem_options,
         build_analysis=_build_positive_analysis,
+        boundary_evaluator=lambda stem_surface, object_candidate: (
+            _finite_boundary_deferred(
+                polarity="positive",
+                object_surface=(
+                    object_candidate["surface"] if object_candidate is not None else None
+                ),
+                stem_surface=stem_surface,
+            )
+        ),
+        deferred=deferred,
     )
-
 
 
 def _build_negative_analysis(
@@ -1512,8 +1647,8 @@ def _build_negative_analysis(
             },
             "extensions": extensions,
             "final_vowel": {
-                "surface": "e",
-                "value": "e",
+                "surface": stem_surface[-1],
+                "value": stem_surface[-1],
             },
         },
         "phonology": compute_phonology_fields(normalized),
@@ -1522,7 +1657,10 @@ def _build_negative_analysis(
 
 
 def _analyze_present_negative(
-    normalized: str, subject_candidate: dict[str, object]
+    normalized: str,
+    subject_candidate: dict[str, object],
+    deferred: list[str] | None = None,
+    pro_verb_exclusions: list[str] | None = None,
 ) -> list[dict[str, object]]:
     if not normalized.startswith("ha"):
         return []
@@ -1538,14 +1676,20 @@ def _analyze_present_negative(
     def stem_options(
         stem: str, object_candidate: dict[str, object] | None
     ) -> list[tuple[str, str]]:
-        """Negative readings: final vowel -e, DB lookup mutates -e back to -a.
+        """Negative readings: terminal -i (generated) or -e (Zezuru variant).
 
-        Subject-coalescence applies to the no-object reading when the subject
-        concord ends in "a" (e.g. class 1 "a" + stem "amba..." surfaces as
-        "ha..." + stem); object-coalescence applies when the object concord
-        ends in "a".
+        Plain readings come first; contraction-recovery expansions ("a" + stem
+        slot) are emitted only so the shared boundary evaluator can record the
+        unattested coalesced contact when such a reading would have resolved
+        (morphology-rules-v5), instead of analyzing it. Adjacent `a` vowels are
+        retained at the attested negative-prefix and subject|object contacts.
+
+        Only readings whose terminal is -i or -e are viable negative spellings
+        (FSI Unit 12 note: "-i in some dialects, -e in others"). Each yields
+        two lookups: the terminal restored to -a (the lexical stem, e.g.
+        zivi/zive -> ziva) and the surface itself (divergent stems such as
+        -ti/-nzi whose citation form already carries the non-a terminal).
         """
-        options: list[tuple[str, str]] = []
         if object_candidate is None:
             readings = [stem]
             if sc_surface.endswith("a"):
@@ -1557,9 +1701,12 @@ def _analyze_present_negative(
                 readings.append(inner)
             if object_candidate["surface"].endswith("a"):
                 readings.append("a" + inner)
+        options: list[tuple[str, str]] = []
         for surface in readings:
-            if surface.endswith("e"):
-                options.append((surface, surface[:-1] + "a"))
+            if not surface.endswith(("i", "e")):
+                continue
+            options.append((surface, surface[:-1] + "a"))
+            options.append((surface, surface))
         return options
 
     return _analyze_segmentations(
@@ -1568,6 +1715,19 @@ def _analyze_present_negative(
         verb_stem=verb_stem,
         stem_options_for=stem_options,
         build_analysis=_build_negative_analysis,
+        boundary_evaluator=lambda stem_surface, object_candidate: (
+            _finite_boundary_deferred(
+                polarity="negative",
+                subject_surface=sc_surface if object_candidate is None else None,
+                object_surface=(
+                    object_candidate["surface"] if object_candidate is not None else None
+                ),
+                stem_surface=stem_surface,
+            )
+        ),
+        deferred=deferred,
+        exclude_pro_verb_stems=True,
+        pro_verb_exclusions=pro_verb_exclusions,
     )
 
 
@@ -1680,7 +1840,7 @@ def _normalize_generation_extensions(extensions_feature: object) -> list[dict[st
                         "field": "extensions",
                         "received": ext,
                         "supported": ["repetitive (no style)", 'reversive with style "long" or "short"'],
-                        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+                        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i",
                         "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001", "fortune.concord.object.001"],
                     },
                 )
@@ -1696,7 +1856,7 @@ def _normalize_generation_extensions(extensions_feature: object) -> list[dict[st
                         "field": "extensions",
                         "received": ext,
                         "supported": ['reversive with style "long" or "short"'],
-                        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+                        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i",
                         "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001", "fortune.concord.object.001"],
                     },
                 )
@@ -1746,11 +1906,136 @@ _INFINITIVE_SUPPORTED_RULE_IDS = [
     "fortune.concord.object.001",
 ]
 
+
 _INFINITIVE_ALLOWED_FEATURES = frozenset(
     {"generation_type", "polarity", "object", "reflexive", "extensions"}
 )
 
 INFINITIVE_DEFERRED_REASON = "deferred_pending_evidence"
+
+#
+# Negated -no- present terminal vowel (morphology-rules-v5): the final -a of a
+# lexical stem becomes -i in the API's generated dialect. Sources:
+# - FSI Unit 12, Note 1 (printed p. 118): the negative of the /-no-/ tense --
+#   "The final vowel of the stem is /-i/ in some dialects, /-e/ in others.",
+#   and pro-verb stems keep their final vowels; FSI's own forms are /-i/
+#   (Handízíví, Handítaúrí, Haváazíví, Handíríveréngí, Havázvígadzírí);
+# - FSI Unit 13, Note 1 (printed p. 126): /-sa-/ past negatives keep /-a/,
+#   "does not become /-i/" -- scoping the mutation to the /-no-/-tense lane;
+# - Hannan, front-matter TABLE OF VERB FORMS, Present Indicative negative
+#   (PDF pp. 14-15): "Handidyi St. Sh." (Standard Shona, -i) versus
+#   "Handidye Z" (Zezuru, -e), and the -ziva entry "Handimuzivi: I do not
+#   know him" (terminal -i with object concord);
+# - Fortune, TC VII (printed p. 25) and 2.10.2.4(b): the negative principal
+#   present inflection ends /-e/,/-é/ ("ha-ndí-zív-é (I don't know)") --
+#   the Zezuru variant, analyzed as a dialect spelling, never generated.
+#
+
+#
+# Finite vowel-boundary policy (morphology-rules-v5).
+#
+# Attested retention of adjacent `a` vowels in verb forms, for the boundaries
+# the finite shapes can realize:
+# - tense sign before object concord: Hannan p. 25 concord list, "-a- ... oc 6:
+#   Ndakaaona: I saw them"; FSI Unit 15 drills Ndaagadzira/Vaagadzira/Yaagadzira
+#   (PDF p. 169); FSI p. 225 Ndaatora (nda-a-tor-a, class-6 object).
+# - tense sign before stem: Hannan p. 26, "-ambura ... Umba yaambura: the house
+#   is on fire" (class-9 subject + -a- tense + a-initial radical).
+# - negative prefix before subject concord: FSI Unit 15 Haanayo/Haaudi samples;
+#   Hannan "Mabhuku haakodzi" (class-6 subject a-).
+# - subject concord before a-initial object concord: FSI Unit 15 "Havaazivi:
+#   they don't know them" (ha-va-a-zivi).
+# - non-identical vowel contacts at object|stem and no|object: FSI Unit 15
+#   Ndamuona/Ndavaona (p. 166), Ndinoada/Ndinouda (PDF p. 170), Ndaiona.
+# No available source witnesses an a-final subject or object concord
+# immediately before an a-initial stem. FSI "Majaha arara" (PDF p. 41) is the
+# fused hodiernal subject+tense form (Fortune, Series X subject-prefix
+# allomorphs with tense sign /-a-/), not a subject|stem boundary, and Fortune's
+# coalescence rule (3.3.9, mano/meno/meso) is explicitly nominal. Those
+# contacts are therefore deferred: generation refuses them, analysis infers no
+# reading across them, and no contracted or unattested-hiatus spelling is
+# invented (same discipline as the infinitive deferrals).
+#
+
+FINITE_DEFERRED_REASON = "deferred_pending_evidence"
+
+# The defective pro-verb stem whose negated -no- present is not derivable
+# from a terminal rule (affirmative -ne, negative -na; Hannan front matter;
+# FSI Unit 12: pro-verb stems keep their final vowels). Generation refuses it
+# instead of inventing a form.
+_PRO_VERB_STEMS = frozenset({"na"})
+
+
+def _finite_boundary_deferred(
+    *,
+    polarity: str,
+    subject_surface: str | None = None,
+    object_surface: str | None = None,
+    stem_surface: str,
+) -> str | None:
+    """Deferred a-vowel-boundary policy shared by finite generation/analysis.
+
+    Returns a stable boundary code when the evaluated morphemes place an
+    a-final subject or object concord immediately before an a-initial stem
+    without applicable source evidence, else None. Adjacent identical `a`
+    vowels are retained at attested contacts (negative prefix before the
+    subject concord, subject concord before an a-initial object concord,
+    tense sign before an object concord or stem); only the unattested
+    concord|stem contacts are deferred. Arguments are morphemes (the effective
+    subject and object surfaces and the stem as built after extensions and the
+    negative terminal-vowel mutation), never substrings of the finished word.
+    """
+    if (
+        object_surface is not None
+        and object_surface.endswith("a")
+        and stem_surface.startswith("a")
+    ):
+        return "object_before_a_initial_stem"
+    if (
+        polarity == "negative"
+        and object_surface is None
+        and subject_surface is not None
+        and subject_surface.endswith("a")
+        and stem_surface.startswith("a")
+    ):
+        return "subject_before_a_initial_stem"
+    return None
+
+
+def _deferred_finite_generation(
+    *, boundary: str, features: dict[str, object]
+) -> GenerationFailure:
+    """Structured refusal for a deferred finite vowel boundary."""
+    return GenerationFailure(
+        code="GENERATION_UNSUPPORTED",
+        message=(
+            "Unsupported v1 generation feature: finite_boundary. This "
+            "morpheme combination crosses a vowel boundary deferred pending "
+            "linguistic evidence; it is not claimed to be grammatically "
+            "impossible, and no alternative spelling is generated."
+        ),
+        detail={
+            "field": "finite_boundary",
+            "boundary": boundary,
+            "reason": FINITE_DEFERRED_REASON,
+            "received": features,
+            "supported": [
+                "finite present constructions that avoid an a-final subject or "
+                "object concord immediately before an a-initial stem; adjacent "
+                "a vowels are kept at attested contacts (ha + subject concord, "
+                "subject concord + a-initial object concord) and never merged"
+            ],
+            "supported_shape": (
+                "subject_concord + no + [object_concord] + verb_stem / "
+                "ha + subject_concord + [object_concord] + verb_stem_ending_in_i"
+            ),
+            "supported_rule_ids": [
+                SUPPORTED_RULE_ID,
+                "fortune.verbal.negation.001",
+                "fortune.concord.object.001",
+            ],
+        },
+    )
 
 
 def _infinitive_boundary_deferred(
@@ -1770,7 +2055,9 @@ def _infinitive_boundary_deferred(
     are morphemes (the object surface, the reflexive flag, the stem as
     built after extensions), never substrings of the finished word, so
     supported combinations sharing letters (e.g. `kusaziva` from `sa` +
-    `ziva`) are unaffected. Finite-verb behavior is untouched.
+    `ziva`) are unaffected. Finite verb forms run the parallel
+    _finite_boundary_deferred policy (morphology-rules-v5) with its own
+    boundary codes and rule card.
     """
     if polarity == "negative":
         if object_surface is not None:
@@ -1915,8 +2202,9 @@ def _join_infinitive_surface(parts: list[str]) -> str:
 
     No vowels are dropped or merged here; deferred a-vowel boundaries never
     reach this join because generation refuses them first (see
-    _infinitive_boundary_deferred). (Finite present generation keeps its own
-    prior-v1 joining rule; that path is out of scope for this correction.)
+    _infinitive_boundary_deferred). Finite present generation joins plainly
+    too under morphology-rules-v5: its deferred a-vowel boundaries are refused
+    by _finite_boundary_deferred before the form is built.
     """
     return "".join(parts)
 
@@ -2203,7 +2491,7 @@ def _unsupported_generation(*, field: str, received, supported) -> GenerationFai
             "field": field,
             "received": received,
             "supported": supported,
-            "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+            "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i",
             "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001", "fortune.concord.object.001"],
         },
     )

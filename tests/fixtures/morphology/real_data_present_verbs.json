@@ -14,7 +14,7 @@
       },
       {
         "name": "negative_person_subject",
-        "text": "handibadanudze",
+        "text": "handibadanudzi",
         "rule_id": "fortune.verbal.negation.001"
       },
       {
@@ -25,7 +25,7 @@
       },
       {
         "name": "negative_person_object",
-        "text": "handikubadanudze",
+        "text": "handikubadanudzi",
         "rule_id": "fortune.concord.object.001",
         "object_surface": "ku"
       }
@@ -52,7 +52,7 @@
       },
       {
         "name": "negative_person_subject",
-        "text": "handibadanuke",
+        "text": "handibadanuki",
         "rule_id": "fortune.verbal.negation.001"
       }
     ],
@@ -64,23 +64,13 @@
     "normalized_headword": "ambura",
     "part_of_speech_code": "vt",
     "part_of_speech_label": "transitive verb",
-    "source_locator": "hannan:fixture:ambura",
+    "source_locator": "hannan:page_026:entry:ambura (Umba yaambura: the house is on fire)",
     "supported_cases": [
       {
-        "name": "positive_class_object_coalescence",
-        "text": "vanovambura",
-        "rule_id": "fortune.concord.object.001",
-        "subject_surface": "va",
-        "object_surface": "va",
-        "verb_stem_surface": "ambura"
-      },
-      {
-        "name": "negative_class_object_coalescence",
-        "text": "havavambure",
-        "rule_id": "fortune.concord.object.001",
-        "subject_surface": "va",
-        "object_surface": "va",
-        "verb_stem_surface": "ambure"
+        "name": "positive_class_subject",
+        "text": "vanoambura",
+        "rule_id": "fortune.verbal.slots.001",
+        "subject_surface": "va"
       },
       {
         "name": "positive_third_person_object",
@@ -97,9 +87,58 @@
     ],
     "unsupported_observed_forms": [
       {
+        "form": "vanovambura",
+        "reason": "deferred a-final object concord + a-initial stem boundary (finite)"
+      },
+      {
+        "form": "ndinovambura",
+        "reason": "deferred a-final object concord + a-initial stem boundary (finite)"
+      },
+      {
+        "form": "havavambure",
+        "reason": "deferred a-final object concord + a-initial stem boundary (finite)"
+      },
+      {
+        "form": "havambure",
+        "reason": "deferred a-final subject concord + a-initial stem boundary (finite negative)"
+      },
+      {
         "form": "kusaambura",
         "reason": "negative infinitive across deferred sa-/a-stem boundary"
       }
     ]
+  },
+  {
+    "id": "hannan_ziva",
+    "headword": "-ziva",
+    "normalized_headword": "ziva",
+    "part_of_speech_code": "vt",
+    "part_of_speech_label": "transitive verb",
+    "source_locator": "hannan:page_774:entry:ziva (Handimuzivi: I do not know him)",
+    "supported_cases": [
+      {
+        "name": "positive_person_subject",
+        "text": "ndinoziva",
+        "rule_id": "fortune.verbal.slots.001"
+      },
+      {
+        "name": "negative_person_subject",
+        "text": "handizivi",
+        "rule_id": "fortune.verbal.negation.001"
+      },
+      {
+        "name": "negative_third_person_object",
+        "text": "handimuzivi",
+        "rule_id": "fortune.concord.object.001",
+        "object_surface": "mu"
+      },
+      {
+        "name": "positive_infinitive",
+        "text": "kuziva",
+        "rule_id": "fortune.verbal.infinitive.001",
+        "verb_stem_surface": "ziva"
+      }
+    ],
+    "unsupported_observed_forms": []
   }
 ]

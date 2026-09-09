@@ -477,7 +477,7 @@ def schemas():
                 "data_release": {"type": "string", "example": "2026.05.0"},
                 "rule_set_version": {
                     "type": "string",
-                    "example": "morphology-rules-v4",
+                    "example": "morphology-rules-v5",
                 },
                 "generated_at": {
                     "type": "string",
