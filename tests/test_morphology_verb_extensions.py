@@ -559,8 +559,8 @@ def test_extension_round_trip_negative_and_object_variants(
         },
     )
     assert response.status_code == 200
-    assert response.json()["data"]["generated"]["form"] == "handiamburise"
-    response = analyze(client, api_key, "handiamburise")
+    assert response.json()["data"]["generated"]["form"] == "handiamburisi"
+    response = analyze(client, api_key, "handiamburisi")
     assert response.status_code == 200
     analysis = response.json()["data"]["analyses"][0]
     assert analysis["lemma"]["public_id"] == ambura.public_id
@@ -978,7 +978,7 @@ def test_ambiguity_keeps_originating_lemma_across_object_readings(
 
     for polarity, form in [
         ("positive", "ndinokurisa"),
-        ("negative", "handikurise"),
+        ("negative", "handikurisi"),
     ]:
         features = {
             "generation_type": "verb_form",
@@ -1036,37 +1036,53 @@ def test_competing_object_concords_stay_distinct(
 
 
 @pytest.mark.django_db
-def test_coalesced_object_reading_survives_competition(
+def test_deferred_object_boundary_excludes_reading_construction_specifically(
     client, api_key, current_release
 ):
-    """Finding 2: the coalescence alternative is a viable reading of the same
-    surface and must be considered alongside the plain segmentation."""
+    """morphology-rules-v5: the va + a-initial-stem reading is excluded from
+    analysis (recorded as a deferred boundary, not inferred), while supported
+    object readings stay construction-specific: the same object concord on a
+    consonant-initial stem still resolves, so no surface is blacklisted."""
     from shona_api.lexicon.models import NounClass
 
-    ambura = make_verb("-ambura")
-    NounClass.objects.get_or_create(
-        class_number="2",
-        defaults=dict(
-            display_order=2,
-            label="Class 2",
-            nominal_prefix="va",
-            subject_concord="va",
-            object_concord="va",
-            review_state=ReviewState.APPROVED,
-        ),
-    )
-    response = analyze(client, api_key, "ndinovambura")
+    make_verb("-ambura")
+    badanudza = make_verb("-badanudza")
+    for class_number, subject_concord, object_concord in (("2", "va", "va"), ("6", "a", "a")):
+        NounClass.objects.get_or_create(
+            class_number=class_number,
+            defaults=dict(
+                display_order=int(class_number),
+                label=f"Class {class_number}",
+                nominal_prefix=object_concord,
+                subject_concord=subject_concord,
+                object_concord=object_concord,
+                review_state=ReviewState.APPROVED,
+            ),
+        )
+
+    for text in ("ndinovambura", "ndinoaambura", "vanovambura", "vanovaambura"):
+        response = analyze(client, api_key, text)
+        assert response.status_code == 422, text
+        matching = [
+            lane
+            for lane in response.json()["error"]["detail"]["future_lanes"]
+            if lane["code"] == "deferred_finite_boundary"
+            and lane["boundary"] == "object_before_a_initial_stem"
+        ]
+        assert matching, (text, response.json()["error"]["detail"]["future_lanes"])
+
+    # The same object concord before a consonant-initial stem still analyzes.
+    response = analyze(client, api_key, "ndinovabadanudza")
     assert response.status_code == 200
     analyses = response.json()["data"]["analyses"]
-    coalesced = [
+    object_readings = [
         analysis
         for analysis in analyses
         if analysis["slots"]["object"]
         and analysis["slots"]["object"]["surface"] == "va"
-        and analysis["slots"]["verb_stem"]["surface"] == "ambura"
+        and analysis["lemma"]["public_id"] == badanudza.public_id
     ]
-    assert coalesced, analyses
-    assert coalesced[0]["lemma"]["public_id"] == ambura.public_id
+    assert object_readings, analyses
 
 
 @pytest.mark.django_db

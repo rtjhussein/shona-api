@@ -9,7 +9,7 @@ future backlog items.
 ```powershell
 python -m pip install -e ".[dev]"
 python manage.py migrate
-python manage.py ensure_current_release --version 2026.05.local --label "Local development release" --rule-set-version morphology-rules-v4
+python manage.py ensure_current_release --version 2026.09.local --label "Local development release" --rule-set-version morphology-rules-v5
 python manage.py runserver
 ```
 
@@ -18,8 +18,8 @@ response envelope can expose `data_release` and `rule_set_version`. If no
 current release exists, the API returns `CURRENT_RELEASE_NOT_CONFIGURED` with
 the setup command above in `error.detail.setup_command`. The release must also
 declare the morphology rules version this deployment implements
-(`morphology-rules-v4`; v4 keeps the v3 extension rules unchanged and adds the
-infinitive negation/object/reflexive and generation lane): otherwise analyze
+(`morphology-rules-v5`; v5 keeps the v4 infinitive and v3 extension rules
+unchanged and corrects the finite vowel-boundary joining rule): otherwise analyze
 and generate return `503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED`, and search
 keeps serving lexical results while reporting
 `morphology_enrichment.status = "unavailable"`.
@@ -216,10 +216,15 @@ Generation v1 supports reviewed verb-stem lemmas, the finite
 `subject_concord + no + [object_concord] + verb_stem` shape with the
 documented verb extensions, and a `generation_type: "infinitive"` branch
 (`ku + [sa] + [object_concord | zvi-reflexive] + verb_stem`, e.g. `kusaziva`).
-Evidence-gated allomorphs (causative styles `dz` and `ts`, reversive style
-`short`) return `422 EXTENSION_UNVERIFIED` on both branches; other unsupported
-feature requests return `GENERATION_UNSUPPORTED`. See
-`docs/morphology/generate_endpoint.md` for the full contract.
+Finite `a`-vowel boundaries without source evidence (an `a`-final subject or
+object concord immediately before an `a`-initial stem) are deferred with a
+structured `finite_boundary` refusal, and the negated `-no-` present terminal
+is the Standard Shona `-i` (`handidyi`-type; the Zezuru `-e` spelling stays
+analyzable). Evidence-gated allomorphs (causative
+styles `dz` and `ts`, reversive style `short`) return `422
+EXTENSION_UNVERIFIED` on both branches; other unsupported feature requests
+return `GENERATION_UNSUPPORTED`. See `docs/morphology/generate_endpoint.md`
+for the full contract.
 
 ## 8. Response envelope
 
@@ -228,8 +233,8 @@ Protected public API success responses use:
 ```json
 {
   "api_version": "v1",
-  "data_release": "2026.05.0",
-  "rule_set_version": "morphology-rules-v4",
+  "data_release": "2026.09.0",
+  "rule_set_version": "morphology-rules-v5",
   "generated_at": "2026-05-12T12:00:00Z",
   "data": {}
 }

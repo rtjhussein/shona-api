@@ -220,3 +220,110 @@ finite present generation keeps its prior-v1 `a`-coalescence joining rule
 (e.g. `vanovambura`) from the accepted extension milestone; the hiatus
 witnesses collected here suggest that rule deserves its own supervisor
 review, but this correction does not change finite behavior.
+
+---
+
+## Status update: 2026-09-09 finite vowel-boundary correction (morphology-rules-v5)
+
+The historical sections above are preserved as written. This section resolves
+the known tension recorded at the end of the v4 correction: the finite present
+`a`-coalescence joining rule (e.g. `va` + `ambura` -> `vambura`, including
+`vanovambura`) is removed because source review found it unsupported, and the
+same deferral discipline as the infinitive lane now governs finite boundaries.
+
+Source evidence (validated directly against the local PDFs): no available
+source states a verbal contraction rule. Fortune's coalescence rule (3.3.9,
+`mano`/`meno`/`meso`, PDF p. 64) is explicitly nominal, and Fortune's Series
+X/XI tables (printed pp. 16-17) plus 2.10.2.4 give no verb-prefix contraction;
+the only single-`a` verbal witness, FSI `Majaha arara` (PDF p. 41), is the
+fused hodiernal subject+tense form (Series X allomorph with tense sign
+`/-a-/`), a boundary the supported finite shapes never realize. Every attested
+verbal contact spells adjacent `a` vowels out in full: tense sign + class-6
+object (`Ndaatora` FSI p. 225; Hannan p. 25 concord list "Ndakaaona: I saw
+them"; FSI Unit 15 `Ndaagadzira`/`Vaagadzira`/`Yaagadzira` PDF p. 169), tense
+sign + a-initial stem (Hannan p. 26, `-ambura ... Umba yaambura: the house is
+on fire`), negative prefix + subject concord (Hannan `Mabhuku haakodzi`; FSI
+`Haanayo`/`Haaudi`), subject concord + class-6 object (FSI `Havaazivi: they
+don't know them`, PDF p. 171), and non-identical object|stem contacts
+(`Ndamuona`/`Ndavaona` FSI p. 166; `Ndinoada`/`Ndinouda` FSI PDF p. 170;
+`Mwambovaona` FSI p. 189). No source witnesses an `a`-final subject or object
+concord immediately before an `a`-initial stem: Hannan's own class-6 object
+example (`Ndakaaona`) precedes the vowel-initial radical `-ona` (`a|o`
+contact, non-identical, retained); the identical `a|a` contact stays
+unwitnessed.
+
+Implemented under `morphology-rules-v5` (`MORPHOLOGY_RULES_VERSION` in
+`shona_api/morphology/services.py`): finite generation concatenates morphemes
+plainly and refuses the unattested contacts with structured `422
+GENERATION_UNSUPPORTED` (`field: finite_boundary`, `reason:
+deferred_pending_evidence`, stable boundary codes
+`subject_before_a_initial_stem` / `object_before_a_initial_stem`, evaluated on
+the stem as built after extensions and the negative terminal mutation).
+Analysis excludes only the unsupported inferred construction: the
+contraction-recovery readings (`vanovambura` -> va + ambura,
+`havamburi`/`havambure` -> va + ambura) no longer analyze, and a
+`deferred_finite_boundary` lane is recorded only when the
+excluded reading would have resolved to reviewed lexical material, mirroring
+the infinitive lane. Search enrichment consumes the same analyzer. Retained
+behavior, regression-covered: `ha` + class 1 subject (`haabadanudzi`), subject
+concord + class-6 object (`havaabadanudzi`, the `Havaazivi` contact), `no` +
+class 6
+object (`ndinoabadanudza`, the `Ndinoada` contact), non-identical object|stem
+contacts (`ndinomuambura`, `vanovabadanudza`), and all infinitive and
+extension rules (v4/v3 cards byte-identical).
+
+Rule-set history: v5 changes only the finite joining rule (new card
+`fortune.verbal.slots.001`, `affected_rule_set: morphology-rules-v5`); the
+infinitive card stays `morphology-rules-v4` and the extension cards stay
+`morphology-rules-v3`. Releases declaring older rule versions receive `503
+MORPHOLOGY_RULES_VERSION_UNSUPPORTED`; no release records are rewritten.
+Regressions: `tests/test_morphology_api.py` (structured generation refusals,
+analysis exclusion lanes, retained-contact cases, corpus fixture), and
+`tests/test_morphology_verb_extensions.py` (construction-specific exclusion).
+
+Remaining limits, stated honestly: the deferred finite boundaries have no
+attested witness in the available sources; if a source witness is later
+located, the boundary can be moved from deferral to explicit support without
+touching other rules. No independent linguistic review of the enabled finite
+patterns has occurred; tone and non-present tenses remain unsupported. This
+correction does not claim morphology as a whole is finished.
+
+---
+
+### Correction: negated -no- present terminal vowel (same unreleased v5)
+
+The finite-boundary review also covered the negated `-no-` present terminal
+vowel. The prior rules replaced a lexical stem's final `-a` with `-e` and
+appended `-e` to non-a stems, with no source locator. The sources establish a
+dialect split for one and the same construction, not a universal rule:
+
+- FSI Unit 12, Note 1 (printed p. 118): the final vowel of the stem in the
+  negated /-no-/ tense "is /-i/ in some dialects, /-e/ in others"; pro-verb
+  stems keep their final vowels. FSI's own forms are `-i`
+  (`Handízíví`, `Handítaúrí`, `Haváazíví` p. 171, `Handíríveréngí`,
+  `Havázvígadzírí`).
+- FSI Unit 13, Note 1 (printed p. 126): `/ha+SP+sa+stem/` past negatives keep
+  `-a` ("does not become /-i/"), scoping the mutation to the `-no-` lane.
+- Hannan front matter, TABLE OF VERB FORMS, Present Indicative negative
+  (PDF pp. 14-15): `Handidyi St. Sh.` (Standard Shona, `-i`) versus
+  `Handidye Z` (Zezuru, `-e`); the `-ziva` entry (PDF p. 774) gives
+  `Handimuzivi: I do not know him` (`-i` with object concord `mu`).
+- Fortune (Zezuru grammar), TC VII (printed p. 25) and 2.10.2.4(b):
+  `ha-ndí-zív-é (I don't know)`: the `-e` variant, source-attested.
+
+Implemented: generation emits `-i` (Standard Shona; also FSI's teaching
+practice and Hannan's dictionary examples); analysis accepts both `-i` and
+`-e` spellings as the same construction (terminal restored to `-a` for the
+lexical lookup, plus an identity lookup so divergent stems like `-ti`
+resolve); divergent stems keep their non-a terminal (Fortune 3.3.18); the
+defective pro-verb `-na` (own `-ne`/`-na` paradigm, Hannan front matter; FSI
+"pro-verb stems keep their final vowels") is refused with
+`GENERATION_UNSUPPORTED` / `defective_pro_verb_stem` instead of inventing a
+terminal. Zezuru `-e` spellings are analyzed dialect variants, never
+blacklisted. The exclusion is enforced on both sides of the API: generation
+refuses the defective pro-verb `-na` (`defective_pro_verb_stem`), and
+analysis infers no `ni`/`ne` reading from it either (mutated lookup,
+object-marked, or extension-decomposed paths all excluded, reported as an
+`excluded_defective_pro_verb_stem` future lane); search enrichment follows
+the analyzer, while an independently reviewed stem such as a reviewed `-ni`
+still resolves the same surface. The `-ziva` record joins the regression corpus
