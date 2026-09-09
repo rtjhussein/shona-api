@@ -186,6 +186,9 @@ def test_real_data_present_verb_corpus_generates_supported_forms(
             "tense_aspect": "present",
             "polarity": "positive",
         },
+        "positive_infinitive": {
+            "generation_type": "infinitive",
+        },
     }
 
     for record in records:
@@ -223,7 +226,7 @@ def test_real_data_present_verb_corpus_documents_future_unsupported_forms():
 
     assert unsupported_forms
     assert {"form": "badanudzwa", "reason": "passive or extension-like surface outside present v1 support"} in unsupported_forms
-    assert {"form": "kuambura", "reason": "infinitive/nominal form outside analyze/generate v1"} in unsupported_forms
+    assert {"form": "kusaambura", "reason": "negative infinitive across deferred sa-/a-stem boundary"} in unsupported_forms
 
 
 @pytest.fixture
@@ -343,8 +346,13 @@ def test_analyze_endpoint_returns_ku_infinitive_analysis(
         },
         "subject": None,
         "tense_aspect": None,
-        "polarity": None,
+        "polarity": {
+            "surface": "",
+            "value": "positive",
+            "label": "No negative marker in the supported infinitive pattern.",
+        },
         "object": None,
+        "reflexive": None,
         "verb_stem": {
             "surface": "buda",
             "lemma_public_id": verb_lemma.public_id,
@@ -355,7 +363,7 @@ def test_analyze_endpoint_returns_ku_infinitive_analysis(
             "value": "a",
         },
     }
-    assert "generation is not supported" in analysis["limitations"][2]
+    assert "optionally negative" in analysis["limitations"][0]
 
 
 @pytest.mark.django_db
@@ -427,7 +435,7 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
     assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
     assert body["error"]["detail"] == {
         "normalized": "handibuda",
-        "supported_shape": "ku + reviewed verb_stem / subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+        "supported_shape": "ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb_stem / subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
         "supported_rule_ids": [
             "fortune.verbal.infinitive.001",
             "fortune.verbal.slots.001",

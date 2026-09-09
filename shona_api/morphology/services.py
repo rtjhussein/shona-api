@@ -11,7 +11,7 @@ GENERATOR_VERSION = "shona-morphology-generator-v1"
 # The rule-set version implemented by this code. Public endpoints validate the
 # serving release's rule_set_version against it (Finding 5 policy): responses
 # never echo a version label the engine does not execute.
-MORPHOLOGY_RULES_VERSION = "morphology-rules-v3"
+MORPHOLOGY_RULES_VERSION = "morphology-rules-v4"
 RULES_VERSION_ERROR_CODE = "MORPHOLOGY_RULES_VERSION_UNSUPPORTED"
 SUPPORTED_RULE_ID = "fortune.verbal.slots.001"
 INFINITIVE_RULE_ID = "fortune.verbal.infinitive.001"
@@ -29,10 +29,18 @@ INFINITIVE_SOURCE_LOCATOR = (
     "PDF pages 90-91 (printed pp. 78-79)"
 )
 SUPPORTED_TENSE_ASPECT_MARKER = "no"
+INFINITIVE_PREFIX = "ku"
+INFINITIVE_NEGATIVE_MARKER = "sa"
+INFINITIVE_REFLEXIVE_SURFACE = "zvi"
+INFINITIVE_ANALYZER_CONFIDENCE = 0.82
+# Bounded infinitive ambiguity budget: at most this many ku- readings
+# (polarity x no-object/reflexive/object-concord x stem candidates) are
+# collected before the remaining segmentations are skipped.
+_MAX_INFINITIVE_ANALYSES = 12
 SUPPORTED_ANALYSIS_SHAPE = (
-    "ku + reviewed verb_stem / subject_concord + no + [object_concord] + "
-    "verb_stem / ha + subject_concord + [object_concord] + "
-    "verb_stem_ending_in_e"
+    "ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb_stem / "
+    "subject_concord + no + [object_concord] + verb_stem / "
+    "ha + subject_concord + [object_concord] + verb_stem_ending_in_e"
 )
 SUPPORTED_ANALYSIS_RULE_IDS = [
     INFINITIVE_RULE_ID,
@@ -350,7 +358,8 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
     neg_candidates.sort(key=lambda candidate: len(candidate["surface"]), reverse=True)
 
     analyses: list[dict[str, object]] = []
-    analyses.extend(_analyze_ku_infinitive(normalized))
+    infinitive_deferred: list[str] = []
+    analyses.extend(_analyze_ku_infinitive(normalized, infinitive_deferred))
 
     analyses.extend([
         analysis
@@ -370,17 +379,18 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
             "supported_shape": SUPPORTED_ANALYSIS_SHAPE,
             "supported_rule_ids": SUPPORTED_ANALYSIS_RULE_IDS,
         }
-        future_lanes = _unsupported_future_lanes(normalized)
+        future_lanes = _unsupported_future_lanes(normalized, infinitive_deferred)
         if future_lanes:
             detail["future_lanes"] = future_lanes
         raise AnalysisFailure(
             code="ANALYSIS_UNSUPPORTED",
             message=(
                 "No supported v1 analysis matched the input. Supported v1 forms "
-                "are ku- infinitive forms (ku + reviewed verb stem), "
-                "positive present verb forms (subject concord + 'no' + "
-                "[object_concord] + verb_stem), and negative present verb forms "
-                "(ha- + subject concord + [object_concord] + verb_stem ending in -e)."
+                "are ku- infinitive forms (ku + [sa] + [object_concord | "
+                "zvi-reflexive] + reviewed verb stem), positive present verb "
+                "forms (subject concord + 'no' + [object_concord] + verb_stem), "
+                "and negative present verb forms (ha- + subject concord + "
+                "[object_concord] + verb_stem ending in -e)."
             ),
             detail=detail,
         )
@@ -407,6 +417,13 @@ def generate_form(
     rule_set_version: str,
 ) -> dict[str, object]:
     lemma = _get_generation_verb_stem(lemma_public_id)
+    if features.get("generation_type") == "infinitive":
+        return _generate_infinitive(
+            lemma_public_id=lemma_public_id,
+            lemma=lemma,
+            features=features,
+            rule_set_version=rule_set_version,
+        )
     _validate_supported_generation_features(features)
     subject_candidate = _resolve_generation_subject(features["subject"])
     object_candidate = _resolve_generation_object(features.get("object"))
@@ -640,12 +657,51 @@ def _candidate_object_concords() -> list[dict[str, object]]:
     return sorted(candidates, key=lambda candidate: len(candidate["surface"]), reverse=True)
 
 
+def _infinitive_polarity_slot(polarity: str) -> dict[str, object]:
+    """Shared infinitive polarity slot; analyzer and generator agree on it."""
+    if polarity == "negative":
+        return {
+            "surface": INFINITIVE_NEGATIVE_MARKER,
+            "value": "negative",
+            "label": "infinitive negative marker",
+        }
+    return {
+        "surface": "",
+        "value": "positive",
+        "label": "No negative marker in the supported infinitive pattern.",
+    }
+
+
+def _reflexive_slot() -> dict[str, object]:
+    """Reflexive zvi slot, represented distinctly from object agreement.
+
+    Fortune 3.3.18(a) lists object and reflexive prefixes together but glosses
+    them apart (kuzvitora "to take them" versus kuzviziva "to know oneself"),
+    so a reflexive reading is never folded into an object-concord slot.
+    """
+    return {
+        "surface": INFINITIVE_REFLEXIVE_SURFACE,
+        "value": True,
+        "label": "reflexive prefix",
+    }
+
+
 def _build_infinitive_analysis(
-    *, normalized: str, verb_stem: str, lemma, extensions: list[dict[str, object]]
+    *,
+    normalized: str,
+    polarity: str,
+    object_candidate: dict[str, object] | None,
+    reflexive: bool,
+    verb_stem: str,
+    lemma,
+    extensions: list[dict[str, object]],
 ) -> dict[str, object]:
+    confidence = INFINITIVE_ANALYZER_CONFIDENCE
+    if object_candidate is not None:
+        confidence = min(confidence, object_candidate["confidence"])
     return {
         "analysis_type": "infinitive",
-        "confidence": 0.82,
+        "confidence": confidence,
         "rule_id": INFINITIVE_RULE_ID,
         "lemma": _lemma_payload(lemma),
         "source": {
@@ -655,14 +711,15 @@ def _build_infinitive_analysis(
         },
         "slots": {
             "infinitive_prefix": {
-                "surface": "ku",
+                "surface": INFINITIVE_PREFIX,
                 "type": "class_15_infinitive_prefix",
                 "label": "class 15 infinitive prefix",
             },
             "subject": None,
             "tense_aspect": None,
-            "polarity": None,
-            "object": None,
+            "polarity": _infinitive_polarity_slot(polarity),
+            "object": _subject_slot(object_candidate) if object_candidate is not None else None,
+            "reflexive": _reflexive_slot() if reflexive else None,
             "verb_stem": {
                 "surface": verb_stem,
                 "lemma_public_id": lemma.public_id,
@@ -675,32 +732,168 @@ def _build_infinitive_analysis(
         },
         "phonology": compute_phonology_fields(normalized),
         "limitations": [
-            "v1 analyzes only simple ku + reviewed verb-stem infinitives.",
-            "Infinitive complements, negation, objects, and tone are not analyzed.",
-            "Infinitive generation is not supported.",
+            "v1 analyzes only single-token ku- infinitives, optionally negative and with at most one object concord or the reflexive prefix.",
+            "Progressive/exclusive formatives, complements, nominal plurals, and tone are not analyzed.",
+            "Divergent stems without terminal -a resolve only as their own reviewed lemmas.",
         ],
     }
 
 
-def _analyze_ku_infinitive(normalized: str) -> list[dict[str, object]]:
-    if not normalized.startswith("ku") or len(normalized) <= 2:
+def _infinitive_negative_stem_options(
+    stem: str, object_candidate: dict[str, object] | None
+) -> list[tuple[str, str]]:
+    """Stem readings inside a ku-sa- infinitive.
+
+    Unlike finite negatives there is no -e/-a mutation (kusaziva keeps the
+    terminal -a). Readings are full-prefix strips only; a-vowel contacts
+    that lack applicable evidence are excluded later by
+    _infinitive_boundary_deferred, not here. Every option still needs a
+    lexical hit.
+    """
+    if object_candidate is None:
+        readings = [stem]
+    else:
+        inner = stem.removeprefix(object_candidate["surface"])
+        readings = [inner] if inner else []
+    return [(surface, surface) for surface in readings if surface]
+
+
+def _infinitive_positive_stem_options(
+    inner: str, object_candidate: dict[str, object]
+) -> list[tuple[str, str]]:
+    """Full-prefix strip for positive infinitive object readings.
+
+    Only the exact remainder can resolve lexically; a-vowel contacts that
+    lack applicable evidence are excluded later by
+    _infinitive_boundary_deferred, not here.
+    """
+    rest = inner.removeprefix(object_candidate["surface"])
+    return [(rest, rest)] if rest else []
+
+
+def _analyze_ku_infinitive(
+    normalized: str, deferred: list[str] | None = None
+) -> list[dict[str, object]]:
+    """Bounded ku- infinitive readings: polarity x object/reflexive x stems.
+
+    Every reading is lexically gated: the remaining stem must resolve to a
+    reviewed verb stem (exactly, or through an evidence-backed derivation),
+    so a lexical stem that merely begins with sa- or zvi- never invents a
+    negative/object/reflexive construction, and no reading invents a stem.
+    """
+    if not normalized.startswith(INFINITIVE_PREFIX) or len(normalized) <= 2:
         return []
+    rest = normalized.removeprefix(INFINITIVE_PREFIX)
+    if not rest:
+        return []
+    polarity_inners = [("positive", rest)]
+    if rest.startswith(INFINITIVE_NEGATIVE_MARKER):
+        inner = rest.removeprefix(INFINITIVE_NEGATIVE_MARKER)
+        if inner:
+            polarity_inners.append(("negative", inner))
 
-    verb_stem = normalized.removeprefix("ku")
-    return [
-        _build_infinitive_analysis(
-            normalized=normalized,
-            verb_stem=verb_stem,
-            lemma=lemma,
-            extensions=extensions,
+    analyses: list[dict[str, object]] = []
+    seen: set[tuple[object, ...]] = set()
+
+    def add(
+        polarity: str,
+        stem_surface: str,
+        lookup_stem: str,
+        object_candidate: dict[str, object] | None,
+        reflexive: bool,
+    ) -> bool:
+        """Append readings for one segmentation; True when the budget is spent."""
+        if not lookup_stem:
+            return False
+        stem_candidates = _get_stem_candidates(lookup_stem)
+        if not stem_candidates:
+            return False
+        boundary = _infinitive_boundary_deferred(
+            polarity=polarity,
+            object_surface=object_candidate["surface"] if object_candidate is not None else None,
+            reflexive=reflexive,
+            stem_surface=stem_surface,
         )
-        for lemma, extensions in _get_stem_candidates(verb_stem)
-    ]
+        if boundary is not None:
+            if deferred is not None and boundary not in deferred:
+                deferred.append(boundary)
+            return False
+        for lemma, extensions in stem_candidates:
+            key = (
+                lemma.public_id,
+                stem_surface,
+                tuple(
+                    (item["type"], item.get("style"), item["surface"])
+                    for item in extensions
+                ),
+                polarity,
+                _object_features_key(object_candidate),
+                reflexive,
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            analyses.append(
+                _build_infinitive_analysis(
+                    normalized=normalized,
+                    polarity=polarity,
+                    object_candidate=object_candidate,
+                    reflexive=reflexive,
+                    verb_stem=stem_surface,
+                    lemma=lemma,
+                    extensions=extensions,
+                )
+            )
+            if len(analyses) >= _MAX_INFINITIVE_ANALYSES:
+                return True
+        return False
+
+    for polarity, inner in polarity_inners:
+        if polarity == "positive":
+            plain_options = [(inner, inner)]
+        else:
+            plain_options = _infinitive_negative_stem_options(inner, None)
+        for stem_surface, lookup_stem in plain_options:
+            if add(polarity, stem_surface, lookup_stem, None, False):
+                return analyses
+        if inner.startswith(INFINITIVE_REFLEXIVE_SURFACE):
+            reflexive_stem = inner.removeprefix(INFINITIVE_REFLEXIVE_SURFACE)
+            if reflexive_stem and add(polarity, reflexive_stem, reflexive_stem, None, True):
+                return analyses
+        for object_candidate in _candidate_object_concords():
+            oc_surface = object_candidate["surface"]
+            if not inner.startswith(oc_surface):
+                continue
+            if polarity == "positive":
+                options = _infinitive_positive_stem_options(inner, object_candidate)
+            else:
+                options = _infinitive_negative_stem_options(inner, object_candidate)
+            for stem_surface, lookup_stem in options:
+                if add(polarity, stem_surface, lookup_stem, object_candidate, False):
+                    return analyses
+    return analyses
 
 
-def _unsupported_future_lanes(normalized: str) -> list[dict[str, object]]:
+def _unsupported_future_lanes(
+    normalized: str, deferred_boundaries: list[str] | tuple[str, ...] = ()
+) -> list[dict[str, object]]:
     lanes = []
-    if normalized.startswith("ku") and len(normalized) > 2:
+    for boundary in deferred_boundaries:
+        lanes.append(
+            {
+                "code": "deferred_infinitive_boundary",
+                "message": (
+                    "This surface matches a ku- infinitive construction across "
+                    "a vowel boundary deferred pending linguistic evidence "
+                    f"({boundary}); it is not claimed to be ungrammatical, "
+                    "and no reading is inferred for it."
+                ),
+                "support_status": "deferred_pending_evidence",
+                "boundary": boundary,
+                "rule_card_ids": [INFINITIVE_RULE_ID],
+            }
+        )
+    if not deferred_boundaries and normalized.startswith("ku") and len(normalized) > 2:
         lanes.append(
             {
                 "code": "ku_infinitive_unmatched_stem",
@@ -1546,6 +1739,318 @@ def _normalize_generation_extensions(extensions_feature: object) -> list[dict[st
     return normalized
 
 
+_INFINITIVE_SUPPORTED_SHAPE = "ku + [sa] + [object_concord | zvi-reflexive] + verb_stem"
+_INFINITIVE_SUPPORTED_RULE_IDS = [
+    INFINITIVE_RULE_ID,
+    "fortune.verbal.negation.001",
+    "fortune.concord.object.001",
+]
+
+_INFINITIVE_ALLOWED_FEATURES = frozenset(
+    {"generation_type", "polarity", "object", "reflexive", "extensions"}
+)
+
+INFINITIVE_DEFERRED_REASON = "deferred_pending_evidence"
+
+
+def _infinitive_boundary_deferred(
+    *,
+    polarity: str,
+    object_surface: str | None,
+    reflexive: bool,
+    stem_surface: str,
+) -> str | None:
+    """Deferred vowel-boundary policy for the infinitive lane only.
+
+    Returns a stable boundary code when the morpheme sequence crosses an
+    `a`-vowel boundary without applicable source evidence, else None. The
+    two deferred boundaries are: negative `sa-` immediately followed by an
+    `a`-initial object concord or an `a`-initial stem, and an `a`-final
+    object concord immediately followed by an `a`-initial stem. Arguments
+    are morphemes (the object surface, the reflexive flag, the stem as
+    built after extensions), never substrings of the finished word, so
+    supported combinations sharing letters (e.g. `kusaziva` from `sa` +
+    `ziva`) are unaffected. Finite-verb behavior is untouched.
+    """
+    if polarity == "negative":
+        if object_surface is not None:
+            if object_surface.startswith("a"):
+                return "sa_before_a_initial_object"
+        elif not reflexive and stem_surface.startswith("a"):
+            return "sa_before_a_initial_stem"
+    if (
+        object_surface is not None
+        and object_surface.endswith("a")
+        and stem_surface.startswith("a")
+    ):
+        return "object_before_a_initial_stem"
+    return None
+
+
+def _deferred_infinitive_generation(
+    *, boundary: str, features: dict[str, object]
+) -> GenerationFailure:
+    """Structured refusal for a deferred infinitive vowel boundary."""
+    return GenerationFailure(
+        code="GENERATION_UNSUPPORTED",
+        message=(
+            "Unsupported v1 generation feature: infinitive_boundary. This "
+            "morpheme combination crosses a vowel boundary deferred pending "
+            "linguistic evidence; it is not claimed to be grammatically "
+            "impossible, and no alternative spelling is generated."
+        ),
+        detail={
+            "field": "infinitive_boundary",
+            "boundary": boundary,
+            "reason": INFINITIVE_DEFERRED_REASON,
+            "received": features,
+            "supported": [
+                "infinitive constructions that avoid sa- before an a-initial "
+                "object concord or stem, and object concords ending in a "
+                "before an a-initial stem"
+            ],
+            "supported_shape": _INFINITIVE_SUPPORTED_SHAPE,
+            "supported_rule_ids": _INFINITIVE_SUPPORTED_RULE_IDS,
+        },
+    )
+
+
+def _unsupported_infinitive_generation(*, field: str, received, supported) -> GenerationFailure:
+    """GENERATION_UNSUPPORTED with the infinitive shape context.
+
+    The shared extension/object gates report the finite shape; infinitive
+    requests re-contextualize those errors instead of echoing a shape the
+    caller did not request.
+    """
+    return GenerationFailure(
+        code="GENERATION_UNSUPPORTED",
+        message=f"Unsupported v1 generation feature: {field}.",
+        detail={
+            "field": field,
+            "received": received,
+            "supported": supported,
+            "supported_shape": _INFINITIVE_SUPPORTED_SHAPE,
+            "supported_rule_ids": _INFINITIVE_SUPPORTED_RULE_IDS,
+        },
+    )
+
+
+def _normalize_infinitive_generation_extensions(extensions_feature: object) -> list[dict[str, object]]:
+    """Shared extension gate (Finding 4 intact) with infinitive-shaped errors."""
+    try:
+        return _normalize_generation_extensions(extensions_feature)
+    except GenerationFailure as exc:
+        if exc.code != "GENERATION_UNSUPPORTED":
+            raise
+        raise _unsupported_infinitive_generation(
+            field=exc.detail["field"],
+            received=exc.detail["received"],
+            supported=exc.detail["supported"],
+        ) from exc
+
+
+def _resolve_infinitive_generation_object(obj: dict[str, object] | None) -> dict[str, object] | None:
+    """Shared object-concord resolution with infinitive-shaped errors."""
+    try:
+        return _resolve_generation_object(obj)
+    except GenerationFailure as exc:
+        if exc.code != "GENERATION_UNSUPPORTED":
+            raise
+        raise _unsupported_infinitive_generation(
+            field=exc.detail["field"],
+            received=exc.detail["received"],
+            supported=exc.detail["supported"],
+        ) from exc
+
+
+def _validate_infinitive_generation_features(features: dict[str, object]) -> None:
+    """Strict gate for the infinitive generation branch.
+
+    An explicit allowlist names the only supported top-level fields
+    (generation_type, polarity, object, reflexive, extensions); anything else
+    — finite-only subject/tense_aspect, mood, or any other grammatical field —
+    is rejected with 422 instead of silently ignored. Reflexivity is an
+    explicit boolean (default False); at most one of object/reflexive may
+    appear (no source-backed double-object or reflexive-plus-object rule
+    exists in the available volume).
+    """
+    for field_name in features:
+        if field_name not in _INFINITIVE_ALLOWED_FEATURES:
+            raise _unsupported_infinitive_generation(
+                field=field_name,
+                received=features.get(field_name),
+                supported=sorted(_INFINITIVE_ALLOWED_FEATURES),
+            )
+    if features.get("polarity", "positive") not in ("positive", "negative"):
+        raise _unsupported_infinitive_generation(
+            field="polarity",
+            received=features.get("polarity"),
+            supported=["positive", "negative"],
+        )
+    if not isinstance(features.get("reflexive", False), bool):
+        raise _unsupported_infinitive_generation(
+            field="reflexive",
+            received=features.get("reflexive"),
+            supported=[True, False],
+        )
+    obj = features.get("object", None)
+    if obj is not None and obj != "" and not isinstance(obj, dict):
+        raise _unsupported_infinitive_generation(
+            field="object",
+            received=obj,
+            supported=["structured object feature or None"],
+        )
+    if features.get("reflexive", False) and obj not in (None, ""):
+        raise _unsupported_infinitive_generation(
+            field="object",
+            received=obj,
+            supported=["either one object marker or reflexivity, not both"],
+        )
+    if "extensions" in features:
+        _normalize_infinitive_generation_extensions(features.get("extensions"))
+
+
+def _join_infinitive_surface(parts: list[str]) -> str:
+    """Concatenate infinitive morphemes with hiatus retained.
+
+    No vowels are dropped or merged here; deferred a-vowel boundaries never
+    reach this join because generation refuses them first (see
+    _infinitive_boundary_deferred). (Finite present generation keeps its own
+    prior-v1 joining rule; that path is out of scope for this correction.)
+    """
+    return "".join(parts)
+
+
+def _generate_infinitive(
+    *,
+    lemma_public_id: str,
+    lemma,
+    features: dict[str, object],
+    rule_set_version: str,
+) -> dict[str, object]:
+    _validate_infinitive_generation_features(features)
+    object_candidate = _resolve_infinitive_generation_object(features.get("object"))
+    normalized_exts = _normalize_infinitive_generation_extensions(
+        features.get("extensions", [])
+    )
+
+    canonical_headword = lemma.normalized_headword
+    if not canonical_headword.endswith("a"):
+        # Divergent stems (Fortune 3.3.18 footnote: -ti, -nzi and their
+        # derived/extended forms take no terminal -a), so the ku + stem
+        # concatenation has no source-backed shape; refuse instead of
+        # fabricating a surface. Such stems still analyze as their own
+        # reviewed lemmas.
+        raise GenerationFailure(
+            code="GENERATION_UNSUPPORTED",
+            message=(
+                "Unsupported v1 generation feature: lemma_stem. The lemma stem "
+                "does not end in terminal -a, so no supported ku- infinitive "
+                "shape applies to it."
+            ),
+            detail={
+                "field": "lemma_stem",
+                "received": lemma.headword,
+                "reason": "divergent_stem_without_terminal_a",
+                "supported": ["reviewed verb-stem lemmas ending in terminal -a"],
+                "supported_shape": _INFINITIVE_SUPPORTED_SHAPE,
+                "supported_rule_ids": _INFINITIVE_SUPPORTED_RULE_IDS,
+            },
+        )
+
+    if normalized_exts:
+        extended_base, applied_extensions = _apply_extensions(canonical_headword, normalized_exts)
+        stem_val = extended_base + "a"
+    else:
+        stem_val = canonical_headword
+        applied_extensions = []
+
+    polarity = features.get("polarity", "positive")
+    reflexive = features.get("reflexive", False)
+    boundary = _infinitive_boundary_deferred(
+        polarity=polarity,
+        object_surface=object_candidate["surface"] if object_candidate is not None else None,
+        reflexive=reflexive,
+        stem_surface=stem_val,
+    )
+    if boundary is not None:
+        raise _deferred_infinitive_generation(boundary=boundary, features=features)
+    parts = [INFINITIVE_PREFIX]
+    if polarity == "negative":
+        parts.append(INFINITIVE_NEGATIVE_MARKER)
+    if reflexive:
+        parts.append(INFINITIVE_REFLEXIVE_SURFACE)
+    elif object_candidate is not None:
+        parts.append(object_candidate["surface"])
+    parts.append(stem_val)
+    form = _join_infinitive_surface(parts)
+
+    if object_candidate is not None:
+        confidence = min(INFINITIVE_ANALYZER_CONFIDENCE, object_candidate["confidence"])
+    else:
+        confidence = INFINITIVE_ANALYZER_CONFIDENCE
+    generated = {
+        "generation_type": "infinitive",
+        "form": form,
+        "normalized": normalize_search_query(form),
+        "confidence": confidence,
+        "rule_id": INFINITIVE_RULE_ID,
+        "lemma": _lemma_payload(lemma),
+        "slots": {
+            "infinitive_prefix": {
+                "surface": INFINITIVE_PREFIX,
+                "type": "class_15_infinitive_prefix",
+                "label": "class 15 infinitive prefix",
+            },
+            "subject": None,
+            "tense_aspect": None,
+            "polarity": _infinitive_polarity_slot(polarity),
+            "object": _subject_slot(object_candidate) if object_candidate is not None else None,
+            "reflexive": _reflexive_slot() if reflexive else None,
+            "verb_stem": {
+                "surface": stem_val,
+                "lemma_public_id": lemma.public_id,
+            },
+            "extensions": applied_extensions,
+            "final_vowel": {
+                "surface": stem_val[-1],
+                "value": stem_val[-1],
+            },
+        },
+        "phonology": compute_phonology_fields(form),
+    }
+    warnings = [
+        {
+            "code": "GENERATION_PARTIAL_RULE_SET",
+            "message": "v1 generation supports only single-token ku- infinitive forms.",
+        },
+        {
+            "code": "TONE_NOT_GENERATED",
+            "message": "Tone is not generated.",
+        },
+    ]
+    supported_rule_ids = [INFINITIVE_RULE_ID]
+    if object_candidate is not None:
+        supported_rule_ids.append("fortune.concord.object.001")
+    supported_rule_ids.extend(_rule_ids_for_extensions(applied_extensions))
+    return {
+        "input": {
+            "lemma_public_id": lemma_public_id,
+            "features": features,
+        },
+        "generator_version": GENERATOR_VERSION,
+        "rule_set_version": rule_set_version,
+        "confidence": generated["confidence"],
+        "generated": generated,
+        "warnings": warnings,
+        "metadata": {
+            "supported_shape": _INFINITIVE_SUPPORTED_SHAPE,
+            "supported_rule_ids": supported_rule_ids,
+            "normalizer": SEARCH_NORMALIZER_VERSION,
+        },
+    }
+
+
 def _validate_supported_generation_features(features: dict[str, object]) -> None:
     if features.get("generation_type") != "verb_form":
         raise _unsupported_generation(
@@ -1564,6 +2069,12 @@ def _validate_supported_generation_features(features: dict[str, object]) -> None
             field="polarity",
             received=features.get("polarity"),
             supported=["positive", "negative"],
+        )
+    if features.get("reflexive") not in (None, False):
+        raise _unsupported_generation(
+            field="reflexive",
+            received=features.get("reflexive"),
+            supported=["omit reflexive for verb_form generation; reflexivity is an infinitive-branch feature"],
         )
     if features.get("object") not in (None, ""):
         if not isinstance(features.get("object"), dict):

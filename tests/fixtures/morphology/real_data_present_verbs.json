@@ -87,12 +87,18 @@
         "text": "ndinomuambura",
         "rule_id": "fortune.concord.object.001",
         "object_surface": "mu"
+      },
+      {
+        "name": "positive_infinitive",
+        "text": "kuambura",
+        "rule_id": "fortune.verbal.infinitive.001",
+        "verb_stem_surface": "ambura"
       }
     ],
     "unsupported_observed_forms": [
       {
-        "form": "kuambura",
-        "reason": "infinitive/nominal form outside analyze/generate v1"
+        "form": "kusaambura",
+        "reason": "negative infinitive across deferred sa-/a-stem boundary"
       }
     ]
   }

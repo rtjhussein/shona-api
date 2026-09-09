@@ -27,9 +27,9 @@ The regression tests cover the existing public v1 rule boundary only:
 - negative present person-subject forms
 - person object concords
 - noun-class object concords
-- vowel coalescence at object-concord/stem boundaries
-- simple ku- infinitive analysis (ku + reviewed verb stem, with extensions);
-  infinitive generation is not supported
+- vowel coalescence at finite object-concord/stem boundaries (prior-v1 finite rule, unchanged by the infinitive hiatus correction)
+- ku- infinitive analysis and generation (positive `kuambura`, negative
+  `kusaambura` with hiatus retained, with extensions)
 
 ## Unsupported Observed Forms
 
