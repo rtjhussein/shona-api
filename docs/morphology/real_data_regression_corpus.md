@@ -28,15 +28,14 @@ The regression tests cover the existing public v1 rule boundary only:
 - person object concords
 - noun-class object concords
 - vowel coalescence at object-concord/stem boundaries
+- simple ku- infinitive analysis (ku + reviewed verb stem, with extensions);
+  infinitive generation is not supported
 
 ## Unsupported Observed Forms
 
 These are intentionally documented rather than implemented:
 
-- passive or extension-like forms such as `badanudzwa`
-- infinitive or nominalized forms such as `kuambura`
+- bare extension-like stems with no supported construction, such as `badanudzwa`
+  (a fully inflected `vanobadanudzwa` would analyze as `-badanudza` + passive)
 - tense/aspect forms outside present positive and present negative
 - tone-aware analysis or generation
-
-Future morphology issues should promote these only after reviewed Fortune rule
-cards and fixtures exist.

@@ -315,14 +315,34 @@ class SearchView(APIView):
         )
 
     def _build_morphology_enrichment(self, *, raw_query, release_metadata):
-        from shona_api.morphology.services import AnalysisFailure, analyze_text
+        from shona_api.morphology.services import (
+            AnalysisFailure,
+            RulesVersionError,
+            analyze_text,
+            ensure_rules_version_supported,
+        )
 
         try:
+            ensure_rules_version_supported(release_metadata["rule_set_version"])
             morphology_analysis = analyze_text(
                 raw_query,
                 rule_set_version=release_metadata["rule_set_version"],
             )
             self._attach_morphology_lemma_details(morphology_analysis)
+        except RulesVersionError as exc:
+            # A release whose rule-set version this deployment does not
+            # implement must stay visible: search results still return, but the
+            # enrichment is explicitly unavailable, never silently dropped.
+            record_metric(
+                "search.morphology_enrichment.unavailable",
+                tags={"code": exc.code},
+            )
+            return None, {
+                "status": "unavailable",
+                "code": exc.code,
+                "message": str(exc),
+                "detail": exc.detail,
+            }
         except AnalysisFailure as exc:
             record_metric(
                 "search.morphology_enrichment.unsupported",
@@ -417,7 +437,10 @@ class SearchView(APIView):
             payload["query"]["filters"] = active_filters
         if morphology_analysis:
             payload["morphology"] = morphology_analysis
-        if morphology_enrichment and morphology_enrichment["status"] == "matched":
+        if morphology_enrichment and morphology_enrichment["status"] in (
+            "matched",
+            "unavailable",
+        ):
             payload["morphology_enrichment"] = morphology_enrichment
         if not results and not morphology_analysis:
             zero_result = {

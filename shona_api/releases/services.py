@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 
+from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
+
 from .models import DataRelease
 
 
 CURRENT_RELEASE_SETUP_COMMAND = (
-    'python manage.py ensure_current_release --version 2026.05.local '
-    '--label "Local development release" --rule-set-version morphology-rules-v2'
+    "python manage.py ensure_current_release --version 2026.05.local "
+    '--label "Local development release" '
+    f"--rule-set-version {MORPHOLOGY_RULES_VERSION}"
 )
 CURRENT_RELEASE_NOT_CONFIGURED_CODE = "CURRENT_RELEASE_NOT_CONFIGURED"
 CURRENT_RELEASE_NOT_CONFIGURED_MESSAGE = (

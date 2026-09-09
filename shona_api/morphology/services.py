@@ -8,9 +8,22 @@ from shona_api.phonology import compute_phonology_fields
 
 ANALYZER_VERSION = "shona-morphology-analyzer-v1"
 GENERATOR_VERSION = "shona-morphology-generator-v1"
+# The rule-set version implemented by this code. Public endpoints validate the
+# serving release's rule_set_version against it (Finding 5 policy): responses
+# never echo a version label the engine does not execute.
+MORPHOLOGY_RULES_VERSION = "morphology-rules-v3"
+RULES_VERSION_ERROR_CODE = "MORPHOLOGY_RULES_VERSION_UNSUPPORTED"
 SUPPORTED_RULE_ID = "fortune.verbal.slots.001"
 INFINITIVE_RULE_ID = "fortune.verbal.infinitive.001"
 EXTENSIONS_RULE_ID = "fortune.verbal.extensions.001"
+REVERSIVE_RULE_ID = "fortune.verbal.reversive.001"
+REPETITIVE_RULE_ID = "fortune.verbal.repetitive.001"
+RECIPROCAL_RULE_ID = "fortune.verbal.reciprocal.001"
+RETAINED_EXTENSIONS_RULE_ID = "fortune.verbal.extensions.retained.001"
+EXTENSIONS_SOURCE_LOCATOR = (
+    "Fortune, Shona Grammatical Constructions Vol. 1 (1985), "
+    "section 2.10.2.3.3 'Extended radicals', PDF p. 33 (printed p. 21)"
+)
 INFINITIVE_SOURCE_LOCATOR = (
     "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, "
     "PDF pages 90-91 (printed pp. 78-79)"
@@ -27,15 +40,34 @@ SUPPORTED_ANALYSIS_RULE_IDS = [
     "fortune.verbal.negation.001",
     "fortune.concord.object.001",
 ]
+# Extension-like endings used only to label unmatched 422 surfaces; the real
+# segmentation inventory lives in _EXTENSION_SURFACES below.
 EXTENSION_LIKE_SUFFIXES = (
+    "anur",
+    "enur",
+    "inur",
+    "onor",
+    "unur",
+    "urur",
+    "oror",
     "irirwa",
     "erwa",
     "irwa",
     "iswa",
     "eswa",
     "idzwa",
+    "edza",
     "udzwa",
     "dzirwa",
+    "itsa",
+    "etsa",
+    "idz",
+    "edz",
+    "its",
+    "ets",
+    "ika",
+    "eka",
+    "ana",
     "zwa",
     "wa",
 )
@@ -43,6 +75,105 @@ SUPPORTED_REVIEW_STATES = (
     ReviewState.APPROVED,
     ReviewState.PUBLISHED,
 )
+#
+# Shared verb-extension rule table.
+#
+# Single source of truth for the generator (_apply_extensions) and the analyzer
+# (_candidate_decompositions) so the two sides cannot drift. Grounded in
+# Fortune Vol. 1, section 2.10.2.3.3 (PDF p. 33 / printed p. 21):
+# - Height harmony: -iC- allomorphs surface as -eC- after radical /e/ or /o/.
+# - Reversive vowel copy: the first vowel copies the radical vowel
+#   (a -> -anur-, e -> -enur-, i -> -inur-, o -> -onor-, u -> -unur-).
+# - Repetitive (-urur-, or -oror- after /o/) is distinct from reversive.
+# - Causative (1) -idz-/-edz-: shape attested in section (d), but the full
+#   lexical distribution is deferred to Volume 2 section 4.2.6.3.2, which is
+#   not available; treat per-lemma productivity as restricted.
+# - Reciprocal -an-, short reversive -ur-/-or- and causative -its-/-ets- have
+#   no locator in the available volume and are explicitly retained (see the
+#   retained rule card), never silently presented as source-backed.
+#
+# (surface, type, style or None) ordered longest-first for segmentation.
+_EXTENSION_SURFACES: tuple[tuple[str, str, str | None], ...] = (
+    ("anur", "reversive", "long"),
+    ("enur", "reversive", "long"),
+    ("inur", "reversive", "long"),
+    ("onor", "reversive", "long"),
+    ("unur", "reversive", "long"),
+    ("urur", "repetitive", None),
+    ("oror", "repetitive", None),
+    ("idz", "causative", "dz"),
+    ("edz", "causative", "dz"),
+    ("its", "causative", "ts"),
+    ("ets", "causative", "ts"),
+    ("is", "causative", None),
+    ("es", "causative", None),
+    ("ir", "applicative", None),
+    ("er", "applicative", None),
+    ("ik", "neuter", None),
+    ("ek", "neuter", None),
+    ("iw", "passive", None),
+    ("ew", "passive", None),
+    ("an", "reciprocal", None),
+    ("ur", "reversive", "short"),
+    ("or", "reversive", "short"),
+    ("w", "passive", None),
+)
+_MID_VOWELS = frozenset({"e", "o"})
+# Extension types accepted by v1 generation, in supported application order.
+# Fortune 2.10.2.3.3 states "R + extension(s)" and gives allomorphy per
+# extension, but no ordering rule; attested multi-extension radicals appear in
+# section 3.4.2.8 (e.g. -pamhidz-ir-an-, PDF p. 110 / printed p. 98). The
+# canonical order below is therefore a documented product convention that
+# generation and analysis share (Finding 3 policy), not a claimed grammar rule.
+_SUPPORTED_EXTENSION_TYPES = (
+    "causative",
+    "applicative",
+    "reciprocal",
+    "reversive",
+    "repetitive",
+    "neuter",
+    "passive",
+)
+# Styles accepted per type; empty means the type takes no style argument.
+_EXTENSION_STYLES: dict[str, tuple[str, ...]] = {
+    "passive": (),
+    "causative": ("dz", "ts"),
+    "applicative": (),
+    "neuter": (),
+    "reciprocal": (),
+    "reversive": ("long", "short"),
+    "repetitive": (),
+}
+# Legacy reversive style names that named -urur-/-oror- surfaces. Those are
+# the repetitive extension now; generation rejects them with a pointer.
+_REVERSIVE_REPETITIVE_STYLE_NAMES = frozenset({"long_urur", "urur", "oror"})
+# Legacy names for the long -VnVr- reversive before vowel copy was enforced.
+_REVERSIVE_LONG_STYLE_ALIASES = frozenset({"long_unur", "unur", "onor"})
+#
+# Evidence-gated generation (Finding 4 policy).
+#
+# The analyzer may still recognize these allomorphs on attested surfaces, but
+# the generator must not synthesize them for an arbitrary lemma:
+# - causative "dz": -idz-/-edz- shape and vowel conditioning are attested
+#   (Fortune section (d); Hannan -edza p. 158, -idza p. 240), but which lemma
+#   takes -idz- versus -is- is a per-lemma choice; the distribution section
+#   (Fortune 4.2.6.3.2) is not available.
+# - causative "ts": no source attests an -its-/-ets- extension allomorph at
+#   all (Hannan derives -ts- only via radical mutation, e.g. -muk- + -y-).
+# - reversive "short": Fortune lists only the long vowel-copy forms; Hannan's
+#   suffix list (printed p. xii) names a -ura suffix, but its dictionary entry
+#   (conditioning, base pairs) could not be located in the available sources.
+_UNVERIFIED_GENERATION_STYLES = frozenset({"dz", "ts"})
+_UNVERIFIED_GENERATION_TYPE_STYLES = frozenset({("reversive", "short")})
+EXTENSION_UNVERIFIED_ERROR_CODE = "EXTENSION_UNVERIFIED"
+_MAX_EXTENSIONS_PER_REQUEST = 3
+_MAX_STEM_CANDIDATES = 8
+_MAX_EXTENSION_DEPTH = 3
+_MAX_ANALYSES = 25
+# Bounded ambiguity budget per subject candidate: at most this many distinct
+# readings (no-object + object concords x coalescence x stem candidates) are
+# collected before the remaining segmentations are skipped (Finding 2 bounds).
+_MAX_ANALYSES_PER_SUBJECT = 12
 
 
 @dataclass(frozen=True)
@@ -57,6 +188,52 @@ class GenerationFailure(Exception):
     code: str
     message: str
     detail: dict[str, object] | None = None
+
+
+
+class RulesVersionError(Exception):
+    """The serving release declares a rule-set version this code does not run.
+
+    Raised before any analyze/generate work when the configured release's
+    rule_set_version does not match MORPHOLOGY_RULES_VERSION, so responses can
+    never echo a version label the engine does not execute (Finding 5).
+    """
+
+    def __init__(
+        self,
+        *,
+        received: str,
+        implemented: str,
+    ) -> None:
+        self.code = RULES_VERSION_ERROR_CODE
+        self.received = received
+        self.implemented = implemented
+        super().__init__(
+            f"Data release declares rule-set version {received!r}, but this "
+            f"deployment implements {implemented!r}. Publish a release whose "
+            "rule_set_version matches the implemented rules."
+        )
+
+    @property
+    def detail(self) -> dict[str, object]:
+        return {
+            "field": "rule_set_version",
+            "received": self.received,
+            "implemented": self.implemented,
+            "setup_command": (
+                "python manage.py ensure_current_release --version <version> "
+                f'--label "<label>" --rule-set-version {self.implemented}'
+            ),
+        }
+
+
+def ensure_rules_version_supported(rule_set_version: str) -> None:
+    """Gate public endpoints on the implemented morphology rules version."""
+    if rule_set_version != MORPHOLOGY_RULES_VERSION:
+        raise RulesVersionError(
+            received=rule_set_version,
+            implemented=MORPHOLOGY_RULES_VERSION,
+        )
 
 
 PERSON_SUBJECT_CONCORDS = (
@@ -161,7 +338,7 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
         )
 
     candidates = _candidate_subject_concords()
-    
+
     # Build negative candidate overrides (Class 1 & 1a subject concord "u" -> "a")
     neg_candidates = []
     for candidate in candidates:
@@ -172,21 +349,19 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
     # Sort negative candidates by surface length descending
     neg_candidates.sort(key=lambda candidate: len(candidate["surface"]), reverse=True)
 
-    analyses = []
-    infinitive_analysis = _analyze_ku_infinitive(normalized)
-    if infinitive_analysis is not None:
-        analyses.append(infinitive_analysis)
+    analyses: list[dict[str, object]] = []
+    analyses.extend(_analyze_ku_infinitive(normalized))
 
     analyses.extend([
         analysis
         for candidate in candidates
-        if (analysis := _analyze_present_positive(normalized, candidate)) is not None
+        for analysis in _analyze_present_positive(normalized, candidate)
     ])
-    
+
     analyses.extend([
         analysis
         for candidate in neg_candidates
-        if (analysis := _analyze_present_negative(normalized, candidate)) is not None
+        for analysis in _analyze_present_negative(normalized, candidate)
     ])
 
     if not analyses:
@@ -211,6 +386,7 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
         )
 
     analyses.sort(key=lambda item: item["confidence"], reverse=True)
+    del analyses[_MAX_ANALYSES:]
     return {
         "query": {
             "raw": raw_text,
@@ -238,14 +414,10 @@ def generate_form(
     polarity = features.get("polarity", "positive")
     has_object = object_candidate is not None
 
-    # Handle optional extensions
-    extensions_feature = features.get("extensions", [])
-    normalized_exts = []
-    for ext in extensions_feature:
-        if isinstance(ext, str):
-            normalized_exts.append({"type": ext})
-        elif isinstance(ext, dict):
-            normalized_exts.append(ext)
+    # Handle optional extensions through the strict validation gate: unknown
+    # types/styles, repeats, unsupported orders and over-long stacks raise
+    # structured GENERATION_UNSUPPORTED instead of falling back to a default.
+    normalized_exts = _normalize_generation_extensions(features.get("extensions", []))
 
     canonical_headword = lemma.normalized_headword
     if normalized_exts:
@@ -360,6 +532,7 @@ def generate_form(
             "phonology": compute_phonology_fields(form),
         }
 
+    has_extensions = bool(applied_extensions)
     warnings = [
         {
             "code": "GENERATION_PARTIAL_RULE_SET",
@@ -371,14 +544,30 @@ def generate_form(
         },
     ]
     if polarity == "positive":
+        if has_extensions:
+            tone_message = (
+                "Tone and negative forms are not generated."
+                if has_object else
+                "Tone, object markers, and negative forms are not generated."
+            )
+        else:
+            tone_message = "Tone, negative forms, and extensions are not generated." if has_object else "Tone, object markers, negative forms, and extensions are not generated."
         warnings.append({
             "code": "TONE_NOT_GENERATED",
-            "message": "Tone, negative forms, and extensions are not generated." if has_object else "Tone, object markers, negative forms, and extensions are not generated.",
+            "message": tone_message,
         })
     else:
+        if has_extensions:
+            tone_message = (
+                "Tone is not generated."
+                if has_object else
+                "Tone and object markers are not generated."
+            )
+        else:
+            tone_message = "Tone and extensions are not generated." if has_object else "Tone, object markers, and extensions are not generated."
         warnings.append({
             "code": "TONE_NOT_GENERATED",
-            "message": "Tone and extensions are not generated." if has_object else "Tone, object markers, and extensions are not generated.",
+            "message": tone_message,
         })
 
     return {
@@ -397,7 +586,7 @@ def generate_form(
                 if polarity == "positive" else
                 "ha + subject_concord + [object_concord] + verb_stem_ending_in_e"
             ),
-            "supported_rule_ids": [generated["rule_id"]],
+            "supported_rule_ids": [generated["rule_id"], *_rule_ids_for_extensions(applied_extensions)],
             "normalizer": SEARCH_NORMALIZER_VERSION,
         },
     }
@@ -451,15 +640,9 @@ def _candidate_object_concords() -> list[dict[str, object]]:
     return sorted(candidates, key=lambda candidate: len(candidate["surface"]), reverse=True)
 
 
-def _analyze_ku_infinitive(normalized: str) -> dict[str, object] | None:
-    if not normalized.startswith("ku") or len(normalized) <= 2:
-        return None
-
-    verb_stem = normalized.removeprefix("ku")
-    lemma, extensions = _get_stem_and_extensions(verb_stem)
-    if lemma is None:
-        return None
-
+def _build_infinitive_analysis(
+    *, normalized: str, verb_stem: str, lemma, extensions: list[dict[str, object]]
+) -> dict[str, object]:
     return {
         "analysis_type": "infinitive",
         "confidence": 0.82,
@@ -499,6 +682,22 @@ def _analyze_ku_infinitive(normalized: str) -> dict[str, object] | None:
     }
 
 
+def _analyze_ku_infinitive(normalized: str) -> list[dict[str, object]]:
+    if not normalized.startswith("ku") or len(normalized) <= 2:
+        return []
+
+    verb_stem = normalized.removeprefix("ku")
+    return [
+        _build_infinitive_analysis(
+            normalized=normalized,
+            verb_stem=verb_stem,
+            lemma=lemma,
+            extensions=extensions,
+        )
+        for lemma, extensions in _get_stem_candidates(verb_stem)
+    ]
+
+
 def _unsupported_future_lanes(normalized: str) -> list[dict[str, object]]:
     lanes = []
     if normalized.startswith("ku") and len(normalized) > 2:
@@ -513,19 +712,50 @@ def _unsupported_future_lanes(normalized: str) -> list[dict[str, object]]:
                 "rule_card_ids": [INFINITIVE_RULE_ID],
             }
         )
+    if _has_unverified_derivation_candidate(normalized):
+        lanes.append(
+            {
+                "code": "unverified_extension_derivation",
+                "message": (
+                    "The surface decomposes through an extension allomorph whose "
+                    "per-lemma distribution is not source-verified (causative "
+                    "-idz-/-edz-, -its-/-ets-, or short reversive -ur-/-or-; see the "
+                    "retained rule card). A reviewed base lemma is not evidence for "
+                    "that derivation, so it is excluded from analyses; the surface "
+                    "resolves only when the full form is published as its own "
+                    "reviewed verb-stem lemma."
+                ),
+                "support_status": "not_supported",
+                "rule_card_ids": [RETAINED_EXTENSIONS_RULE_ID],
+            }
+        )
     if _looks_passive_or_extension_like(normalized):
         lanes.append(
             {
                 "code": "passive_or_extension_like",
                 "message": (
-                    "This looks like a passive or extension-like verb surface. "
-                    "Those forms are a future review lane and are not analyzed in v1."
+                    "This surface contains extension-like material but no supported "
+                    "v1 construction matched it. Check vowel harmony and the lexical "
+                    "stem; the supported extension boundary is documented in the "
+                    "verbal extension rule cards."
                 ),
                 "support_status": "not_supported",
-                "rule_card_ids": [EXTENSIONS_RULE_ID],
+                "rule_card_ids": [
+                    EXTENSIONS_RULE_ID,
+                    REVERSIVE_RULE_ID,
+                    REPETITIVE_RULE_ID,
+                    RETAINED_EXTENSIONS_RULE_ID,
+                ],
             }
         )
     return lanes
+
+
+def _has_unverified_derivation_candidate(normalized: str) -> bool:
+    return any(
+        _derivation_is_evidence_gated(extensions)
+        for _, extensions in _candidate_decompositions(normalized)
+    )
 
 
 def _looks_passive_or_extension_like(normalized: str) -> bool:
@@ -537,278 +767,267 @@ def _looks_passive_or_extension_like(normalized: str) -> bool:
     )
 
 
-def _decompose_stem(surface_stem: str) -> tuple[str, list[dict[str, object]]] | None:
-    if surface_stem.endswith("a"):
-        fv = "a"
-        base = surface_stem[:-1]
-    elif surface_stem.endswith("e"):
-        fv = "e"
-        base = surface_stem[:-1]
+def _last_vowel(text: str) -> str | None:
+    for char in reversed(text):
+        if char in "aeiou":
+            return char
+    return None
+
+
+_REVERSIVE_LONG_SURFACES = {
+    "a": "anur",
+    "e": "enur",
+    "i": "inur",
+    "o": "onor",
+    "u": "unur",
+}
+
+
+def _extension_label(*, ext_type: str, style: str | None, surface: str) -> str:
+    if ext_type == "passive":
+        if surface == "w":
+            return "passive extension (-w-)"
+        return f"passive extension (-{surface}-)"
+    labels = {
+        ("causative", None): "causative extension (-is- / -es-)",
+        ("causative", "dz"): "causative extension (-idz- / -edz-)",
+        ("causative", "ts"): "causative extension (-its- / -ets-)",
+        ("applicative", None): "applicative extension (-ir- / -er-)",
+        ("neuter", None): "neuter extension (-ik- / -ek-)",
+        ("reciprocal", None): "reciprocal extension (-an-)",
+        ("reversive", "long"): (
+            "reversive extension (-anur- / -enur- / -inur- / -onor- / -unur-)"
+        ),
+        ("reversive", "short"): "reversive extension (-ur- / -or-)",
+        ("repetitive", None): "repetitive extension (-urur- / -oror-)",
+    }
+    return labels[(ext_type, style)]
+
+
+def _extension_surface_valid(
+    *, ext_type: str, style: str | None, surface: str, trigger: str | None
+) -> bool:
+    """Shared analyzer/generator allomorph gate.
+
+    `trigger` is the final vowel of the radical being extended, or None for
+    vowelless (C) radicals, which take the high-vowel allomorphs.
+    """
+    mid = trigger in _MID_VOWELS
+    if ext_type == "passive":
+        if surface == "w":
+            return True
+        return (surface == "ew") == mid
+    if ext_type == "causative":
+        if style == "dz":
+            return (surface == "edz") == mid
+        if style == "ts":
+            return (surface == "ets") == mid
+        return (surface == "es") == mid
+    if ext_type == "applicative":
+        return (surface == "er") == mid
+    if ext_type == "neuter":
+        return (surface == "ek") == mid
+    if ext_type == "reciprocal":
+        return surface == "an"
+    if ext_type == "repetitive":
+        if trigger is None:
+            return surface == "urur"
+        return surface == ("oror" if trigger == "o" else "urur")
+    if ext_type == "reversive":
+        if style == "short":
+            if trigger is None:
+                return False
+            return surface == ("or" if trigger == "o" else "ur")
+        return surface == _REVERSIVE_LONG_SURFACES.get(trigger)
+    return False
+
+
+def _extension_item(*, ext_type: str, style: str | None, surface: str) -> dict[str, object]:
+    item: dict[str, object] = {
+        "surface": surface,
+        "type": ext_type,
+        "label": _extension_label(ext_type=ext_type, style=style, surface=surface),
+    }
+    if style is not None:
+        item["style"] = style
+    return item
+
+
+def _extension_types_violation(types: list[str] | tuple[str, ...]) -> str | None:
+    """Shared extension-sequence policy (Finding 3).
+
+    Returns the violation kind ("count", "repeat", or "order") for a sequence
+    of extension types in application (innermost-first) order, or None when the
+    sequence satisfies the documented product convention. Both the generator's
+    request validation and the analyzer's decompositions enforce exactly this
+    one policy. The convention is a conservative product limit (deterministic
+    output, bounded work, matching round-trips); Fortune 2.10.2.3.3 states the
+    constructional pattern "R + extension(s)" without an ordering rule, so no
+    violation here is claimed to be ungrammatical.
+    """
+    if len(types) > _MAX_EXTENSIONS_PER_REQUEST:
+        return "count"
+    seen: set[str] = set()
+    order: list[int] = []
+    for ext_type in types:
+        if ext_type in seen:
+            return "repeat"
+        seen.add(ext_type)
+        order.append(_SUPPORTED_EXTENSION_TYPES.index(ext_type))
+    if order != sorted(order):
+        return "order"
+    return None
+
+
+
+def _candidate_decompositions(surface_stem: str) -> list[tuple[str, list[dict[str, object]]]]:
+    """Bounded segmentation of an extension-bearing stem.
+
+    Explores every suffix path in _EXTENSION_SURFACES (up to
+    _MAX_EXTENSION_DEPTH extensions) and returns (canonical_stem, extensions)
+    pairs whose leftover base still needs a lexical check by the caller.
+    Lexical stems at intermediate boundaries are preserved as candidates
+    instead of being stripped past, and results are ordered deterministically
+    by extension count then surface so the caller can bound them.
+    """
+    if surface_stem.endswith(("a", "e")):
+        start_base = surface_stem[:-1]
     else:
-        return None
+        return []
 
-    extensions = []
+    found: list[tuple[str, list[dict[str, object]]]] = []
+    seen: set[tuple[str, tuple[tuple[str, str, str | None], ...]]] = set()
+    stack: list[tuple[str, list[tuple[str, str, str | None]]]] = [(start_base, [])]
+    while stack:
+        remaining, stripped = stack.pop()
+        for surface, ext_type, style in _EXTENSION_SURFACES:
+            if not remaining.endswith(surface):
+                continue
+            inner = remaining[: -len(surface)]
+            if not inner:
+                continue
+            trigger = _last_vowel(inner)
+            if not _extension_surface_valid(
+                ext_type=ext_type, style=style, surface=surface, trigger=trigger
+            ):
+                continue
+            # Stripping runs outermost-first, so prepend to keep application
+            # (innermost-first) order in the reported sequence.
+            sequence = [(surface, ext_type, style)] + stripped
+            # Shared Finding 3 policy: violations are monotone under
+            # prepending, so prune the branch as soon as it appears.
+            if _extension_types_violation([ext for _, ext, _ in sequence]):
+                continue
 
-    while True:
-        # Check passive suffixes first (since passive is outermost)
-        if base.endswith("w") and not base.endswith("iw") and not base.endswith("ew"):
-            extensions.append({
-                "surface": "w",
-                "type": "passive",
-                "label": "passive extension (-w-)",
-            })
-            base = base[:-1]
-            continue
-        elif base.endswith("iw"):
-            extensions.append({
-                "surface": "iw",
-                "type": "passive",
-                "label": "passive extension (-iw-)",
-            })
-            base = base[:-2]
-            continue
-        elif base.endswith("ew"):
-            extensions.append({
-                "surface": "ew",
-                "type": "passive",
-                "label": "passive extension (-ew-)",
-            })
-            base = base[:-2]
-            continue
+            state = (inner, tuple(sequence))
+            if state in seen:
+                continue
+            seen.add(state)
+            canonical = inner + "a"
+            found.append((
+                canonical,
+                [
+                    _extension_item(ext_type=item_type, style=item_style, surface=item_surface)
+                    for item_surface, item_type, item_style in sequence
+                ],
+            ))
+            if len(sequence) < _MAX_EXTENSION_DEPTH:
+                stack.append((inner, sequence))
 
-        # Causative suffixes
-        if base.endswith("is"):
-            extensions.append({
-                "surface": "is",
-                "type": "causative",
-                "label": "causative extension (-is- / -es-)",
-            })
-            base = base[:-2]
-            continue
-        elif base.endswith("es"):
-            extensions.append({
-                "surface": "es",
-                "type": "causative",
-                "label": "causative extension (-is- / -es-)",
-            })
-            base = base[:-2]
-            continue
-
-        # Applicative suffixes
-        if base.endswith("ir"):
-            extensions.append({
-                "surface": "ir",
-                "type": "applicative",
-                "label": "applicative extension (-ir- / -er-)",
-            })
-            base = base[:-2]
-            continue
-        elif base.endswith("er"):
-            extensions.append({
-                "surface": "er",
-                "type": "applicative",
-                "label": "applicative extension (-ir- / -er-)",
-            })
-            base = base[:-2]
-            continue
-
-        # Reciprocal suffix
-        if base.endswith("an"):
-            extensions.append({
-                "surface": "an",
-                "type": "reciprocal",
-                "label": "reciprocal extension (-an-)",
-            })
-            base = base[:-2]
-            continue
-
-        # Neuter suffix
-        if base.endswith("ik"):
-            extensions.append({
-                "surface": "ik",
-                "type": "neuter",
-                "label": "neuter extension (-ik- / -ek-)",
-            })
-            base = base[:-2]
-            continue
-        elif base.endswith("ek"):
-            extensions.append({
-                "surface": "ek",
-                "type": "neuter",
-                "label": "neuter extension (-ik- / -ek-)",
-            })
-            base = base[:-2]
-            continue
-
-        # Causative style 'dz'
-        if base.endswith("idz"):
-            extensions.append({
-                "surface": "idz",
-                "type": "causative",
-                "style": "dz",
-                "label": "causative extension (-idz- / -edz-)",
-            })
-            base = base[:-3]
-            continue
-        elif base.endswith("edz"):
-            extensions.append({
-                "surface": "edz",
-                "type": "causative",
-                "style": "dz",
-                "label": "causative extension (-idz- / -edz-)",
-            })
-            base = base[:-3]
-            continue
-
-        # Causative style 'ts'
-        if base.endswith("its"):
-            extensions.append({
-                "surface": "its",
-                "type": "causative",
-                "style": "ts",
-                "label": "causative extension (-its- / -ets-)",
-            })
-            base = base[:-3]
-            continue
-        elif base.endswith("ets"):
-            extensions.append({
-                "surface": "ets",
-                "type": "causative",
-                "style": "ts",
-                "label": "causative extension (-its- / -ets-)",
-            })
-            base = base[:-3]
-            continue
-
-        # Reversive suffix (check long first)
-        if base.endswith("unur"):
-            extensions.append({
-                "surface": "unur",
-                "type": "reversive",
-                "style": "long",
-                "label": "reversive extension (-unur- / -onor-)",
-            })
-            base = base[:-4]
-            continue
-        elif base.endswith("onor"):
-            extensions.append({
-                "surface": "onor",
-                "type": "reversive",
-                "style": "long",
-                "label": "reversive extension (-unur- / -onor-)",
-            })
-            base = base[:-4]
-            continue
-        elif base.endswith("urur"):
-            extensions.append({
-                "surface": "urur",
-                "type": "reversive",
-                "style": "long",
-                "label": "reversive extension (-urur- / -oror-)",
-            })
-            base = base[:-4]
-            continue
-        elif base.endswith("oror"):
-            extensions.append({
-                "surface": "oror",
-                "type": "reversive",
-                "style": "long",
-                "label": "reversive extension (-urur- / -oror-)",
-            })
-            base = base[:-4]
-            continue
-        elif base.endswith("ur"):
-            extensions.append({
-                "surface": "ur",
-                "type": "reversive",
-                "style": "short",
-                "label": "reversive extension (-ur- / -or-)",
-            })
-            base = base[:-2]
-            continue
-        elif base.endswith("or"):
-            extensions.append({
-                "surface": "or",
-                "type": "reversive",
-                "style": "short",
-                "label": "reversive extension (-ur- / -or-)",
-            })
-            base = base[:-2]
-            continue
-
-        break
-
-    # If no extensions were parsed, return None (this was a simple stem)
-    if not extensions:
-        return None
-
-    extensions.reverse()
-    canonical_stem = base + "a"
-    return canonical_stem, extensions
+    deduped: dict[tuple[str, tuple[str, ...]], list[dict[str, object]]] = {}
+    for canonical, extensions in found:
+        key = (canonical, tuple(extension["surface"] for extension in extensions))
+        deduped.setdefault(key, extensions)
+    ordered = [(canonical, extensions) for (canonical, _), extensions in deduped.items()]
+    ordered.sort(key=lambda candidate: (len(candidate[1]), [item["surface"] for item in candidate[1]]))
+    return ordered
 
 
-def _validate_extension_harmony(base_root: str, extensions: list[dict[str, object]]) -> bool:
-    current_stem = base_root
-    for ext in extensions:
-        ext_type = ext["type"]
-        ext_surface = ext["surface"]
+def _get_reviewed_verb_stems(normalized_stem: str) -> list:
+    return list(
+        Lemma.objects.filter(
+            review_state__in=SUPPORTED_REVIEW_STATES,
+            headword_kind=Lemma.HeadwordKind.VERB_STEM,
+            normalized_headword=normalized_stem,
+        ).order_by("normalized_headword", "public_id")
+    )
 
-        if ext_surface == "w":
-            current_stem += "w"
+
+def _get_stem_candidates(stem_candidate: str) -> list[tuple[object, list[dict[str, object]]]]:
+    """Lexicon-aware stem resolution.
+
+    Exact reviewed lemmas always resolve first (one entry per homograph
+    lemma, in public_id order), with no extensions claim. Derivational
+    readings follow only when every extension in the reading is
+    evidence-backed: a reviewed base lemma is not evidence for an arbitrary
+    derivation, so readings passing through a gated allomorph (causative
+    -idz-/-edz-, -its-/-ets-, short reversive -ur-/-or-) are excluded instead
+    of being presented as supported analyses (supervisor blocker, 2026-09-09).
+    An attested derived form resolves as its own reviewed verb-stem lemma via
+    the exact path. Extension-looking endings on a lexical root (e.g. -ambura
+    ending in -ur-) therefore keep the exact reading instead of being stripped
+    past it. Capped at _MAX_STEM_CANDIDATES entries.
+    """
+    candidates: list[tuple[object, list[dict[str, object]]]] = []
+    for lemma in _get_reviewed_verb_stems(stem_candidate):
+        candidates.append((lemma, []))
+    for canonical, extensions in _candidate_decompositions(stem_candidate):
+        if canonical == stem_candidate:
             continue
+        if _derivation_is_evidence_gated(extensions):
+            continue
+        for lemma in _get_reviewed_verb_stems(canonical):
+            candidates.append((lemma, [dict(item) for item in extensions]))
+        if len(candidates) >= _MAX_STEM_CANDIDATES:
+            break
+    return candidates[:_MAX_STEM_CANDIDATES]
 
-        trigger_vowel = None
-        for char in reversed(current_stem):
-            if char in "aeiou":
-                trigger_vowel = char
-                break
 
-        if trigger_vowel is None:
-            trigger_vowel = "a"
+def _rule_ids_for_extensions(applied_extensions: list[dict[str, object]]) -> list[str]:
+    rule_ids: list[str] = []
+    for item in applied_extensions:
+        ext_type = item.get("type")
+        style = item.get("style")
+        if ext_type == "reversive":
+            ids = (REVERSIVE_RULE_ID,)
+        elif ext_type == "repetitive":
+            ids = (REPETITIVE_RULE_ID,)
+        elif ext_type == "reciprocal":
+            ids = (RECIPROCAL_RULE_ID,)
+        else:
+            ids = (EXTENSIONS_RULE_ID,)
+        for rule_id in ids:
+            if rule_id not in rule_ids:
+                rule_ids.append(rule_id)
+    return rule_ids
 
-        is_mid_trigger = trigger_vowel in ("e", "o")
-        expected_vowel = "e" if is_mid_trigger else "i"
 
-        if ext_type == "causative":
-            style = ext.get("style")
-            if style == "dz":
-                if ext_surface != f"{expected_vowel}dz":
-                    return False
-            elif style == "ts":
-                if ext_surface != f"{expected_vowel}ts":
-                    return False
-            else:
-                if ext_surface != f"{expected_vowel}s":
-                    return False
-        elif ext_type == "applicative":
-            if ext_surface != f"{expected_vowel}r":
-                return False
-        elif ext_type == "passive":
-            if ext_surface != f"{expected_vowel}w":
-                return False
-        elif ext_type == "neuter":
-            if ext_surface != f"{expected_vowel}k":
-                return False
-        elif ext_type == "reversive":
-            # Reversives have mid-vowel harmony strictly on trigger vowel 'o'
-            is_reversive_mid = trigger_vowel == "o"
-            v = "o" if is_reversive_mid else "u"
-            style = ext.get("style")
-            if style == "long_urur":
-                if ext_surface != f"{v}r{v}r":
-                    return False
-            elif style == "long_unur":
-                if ext_surface != f"{v}n{v}r":
-                    return False
-            elif style == "long":
-                if ext_surface not in (f"{v}r{v}r", f"{v}n{v}r"):
-                    return False
-            else:
-                if ext_surface != f"{v}r":
-                    return False
+def _extension_is_evidence_gated(ext_type: str, style: str | None) -> bool:
+    """True when this extension lacks source-backed evidence.
 
-        current_stem += ext_surface
-    return True
+    The single Finding 4 predicate, shared by generation
+    (_normalize_generation_extensions, _apply_extensions) and analysis
+    (_derivation_is_evidence_gated) so the two sides cannot drift: neither side
+    may synthesize or present an allomorph the available sources do not justify
+    generalizing to an arbitrary lemma.
+    """
+    if style in _UNVERIFIED_GENERATION_STYLES:
+        return True
+    return (ext_type, style) in _UNVERIFIED_GENERATION_TYPE_STYLES
+
+
+def _derivation_is_evidence_gated(extensions: list[dict[str, object]]) -> bool:
+    """True when an inferred derivational reading asserts a gated allomorph.
+
+    Applied to analyzer-side candidates: a reviewed base lemma is not evidence
+    for a restricted derivation, so such readings are excluded from analyses
+    unless the full surface is itself a reviewed lemma (exact path, which
+    carries no derivation claim). Uses the same gate as generation.
+    """
+    return any(
+        _extension_is_evidence_gated(item.get("type"), item.get("style"))
+        for item in extensions
+    )
 
 
 def _apply_extensions(canonical_stem: str, extensions: list[dict[str, object]]) -> tuple[str, list[dict[str, object]]]:
@@ -819,226 +1038,99 @@ def _apply_extensions(canonical_stem: str, extensions: list[dict[str, object]]) 
 
     applied = []
 
+
     for ext in extensions:
         ext_type = ext.get("type")
-
-        trigger_vowel = None
-        for char in reversed(base):
-            if char in "aeiou":
-                trigger_vowel = char
-                break
-        if trigger_vowel is None:
-            trigger_vowel = "a"
-
-        is_mid_trigger = trigger_vowel in ("e", "o")
+        style = ext.get("style")
+        if _extension_is_evidence_gated(ext_type, style):
+            raise _unverified_generation(ext=ext, ext_type=ext_type, style=style)
+        trigger = _last_vowel(base)
+        mid = trigger in _MID_VOWELS
 
         if ext_type == "causative":
-            style = ext.get("style")
             if style == "dz":
-                suffix = "edz" if is_mid_trigger else "idz"
-                label = "causative extension (-idz- / -edz-)"
+                suffix = "edz" if mid else "idz"
             elif style == "ts":
-                suffix = "ets" if is_mid_trigger else "its"
-                label = "causative extension (-its- / -ets-)"
+                suffix = "ets" if mid else "its"
             else:
-                suffix = "es" if is_mid_trigger else "is"
-                label = "causative extension (-is- / -es-)"
-            base += suffix
-            item = {
-                "surface": suffix,
-                "type": "causative",
-                "label": label,
-            }
-            if style is not None:
-                item["style"] = style
-            applied.append(item)
+                suffix = "es" if mid else "is"
+            item_style = style
         elif ext_type == "applicative":
-            suffix = "er" if is_mid_trigger else "ir"
-            base += suffix
-            applied.append({
-                "surface": suffix,
-                "type": "applicative",
-                "label": "applicative extension (-ir- / -er-)",
-            })
+            suffix = "er" if mid else "ir"
+            item_style = None
         elif ext_type == "passive":
-            has_vowels = any(c in "aeiou" for c in base)
-            if not has_vowels or len(base) <= 2:
-                suffix = "ew" if is_mid_trigger else "iw"
+            if trigger is None or len(base) <= 2:
+                suffix = "ew" if mid else "iw"
             else:
                 suffix = "w"
-            base += suffix
-            applied.append({
-                "surface": suffix,
-                "type": "passive",
-                "label": "passive extension (-w-)" if suffix == "w" else f"passive extension (-{suffix}-)",
-            })
+            item_style = None
         elif ext_type == "neuter":
-            suffix = "ek" if is_mid_trigger else "ik"
-            base += suffix
-            applied.append({
-                "surface": suffix,
-                "type": "neuter",
-                "label": "neuter extension (-ik- / -ek-)",
-            })
+            suffix = "ek" if mid else "ik"
+            item_style = None
         elif ext_type == "reciprocal":
             suffix = "an"
-            base += suffix
-            applied.append({
-                "surface": suffix,
-                "type": "reciprocal",
-                "label": "reciprocal extension (-an-)",
-            })
+            item_style = None
+        elif ext_type == "repetitive":
+            suffix = "oror" if trigger == "o" else "urur"
+            item_style = None
+        elif ext_type == "reversive" and (style is None or style == "long"):
+            if trigger is None:
+                raise _unsupported_generation(
+                    field="extensions",
+                    received=ext,
+                    supported=["reversive on a vowel-final radical (vowel copy)"],
+                )
+            suffix = _REVERSIVE_LONG_SURFACES[trigger]
+            item_style = "long"
         elif ext_type == "reversive":
-            style = ext.get("style")
-            # Reversives have mid-vowel harmony strictly on trigger vowel 'o'
-            is_reversive_mid = trigger_vowel == "o"
-            v = "o" if is_reversive_mid else "u"
-            if style == "long_urur" or style == "urur" or style == "oror" or style == "long":
-                # Default long reversive to -urur- / -oror- style if style is long or urur/oror
-                suffix = f"{v}r{v}r"
-                label = "reversive extension (-urur- / -oror-)"
-                style_val = "long"
-            elif style == "long_unur" or style == "unur" or style == "onor":
-                suffix = f"{v}n{v}r"
-                label = "reversive extension (-unur- / -onor-)"
-                style_val = "long"
-            else:
-                suffix = f"{v}r"
-                label = "reversive extension (-ur- / -or-)"
-                style_val = "short"
-            base += suffix
-            applied.append({
-                "surface": suffix,
-                "type": "reversive",
-                "style": style_val,
-                "label": label,
-            })
+            if trigger is None:
+                raise _unsupported_generation(
+                    field="extensions",
+                    received=ext,
+                    supported=["reversive on a vowel-final radical"],
+                )
+            suffix = "or" if trigger == "o" else "ur"
+            item_style = "short"
+        else:  # Unvalidated input must never reach here; validation gates it.
+            raise _unsupported_generation(
+                field="extensions",
+                received=ext,
+                supported=list(_SUPPORTED_EXTENSION_TYPES),
+            )
+        base += suffix
+        applied.append(_extension_item(ext_type=ext_type, style=item_style, surface=suffix))
 
     return base, applied
 
 
-def _get_stem_and_extensions(stem_candidate: str) -> tuple[Lemma | None, list[dict[str, object]]]:
-    lemma = _get_reviewed_verb_stem(stem_candidate)
-    extensions = []
-    if lemma is None:
-        decomp = _decompose_stem(stem_candidate)
-        if decomp is not None:
-            canonical_stem, ext_candidates = decomp
-            base_root = canonical_stem[:-1] if canonical_stem.endswith("a") else canonical_stem
-            if _validate_extension_harmony(base_root, ext_candidates):
-                lemma = _get_reviewed_verb_stem(canonical_stem)
-                if lemma is not None:
-                    extensions = ext_candidates
-    return lemma, extensions
-
-
-def _analyze_present_positive(
-    normalized: str, subject_candidate: dict[str, object]
-) -> dict[str, object] | None:
-    subject_surface = subject_candidate["surface"]
-    prefix = f"{subject_surface}{SUPPORTED_TENSE_ASPECT_MARKER}"
-    if not normalized.startswith(prefix):
-        return None
-
-    verb_stem = normalized.removeprefix(prefix)
-    if not verb_stem:
-        return None
-
-    # Check if there is an object concord prefixing the stem
-    for oc_candidate in _candidate_object_concords():
-        oc_surface = oc_candidate["surface"]
-        if verb_stem.startswith(oc_surface):
-            rest = verb_stem.removeprefix(oc_surface)
-            # Possibility 1: No coalescence
-            if rest:
-                lemma, extensions = _get_stem_and_extensions(rest)
-                if lemma is not None:
-                    phonology = compute_phonology_fields(normalized)
-                    return {
-                        "analysis_type": "verb_form",
-                        "confidence": min(subject_candidate["confidence"], oc_candidate["confidence"]),
-                        "rule_id": "fortune.concord.object.001",
-                        "lemma": _lemma_payload(lemma),
-                        "slots": {
-                            "subject": _subject_slot(subject_candidate),
-                            "tense_aspect": {
-                                "surface": SUPPORTED_TENSE_ASPECT_MARKER,
-                                "value": "present",
-                                "label": "positive present marker",
-                            },
-                            "polarity": {
-                                "surface": "",
-                                "value": "positive",
-                                "label": "No negative marker detected in supported v1 pattern.",
-                            },
-                            "object": _subject_slot(oc_candidate),
-                            "verb_stem": {
-                                "surface": rest,
-                                "lemma_public_id": lemma.public_id,
-                            },
-                            "extensions": extensions,
-                            "final_vowel": {
-                                "surface": rest[-1],
-                                "value": rest[-1],
-                            },
-                        },
-                        "phonology": phonology,
-                        "limitations": [
-                            "v1 supports only single-token positive present verb forms.",
-                            "Negative forms and tone are not analyzed.",
-                        ],
-                    }
-            # Possibility 2: Coalescence (only possible if oc_surface ends in "a")
-            if oc_surface.endswith("a"):
-                rest_coalesced = "a" + rest
-                lemma, extensions = _get_stem_and_extensions(rest_coalesced)
-                if lemma is not None:
-                    phonology = compute_phonology_fields(normalized)
-                    return {
-                        "analysis_type": "verb_form",
-                        "confidence": min(subject_candidate["confidence"], oc_candidate["confidence"]),
-                        "rule_id": "fortune.concord.object.001",
-                        "lemma": _lemma_payload(lemma),
-                        "slots": {
-                            "subject": _subject_slot(subject_candidate),
-                            "tense_aspect": {
-                                "surface": SUPPORTED_TENSE_ASPECT_MARKER,
-                                "value": "present",
-                                "label": "positive present marker",
-                            },
-                            "polarity": {
-                                "surface": "",
-                                "value": "positive",
-                                "label": "No negative marker detected in supported v1 pattern.",
-                            },
-                            "object": _subject_slot(oc_candidate),
-                            "verb_stem": {
-                                "surface": rest_coalesced,
-                                "lemma_public_id": lemma.public_id,
-                            },
-                            "extensions": extensions,
-                            "final_vowel": {
-                                "surface": rest_coalesced[-1],
-                                "value": rest_coalesced[-1],
-                            },
-                        },
-                        "phonology": phonology,
-                        "limitations": [
-                            "v1 supports only single-token positive present verb forms.",
-                            "Negative forms and tone are not analyzed.",
-                        ],
-                    }
-
-    # No object concord matched
-    lemma, extensions = _get_stem_and_extensions(verb_stem)
-    if lemma is None:
-        return None
-
-    phonology = compute_phonology_fields(normalized)
+def _build_positive_analysis(
+    *,
+    normalized: str,
+    subject_candidate: dict[str, object],
+    object_candidate: dict[str, object] | None,
+    stem_surface: str,
+    lemma,
+    extensions: list[dict[str, object]],
+) -> dict[str, object]:
+    has_object = object_candidate is not None
+    if has_object:
+        rule_id = "fortune.concord.object.001"
+        confidence = min(subject_candidate["confidence"], object_candidate["confidence"])
+        limitations = [
+            "v1 supports only single-token positive present verb forms.",
+            "Negative forms and tone are not analyzed.",
+        ]
+    else:
+        rule_id = SUPPORTED_RULE_ID
+        confidence = subject_candidate["confidence"]
+        limitations = [
+            "v1 supports only single-token positive present verb forms.",
+            "Object markers, negative forms, and tone are not analyzed.",
+        ]
     return {
         "analysis_type": "verb_form",
-        "confidence": subject_candidate["confidence"],
-        "rule_id": SUPPORTED_RULE_ID,
+        "confidence": confidence,
+        "rule_id": rule_id,
         "lemma": _lemma_payload(lemma),
         "slots": {
             "subject": _subject_slot(subject_candidate),
@@ -1052,148 +1144,237 @@ def _analyze_present_positive(
                 "value": "positive",
                 "label": "No negative marker detected in supported v1 pattern.",
             },
-            "object": None,
+            "object": _subject_slot(object_candidate) if has_object else None,
             "verb_stem": {
-                "surface": verb_stem,
+                "surface": stem_surface,
                 "lemma_public_id": lemma.public_id,
             },
             "extensions": extensions,
             "final_vowel": {
-                "surface": verb_stem[-1],
-                "value": verb_stem[-1],
+                "surface": stem_surface[-1],
+                "value": stem_surface[-1],
             },
         },
-        "phonology": phonology,
-        "limitations": [
-            "v1 supports only single-token positive present verb forms.",
-            "Object markers, negative forms, and tone are not analyzed.",
-        ],
+        "phonology": compute_phonology_fields(normalized),
+        "limitations": limitations,
+    }
+
+
+def _object_features_key(object_candidate: dict[str, object] | None) -> tuple[object, ...]:
+    """Deduplication key for an object reading's features (Finding 2).
+
+    Distinct object concords sharing a surface (e.g. person 3rd-singular "mu"
+    versus a class concord "mu") are distinct readings and must not merge;
+    truly identical feature readings deduplicate.
+    """
+    if object_candidate is None:
+        return (None,)
+    return (
+        object_candidate["surface"],
+        object_candidate["slot_type"],
+        object_candidate.get("person"),
+        object_candidate.get("number"),
+        object_candidate.get("class_number"),
+    )
+
+
+def _analyze_segmentations(
+    *,
+    normalized: str,
+    subject_candidate: dict[str, object],
+    verb_stem: str,
+    stem_options_for,
+    build_analysis,
+) -> list[dict[str, object]]:
+    analyses: list[dict[str, object]] = []
+    seen: set[tuple[object, ...]] = set()
+
+    def add(
+        stem_surface: str,
+        lookup_stem: str,
+        object_candidate: dict[str, object] | None,
+    ) -> None:
+        for lemma, extensions in _get_stem_candidates(lookup_stem):
+            features_key = (
+                lemma.public_id,
+                stem_surface,
+                tuple(
+                    (item["type"], item.get("style"), item["surface"])
+                    for item in extensions
+                ),
+                _object_features_key(object_candidate),
+            )
+            if features_key in seen:
+                continue
+            seen.add(features_key)
+            analyses.append(
+                build_analysis(
+                    normalized=normalized,
+                    subject_candidate=subject_candidate,
+                    object_candidate=object_candidate,
+                    stem_surface=stem_surface,
+                    lemma=lemma,
+                    extensions=extensions,
+                )
+            )
+
+    # No-object interpretation first: highest confidence (no object concord
+    # multiplying the reading) and the originating lemma usually lives here.
+    for stem_surface, lookup_stem in stem_options_for(verb_stem, None):
+        add(stem_surface, lookup_stem, None)
+        if len(analyses) >= _MAX_ANALYSES_PER_SUBJECT:
+            return analyses
+
+    for oc_candidate in _candidate_object_concords():
+        oc_surface = oc_candidate["surface"]
+        if not verb_stem.startswith(oc_surface):
+            continue
+        for stem_surface, lookup_stem in stem_options_for(verb_stem, oc_candidate):
+            add(stem_surface, lookup_stem, oc_candidate)
+            if len(analyses) >= _MAX_ANALYSES_PER_SUBJECT:
+                return analyses
+    return analyses
+
+
+def _positive_stem_options(
+    verb_stem: str, object_candidate: dict[str, object] | None
+) -> list[tuple[str, str]]:
+    """Segmentation readings for the positive present stem slot."""
+    if object_candidate is None:
+        return [(verb_stem, verb_stem)]
+    oc_surface = object_candidate["surface"]
+    rest = verb_stem.removeprefix(oc_surface)
+    options = []
+    if rest:
+        options.append((rest, rest))
+    if oc_surface.endswith("a"):
+        options.append(("a" + rest, "a" + rest))
+    return options
+
+
+
+def _analyze_present_positive(
+    normalized: str, subject_candidate: dict[str, object]
+) -> list[dict[str, object]]:
+    subject_surface = subject_candidate["surface"]
+    prefix = f"{subject_surface}{SUPPORTED_TENSE_ASPECT_MARKER}"
+    if not normalized.startswith(prefix):
+        return []
+
+    verb_stem = normalized.removeprefix(prefix)
+    if not verb_stem:
+        return []
+
+    return _analyze_segmentations(
+        normalized=normalized,
+        subject_candidate=subject_candidate,
+        verb_stem=verb_stem,
+        stem_options_for=_positive_stem_options,
+        build_analysis=_build_positive_analysis,
+    )
+
+
+
+def _build_negative_analysis(
+    *,
+    normalized: str,
+    subject_candidate: dict[str, object],
+    object_candidate: dict[str, object] | None,
+    stem_surface: str,
+    lemma,
+    extensions: list[dict[str, object]],
+) -> dict[str, object]:
+    has_object = object_candidate is not None
+    if has_object:
+        rule_id = "fortune.concord.object.001"
+        confidence = min(subject_candidate["confidence"], object_candidate["confidence"])
+        limitations = [
+            "v1 supports only single-token negative present verb forms.",
+            "Tone is not analyzed.",
+        ]
+    else:
+        rule_id = "fortune.verbal.negation.001"
+        confidence = subject_candidate["confidence"]
+        limitations = [
+            "v1 supports only single-token negative present verb forms.",
+            "Object markers, positive forms, and tone are not analyzed.",
+        ]
+    return {
+        "analysis_type": "verb_form",
+        "confidence": confidence,
+        "rule_id": rule_id,
+        "lemma": _lemma_payload(lemma),
+        "slots": {
+            "subject": _subject_slot(subject_candidate),
+            "tense_aspect": None,
+            "polarity": {
+                "surface": "ha",
+                "value": "negative",
+                "label": "present negative marker",
+            },
+            "object": _subject_slot(object_candidate) if has_object else None,
+            "verb_stem": {
+                "surface": stem_surface,
+                "lemma_public_id": lemma.public_id,
+            },
+            "extensions": extensions,
+            "final_vowel": {
+                "surface": "e",
+                "value": "e",
+            },
+        },
+        "phonology": compute_phonology_fields(normalized),
+        "limitations": limitations,
     }
 
 
 def _analyze_present_negative(
     normalized: str, subject_candidate: dict[str, object]
-) -> dict[str, object] | None:
+) -> list[dict[str, object]]:
     if not normalized.startswith("ha"):
-        return None
+        return []
     rest = normalized.removeprefix("ha")
     sc_surface = subject_candidate["surface"]
     if not rest.startswith(sc_surface):
-        return None
+        return []
 
     verb_stem = rest.removeprefix(sc_surface)
     if not verb_stem:
-        return None
+        return []
 
-    # Let's check stem candidates WITH object concord first
-    for oc_candidate in _candidate_object_concords():
-        oc_surface = oc_candidate["surface"]
-        if verb_stem.startswith(oc_surface):
-            inner_stem = verb_stem.removeprefix(oc_surface)
-            
-            # Check two stem candidates: Possibility A (No coalescence) and Possibility B (Coalescence)
-            stem_candidates = []
-            if inner_stem:
-                stem_candidates.append((inner_stem, False))
-            if oc_surface.endswith("a"):
-                stem_candidates.append(("a" + inner_stem, True))
+    def stem_options(
+        stem: str, object_candidate: dict[str, object] | None
+    ) -> list[tuple[str, str]]:
+        """Negative readings: final vowel -e, DB lookup mutates -e back to -a.
 
-            for stem, coalesced in stem_candidates:
-                if not stem.endswith("e"):
-                    continue
-                normalized_stem = stem[:-1] + "a"
-                lemma, extensions = _get_stem_and_extensions(normalized_stem)
-                if lemma is not None:
-                    phonology = compute_phonology_fields(normalized)
-                    return {
-                        "analysis_type": "verb_form",
-                        "confidence": min(subject_candidate["confidence"], oc_candidate["confidence"]),
-                        "rule_id": "fortune.concord.object.001",
-                        "lemma": _lemma_payload(lemma),
-                        "slots": {
-                            "subject": _subject_slot(subject_candidate),
-                            "tense_aspect": None,
-                            "polarity": {
-                                "surface": "ha",
-                                "value": "negative",
-                                "label": "present negative marker",
-                            },
-                            "object": _subject_slot(oc_candidate),
-                            "verb_stem": {
-                                "surface": stem,
-                                "lemma_public_id": lemma.public_id,
-                            },
-                            "extensions": extensions,
-                            "final_vowel": {
-                                "surface": "e",
-                                "value": "e",
-                            },
-                        },
-                        "phonology": phonology,
-                        "limitations": [
-                            "v1 supports only single-token negative present verb forms.",
-                            "Tone is not analyzed.",
-                        ],
-                    }
+        Subject-coalescence applies to the no-object reading when the subject
+        concord ends in "a" (e.g. class 1 "a" + stem "amba..." surfaces as
+        "ha..." + stem); object-coalescence applies when the object concord
+        ends in "a".
+        """
+        options: list[tuple[str, str]] = []
+        if object_candidate is None:
+            readings = [stem]
+            if sc_surface.endswith("a"):
+                readings.append("a" + stem)
+        else:
+            inner = stem.removeprefix(object_candidate["surface"])
+            readings = []
+            if inner:
+                readings.append(inner)
+            if object_candidate["surface"].endswith("a"):
+                readings.append("a" + inner)
+        for surface in readings:
+            if surface.endswith("e"):
+                options.append((surface, surface[:-1] + "a"))
+        return options
 
-    # No object concord matched
-    stem_candidates = []
-    if verb_stem:
-        stem_candidates.append((verb_stem, False))
-
-    if sc_surface.endswith("a"):
-        stem_candidates.append(("a" + verb_stem, True))
-
-    for stem, coalesced in stem_candidates:
-        if not stem.endswith("e"):
-            continue
-        # Mutate "e" back to "a" for database lookup
-        normalized_stem = stem[:-1] + "a"
-        lemma, extensions = _get_stem_and_extensions(normalized_stem)
-        if lemma is not None:
-            phonology = compute_phonology_fields(normalized)
-            return {
-                "analysis_type": "verb_form",
-                "confidence": subject_candidate["confidence"],
-                "rule_id": "fortune.verbal.negation.001",
-                "lemma": _lemma_payload(lemma),
-                "slots": {
-                    "subject": _subject_slot(subject_candidate),
-                    "tense_aspect": None,
-                    "polarity": {
-                        "surface": "ha",
-                        "value": "negative",
-                        "label": "present negative marker",
-                    },
-                    "object": None,
-                    "verb_stem": {
-                        "surface": stem,
-                        "lemma_public_id": lemma.public_id,
-                    },
-                    "extensions": extensions,
-                    "final_vowel": {
-                        "surface": "e",
-                        "value": "e",
-                    },
-                },
-                "phonology": phonology,
-                "limitations": [
-                    "v1 supports only single-token negative present verb forms.",
-                    "Object markers, positive forms, and tone are not analyzed.",
-                ],
-            }
-    return None
-
-
-def _get_reviewed_verb_stem(normalized_stem: str) -> Lemma | None:
-    return (
-        Lemma.objects.filter(
-            review_state__in=SUPPORTED_REVIEW_STATES,
-            headword_kind=Lemma.HeadwordKind.VERB_STEM,
-            normalized_headword=normalized_stem,
-        )
-        .order_by("normalized_headword", "public_id")
-        .first()
+    return _analyze_segmentations(
+        normalized=normalized,
+        subject_candidate=subject_candidate,
+        verb_stem=verb_stem,
+        stem_options_for=stem_options,
+        build_analysis=_build_negative_analysis,
     )
 
 
@@ -1243,6 +1424,128 @@ def _get_generation_verb_stem(lemma_public_id: str) -> Lemma:
     return lemma
 
 
+def _normalize_generation_extensions(extensions_feature: object) -> list[dict[str, object]]:
+    """Strict gate for generation extension requests.
+
+    Returns normalized [{"type": ..., "style"?}] entries or raises a structured
+    GENERATION_UNSUPPORTED failure. Unknown types, unknown styles, styles on
+    style-less types, repeated types, unsupported orders and over-long stacks
+    are all rejected here instead of silently falling back to a default.
+
+    Malformed JSON values never escape as errors: `type` must be a string in
+    the supported set and `style` must be a string in the type's style set
+    (Finding 1). Explicit `style: null` is accepted as "no style", matching an
+    omitted style field.
+    """
+    if not isinstance(extensions_feature, list):
+        raise _unsupported_generation(
+            field="extensions",
+            received=extensions_feature,
+            supported=["list of extensions"],
+        )
+    normalized: list[dict[str, object]] = []
+    for ext in extensions_feature:
+        if isinstance(ext, str):
+            ext_type, style = ext, None
+        elif isinstance(ext, dict):
+            ext_type, style = ext.get("type"), ext.get("style")
+        else:
+            raise _unsupported_generation(
+                field="extensions",
+                received=extensions_feature,
+                supported=["list of strings or dicts"],
+            )
+        # Validate the type as a string before any membership or dict lookup:
+        # lists/objects/booleans/numbers/null are client errors, not crashes.
+        if not isinstance(ext_type, str) or ext_type not in _SUPPORTED_EXTENSION_TYPES:
+            raise _unsupported_generation(
+                field="extensions",
+                received=ext_type,
+                supported=list(_SUPPORTED_EXTENSION_TYPES),
+            )
+        allowed_styles = _EXTENSION_STYLES[ext_type]
+        if style is None:
+            normalized_style = None
+        elif not isinstance(style, str):
+            raise _unsupported_generation(
+                field="extensions",
+                received=ext,
+                supported=[
+                    f'{ext_type} with style in {list(allowed_styles) or ["no style"]} or null'
+                ],
+            )
+        elif style not in allowed_styles:
+            if ext_type == "reversive" and style in _REVERSIVE_REPETITIVE_STYLE_NAMES:
+                raise GenerationFailure(
+                    code="GENERATION_UNSUPPORTED",
+                    message=(
+                        "Unsupported v1 generation feature: extensions. "
+                        f"Reversive style {style!r} names -urur-/-oror- surfaces, which are "
+                            'the repetitive extension; request {"type": "repetitive"} instead.'
+                    ),
+                    detail={
+                        "field": "extensions",
+                        "received": ext,
+                        "supported": ["repetitive (no style)", 'reversive with style "long" or "short"'],
+                        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+                        "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001", "fortune.concord.object.001"],
+                    },
+                )
+            if ext_type == "reversive" and style in _REVERSIVE_LONG_STYLE_ALIASES:
+                raise GenerationFailure(
+                    code="GENERATION_UNSUPPORTED",
+                    message=(
+                        "Unsupported v1 generation feature: extensions. "
+                        f"Reversive style {style!r} predates vowel-copy selection; "
+                            'request {"type": "reversive", "style": "long"} instead.'
+                    ),
+                    detail={
+                        "field": "extensions",
+                        "received": ext,
+                        "supported": ['reversive with style "long" or "short"'],
+                        "supported_shape": "subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_e",
+                        "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001", "fortune.concord.object.001"],
+                    },
+                )
+            raise _unsupported_generation(
+                field="extensions",
+                received=ext,
+                supported=[
+                    f'{ext_type} with style in {list(allowed_styles) or ["no style"]}'
+                ],
+            )
+        else:
+            normalized_style = style
+        if _extension_is_evidence_gated(ext_type, normalized_style):
+            raise _unverified_generation(ext=ext, ext_type=ext_type, style=normalized_style)
+        if normalized_style is None:
+            normalized.append({"type": ext_type})
+        else:
+            normalized.append({"type": ext_type, "style": normalized_style})
+    violation = _extension_types_violation([entry["type"] for entry in normalized])
+    if violation == "count":
+        raise _unsupported_generation(
+            field="extensions",
+            received=extensions_feature,
+            supported=[f"at most {_MAX_EXTENSIONS_PER_REQUEST} extensions per request"],
+        )
+    if violation == "repeat":
+        raise _unsupported_generation(
+            field="extensions",
+            received=extensions_feature,
+            supported=["each extension type at most once per request"],
+        )
+    if violation == "order":
+        raise _unsupported_generation(
+            field="extensions",
+            received=extensions_feature,
+            supported=[
+                "extension order " + " < ".join(_SUPPORTED_EXTENSION_TYPES) + " (passive outermost)"
+            ],
+        )
+    return normalized
+
+
 def _validate_supported_generation_features(features: dict[str, object]) -> None:
     if features.get("generation_type") != "verb_form":
         raise _unsupported_generation(
@@ -1276,27 +1579,7 @@ def _validate_supported_generation_features(features: dict[str, object]) -> None
             supported=["structured subject object"],
         )
     if "extensions" in features:
-        exts = features.get("extensions")
-        if not isinstance(exts, list):
-            raise _unsupported_generation(
-                field="extensions",
-                received=exts,
-                supported=["list of extensions"],
-            )
-        for ext in exts:
-            if not isinstance(ext, (str, dict)):
-                raise _unsupported_generation(
-                    field="extensions",
-                    received=exts,
-                    supported=["list of strings or dicts"],
-                )
-            ext_type = ext if isinstance(ext, str) else ext.get("type")
-            if ext_type not in ("passive", "causative", "applicative", "neuter", "reciprocal", "reversive"):
-                raise _unsupported_generation(
-                    field="extensions",
-                    received=ext_type,
-                    supported=["passive", "causative", "applicative", "neuter", "reciprocal", "reversive"],
-                )
+        _normalize_generation_extensions(features.get("extensions"))
 
 
 def _resolve_generation_subject(subject: dict[str, object]) -> dict[str, object]:
@@ -1413,6 +1696,40 @@ def _unsupported_generation(*, field: str, received, supported) -> GenerationFai
             "supported_rule_ids": [SUPPORTED_RULE_ID, "fortune.verbal.negation.001", "fortune.concord.object.001"],
         },
     )
+
+
+def _unverified_generation(*, ext: object, ext_type: str, style: str | None) -> GenerationFailure:
+    """Structured refusal for a generation operation without source evidence.
+
+    Finding 4 policy: the analyzer may still recognize these allomorphs on
+    attested surfaces (see the retained rule card), but generation does not
+    generalize them to arbitrary lemmas until a reviewed source locator backs
+    the per-lemma distribution.
+    """
+    return GenerationFailure(
+        code=EXTENSION_UNVERIFIED_ERROR_CODE,
+        message=(
+            "Unsupported v1 generation feature: extensions. The requested "
+            "extension allomorph is not source-verified for arbitrary stems, so "
+            "generation refuses it instead of guessing a derived form."
+        ),
+        detail={
+            "field": "extensions",
+            "received": ext,
+            "extension_type": ext_type,
+            "style": style,
+            "reason": "lexical_distribution_unverified",
+            "supported": (
+                "Review the derived form against the dictionary sources and "
+                "publish it as its own reviewed verb-stem lemma; generation of "
+                "verified extension patterns (for example causative -is-/-es-, "
+                "applicative, passive, neuter, long reversive, repetitive, "
+                "reciprocal) remains available."
+            ),
+            "supported_rule_ids": [SUPPORTED_RULE_ID, RETAINED_EXTENSIONS_RULE_ID],
+        },
+    )
+
 
 
 def _lemma_payload(lemma: Lemma) -> dict[str, object]:
