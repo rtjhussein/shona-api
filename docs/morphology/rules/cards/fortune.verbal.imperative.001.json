@@ -1,0 +1,151 @@
+{
+  "rule_card_schema_version": "2026-05-23",
+  "rule_id": "fortune.verbal.imperative.001",
+  "title": "affirmative imperative constructions: bare-stem singular, plural -i suffix, prothetic i- for monosyllabic radicals, and the object-marked -e imperative",
+  "source_key": "source_fortune",
+  "source_locator": "Fortune Grammatical Constructions Vol. 1: the imperative inflection completing the radical with a terminal vowel (2.10.2.2, printed p. 20; PDF p. 32: i-p-a, i-rw-a, tem-a, bik-a, zoror-a, tever-a); Tone Conjugation II with extended radicals in the imperative inflection (2.10.2.4(f)(ii), printed p. 23; PDF p. 35: tauris-a, tever-a, kanganis-a); the penultimate i- of C-shape radicals in the imperative (printed p. 37; PDF p. 48: i-d-a). FSI Shona Basic Course, Unit 13 Note 2 (printed pp. 126-127; PDF p. 144): the plural affirmative imperative is \"the stem of the verb, plus /-i/ (in some dialects /-nyi/)\" with examples Nyorai, Taurai, Garai pasi and dialogue Pinda/Pindai; \"the plural form may be used in speaking to one person, as a mark of respect\"; the singular \"is like the plural except that it lacks the suffix\". FSI Unit 34 Notes 1, 2, 4 (printed pp. 338-342; PDF pp. 356-360): object-marked imperatives Ipe/Ape/Adye/Ridye/Imwe, Riise/Uiise-type (printed Riise, Uise), Muradzike/Varadzike/Aise, Ugeze/Dzigeze/Rigeze - the object-marked imperative stem carries terminal -e with adjacent vowels retained (Riise i|i, Aise a|i, Usauisa u|i in the negative). Hannan front matter TABLE OF VERB FORMS, Imperative Mood (printed p. xvii; PDF p. 19): Idya / Idyai; Hannan i- entry (PDF p. 239): \"prefixal form of imperative of monosyllabic v, sg & pl. Idya: eat (sg)! Idyai: eat (pl)!\"; Hannan -i entry (PDF p. 239): \"-i pl v suffix. Ipai: you (pl) give\"; Hannan chi- entry (PDF p. 82): chidye \"eat it\" (the object-marked -e terminal inside the chi- imperative).",
+  "rule_domain": "verbal_constructions",
+  "rule_type": "construction_slot",
+  "rule_summary": "Affirmative imperative lane for morphology-rules-v6: the singular imperative is the reviewed verb stem itself (radical + terminal -a; FSI Pinda, Fortune tem-a/bik-a), the plural adds the suffix -i (FSI Unit 13 Note 2; Hannan -i entry Ipai; the Manyika -nyi variant is analyzed, never generated), and vowelless (C-shape) radicals take the prothetic i- prefix in both numbers (Fortune i-p-a/i-d-a; Hannan Idya/Idyai). The object-marked singular imperative is object_concord + radical + terminal -e (FSI Unit 34: Riise, Aise, Muradzike, Ipe; Hannan chidye \"eat it\"); the object concord supplies the onset, so C-shape radicals need no prothetic there (Ipe). The plural form may politely address one person (FSI Unit 13 Note 2), which the API records as number only. Extended radicals ride the shared extension machinery (Fortune TC II: tauris-a, tever-a, kanganis-a) with all v3 evidence gates unchanged. The shared imperative stem scope is enforced identically by generation and inferred analysis: only reviewed verb-stem lemmas ending in terminal -a (and not the defective pro-verb -na) support imperative readings; divergent stems (-ti/-nzi, Fortune 3.3.18) are refused at generation (divergent_stem_without_terminal_a) and excluded from imperative analysis readings, with an excluded_divergent_stem_imperative lane when a reading would have resolved. Deferred pending evidence (never presented as ungrammatical): the plural imperative with an object concord (boundary plural_with_object_concord; enforced on both sides, with a deferred_imperative_plural_object lane when the excluded reading would have resolved) and reflexive imperatives, plus the a-final object concord immediately before an a-initial stem (object_before_a_initial_stem), evaluated on the stem as built after extensions. A bare vowelless-radical spelling (dya) is NOT the imperative of -dya (that is idya), so it gets no bare-stem reading.",
+  "affected_rule_set": "morphology-rules-v6",
+  "inputs": {
+    "lexical_category": "verb",
+    "headword_kind": "verb_stem",
+    "surface_shape": "stem (sg) | stem + i (pl) | object_concord + stem_radical + e (sg with object); prothetic i- before vowelless-radical stems in both numbers",
+    "generation_features": {
+      "generation_type": "imperative",
+      "number": "singular | plural",
+      "polarity": "positive",
+      "object": "optional structured object feature (singular addressee only)",
+      "extensions": "optional shared extension gate (unchanged from morphology-rules-v3)"
+    }
+  },
+  "conditions": {
+    "dialects": [],
+    "source_scope": "standard unless source says otherwise",
+    "review_blockers": [],
+    "plural_suffix": "the generated plural suffix is -i (Hannan -i entry; FSI Unit 13); the Manyika -nyi suffix (Hannan -nyi entry, PDF p. 513, \"Idyanyi: eat!\") is an analyzed dialect variant, never generated",
+    "prothetic_i": "applied exactly when the radical (stem minus terminal -a) contains no vowel: attested for C-shape radicals (Fortune 2.10.2.2 i-p-a, i-rw-a; p. 37 i-d-a; Hannan Idya/Idyai); vowel-bearing radicals never take it; product generalization of the attested C-shape rule, not a verbatim quoted rule",
+    "object_marked_terminal": "the object-marked imperative stem carries -e (FSI Unit 34 Riise/Aise/Muradzike; Hannan chidye); adjacent vowels are kept (Riise, Aise)",
+    "politeness_note": "the plural form may politely address one person (FSI Unit 13, Note 2); recorded as number only, never as a separate subject reading",
+    "shared_extension_policy": "extension evidence gating (dz/ts causative, short reversive) and the causative < applicative < reciprocal < reversive < repetitive < neuter < passive product sequence apply unchanged from morphology-rules-v3",
+    "deferred_combinations": "plural with an object concord and reflexive imperatives return 422 GENERATION_UNSUPPORTED with reason deferred_pending_evidence and stable boundaries plural_with_object_concord / reflexive_imperative; analysis infers no such readings, and the plural-object deferral is enforced identically on both sides (a deferred_imperative_plural_object lane records the deferral when the excluded reading, including extension-derived candidates, would have resolved to supported lexical material)",
+    "deferred_vowel_boundaries": "an a-final object concord immediately before an a-initial stem is deferred pending applicable evidence (deferred_pending_evidence, never presented as ungrammatical): generation refuses it with 422 GENERATION_UNSUPPORTED (field imperative_boundary, code object_before_a_initial_stem) and analysis infers no reading across it, recording a deferred_imperative_boundary lane only when the excluded reading would have resolved lexically; independently supported readings of the same surface stay available",
+    "excluded_stems": "the shared imperative stem scope is enforced by generation and analysis alike: only reviewed verb-stem lemmas ending in terminal -a and outside the defective pro-verb set support imperative readings; divergent stems (-ti/-nzi, Fortune 3.3.18) are refused with reason divergent_stem_without_terminal_a and excluded from imperative analysis readings (excluded_divergent_stem_imperative lane naming the excluded stem when a reading would have resolved); the defective pro-verb -na is refused with reason defective_pro_verb_stem and excluded from imperative analysis readings; other constructions on the same lemmas (finite, infinitive, exact lexical lookup) are unaffected"
+  },
+  "outputs": {
+    "analysis_fields": [
+      "analysis_type imperative with mood, polarity, addressee (second person; never the finite subject slot, which stays null), object, verb_stem, extensions, final_vowel slots"
+    ],
+    "generation_fields": [
+      "form, normalized, rule_id, lemma, slots, phonology, warnings"
+    ],
+    "model_fields": []
+  },
+  "evidence": {
+    "examples": [
+      {
+        "surface": "pinda",
+        "lemma_headword": "-pinda",
+        "status": "source_attested",
+        "note": "FSI Unit 13 dialogue, printed p. 126: \"Pinda. Enter!\" - singular imperative is the bare stem."
+      },
+      {
+        "surface": "taurai",
+        "lemma_headword": "-taura",
+        "status": "source_attested",
+        "note": "FSI Unit 13 Note 2 (printed p. 126): \"Taurai. Speak!\" - plural = stem + -i."
+      },
+      {
+        "surface": "idyai",
+        "lemma_headword": "-dya",
+        "status": "source_attested",
+        "note": "Hannan front matter Imperative Mood (printed p. xvii; PDF p. 19) \"Idyai\" and i- entry (PDF p. 239): prothetic i- + monosyllabic radical + plural -i."
+      },
+      {
+        "surface": "ipa",
+        "lemma_headword": "-pa",
+        "status": "source_attested",
+        "note": "Fortune 2.10.2.2 (printed p. 20) i-p-a 'give!'; Hannan i- entry: prothetic i- + C radical."
+      },
+      {
+        "surface": "taurisa",
+        "lemma_headword": "-taura",
+        "status": "source_attested_shape",
+        "note": "Fortune TC II (printed p. 23) tauris-a: an extended (causative) radical inside the imperative inflection; the API builds it on the -taura fixture with the shared causative rule."
+      },
+      {
+        "surface": "riise",
+        "lemma_headword": "-isa",
+        "status": "source_attested",
+        "note": "FSI Unit 34 Note 2 (printed p. 340) \"Riise patafura. Put it on the table\": object concord ri + radical is + terminal e; i|i contact retained."
+      },
+      {
+        "surface": "aise",
+        "lemma_headword": "-isa",
+        "status": "source_attested",
+        "note": "FSI Unit 34 Note 4 (printed p. 341) \"Aise ... Put them down\": class-6 object concord a + ise; a|i contact retained."
+      },
+      {
+        "surface": "muradzike",
+        "lemma_headword": "-radzika",
+        "status": "source_attested",
+        "note": "FSI Unit 34 Note 4: \"Muradzike pakaoma. Put him down where it is dry\": person object mu + radzik + e."
+      },
+      {
+        "surface": "ipe",
+        "lemma_headword": "-pa",
+        "status": "source_attested",
+        "note": "FSI Unit 34 Note 1 (printed p. 339) \"Ipe kunaBaba\" (give it to Father): the class-9 object concord i supplies the onset; no separate prothetic."
+      },
+      {
+        "surface": "chidye",
+        "lemma_headword": "-dya",
+        "status": "source_attested",
+        "note": "Hannan chi- entry (PDF p. 82): \"imperative, if it incorporates an obj c: chidye: eat it\" - the object-marked -e terminal; the chi- prefix itself is a separate (deferred) construction."
+      },
+      {
+        "surface": "tauranyi",
+        "lemma_headword": "-taura",
+        "status": "analyzed_dialect_variant",
+        "note": "Manyika -nyi plural suffix (Hannan -nyi entry, PDF p. 513; front matter Idyanyi M): analyzed as a plural imperative variant, never generated; the attested witness is monosyllabic Idyanyi, so spellings on other stems are constructed combinations of the attested suffix rule."
+      }
+    ],
+    "counterexamples": [
+      {
+        "surface": "dya",
+        "note": "The bare vowelless-radical spelling is not the imperative of -dya (that is idya, Hannan i- entry): the bare-stem reading requires a vowel-bearing radical and dya stays unanalyzed as an imperative."
+      },
+      {
+        "surface": "aambure",
+        "note": "Class-6 object concord + a-initial stem in the positive: the a|a contact has no witness in the available sources (attested object imperative contacts are non-identical: Riise, Aise); deferred with object_before_a_initial_stem."
+      },
+      {
+        "surface": "tibvunze",
+        "note": "Subjunctive/hortative-shaped forms (1st person prefixes) are different constructions and stay outside the imperative lane."
+      },
+      {
+        "surface": "ti",
+        "note": "The bare divergent-stem spelling is not an imperative: the shared imperative stem scope excludes divergent stems without terminal -a (-ti, Fortune 3.3.18) from readings on both sides (generation reason divergent_stem_without_terminal_a; analysis lane excluded_divergent_stem_imperative). The surface still resolves as the exact lexical entry, and kuti/handiti-type constructions on the same lemma are untouched."
+      }
+    ],
+    "notes": [
+      "Tone is excluded from the API; FSI's imperative tone notes (first syllable of low verbs, dialect-dependent -i tone) are out of scope.",
+      "The chi- exclusive/polite imperative (Hannan front matter Chidya/Chidyai; Hannan chi- entry PDF p. 82; Fortune TC X printed p. 24; FSI Unit 35 printed p. 348) is a distinct construction with its own tone behaviour and is deferred with its locators recorded.",
+      "The rega- prohibitive strategy (Fortune printed p. 112, Rega kubika 'don't cook') and the interrogative -ei/-nyi verb enclitic (Hannan -i entry: Unomirirei) are separate constructions, not imperative lanes."
+    ]
+  },
+  "qa": {
+    "extraction_confidence": 0.85,
+    "reviewer_notes": "The bare-stem singular, plural -i, prothetic i-, and object-marked -e shapes are each attested verbatim (FSI Units 13/34; Hannan front matter and -i/i-/-nyi entries; Fortune 2.10.2.2 and TC II). Constructed combinations (object-marked imperatives on fixture stems, -nyi on non-monosyllabic stems, extension-bearing imperatives beyond the Fortune TC II radicals) are documented as such. Deferred: plural+object, reflexive imperatives, and the a-final-object|a-initial-stem contact (no witnesses); generation refuses them with stable reasons and analysis infers no readings. No independent linguistic review of the enabled patterns has occurred.",
+    "review_state": "approved",
+    "review_decision": "approved_for_bounded_imperative_slice_except_deferred_combinations"
+  },
+  "api_safety": {
+    "analyzer_consumes": true,
+    "generator_consumes": true,
+    "public_endpoint_safe": true,
+    "requires_review_before_public": false,
+    "backward_compatibility": "Additive under morphology-rules-v6: analyze gains imperative readings (analysis_type imperative) for surfaces that previously returned 422 ANALYSIS_UNSUPPORTED (bare stems such as pinda or buda, plural budai/taurai, object-marked riise/aise/muradzike, negative usadye/musadye families), and search enrichment reports them as matched through the shared analyzer. No previously supported analysis is removed; existing finite, infinitive, and extension behaviour is unchanged, and independently supported readings of shared surfaces (exact lexical entries, ku- infinitives) remain available alongside the new readings. Deferred combinations and boundaries return structured 422 GENERATION_UNSUPPORTED refusals with stable reasons instead of generated forms. The serving release must declare morphology-rules-v6 or endpoints return 503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED. Supervisor correction pass (same unreleased v6): plural imperative readings with an object concord and divergent-stem imperative readings (musaridye-type, ti/nzi) that previously leaked through inferred analysis and search are excluded; the deferrals are recorded with deferred_imperative_plural_object and excluded_divergent_stem_imperative lanes, while exact lexical results, plural commands without objects, singular object-marked commands, and finite/infinitive readings on the same lemmas are unchanged."
+  }
+}

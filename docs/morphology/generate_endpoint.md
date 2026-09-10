@@ -33,6 +33,11 @@ with exactly five accepted feature fields (`generation_type`, `polarity`,
 `object`, `reflexive`, `extensions`); anything else — finite-only
 `subject`/`tense_aspect`, `mood`, or any other grammatical field — is rejected
 with `422 GENERATION_UNSUPPORTED` instead of being ignored.
+Imperative generation uses `generation_type: "imperative"` (see item 7 below)
+with exactly five accepted feature fields (`generation_type`, `number`,
+`polarity`, `object`, `extensions`); `subject`, `tense_aspect`, `mood`,
+`reflexive`, and any other field are rejected with
+`422 GENERATION_UNSUPPORTED` instead of being ignored.
 
 ### Supported Features:
 
@@ -180,6 +185,81 @@ with `422 GENERATION_UNSUPPORTED` instead of being ignored.
    - Deferred: the two `a`-vowel boundaries above; progressive/exclusive
      `-cha-`/`-chi-` infinitives, multiword complements, nominal plurals, tone.
 
+7. **Imperative Generation (morphology-rules-v6)**:
+   - Shapes: positive singular = the bare stem (`pinda`; FSI Unit 13 dialogue
+     "Pinda. Enter!", Fortune 2.10.2.2 `tem-a`, `bik-a`); positive plural =
+     stem + `-i` (`taurai`, `budai`; FSI Unit 13 Note 2, Hannan `-i` entry
+     `Ipai`); monosyllabic radicals take the prothetic `i-` (`idya`, `idyai`;
+     Hannan front matter `Idya`/`Idyai`, Fortune `i-p-a`/`i-d-a`); the
+     singular object-marked imperative = object concord + radical + `-e`
+     (`riise`, `aise`, `muradzike`, `ipe`; FSI Unit 34, Hannan `chidye`
+     "eat it"); negative commands = `usa-`/`musa-` + [object concord] +
+     radical + `-e` (`usadye`, `musadye`, `usariise`, `usauise`; Hannan
+     front matter and `-sa-` entry, FSI Units 32/34). Rule IDs
+     `fortune.verbal.imperative.001` (positive) and
+     `fortune.verbal.imperative.negative.001` (negative).
+   - Dialect policy: the negative terminal is generated as `-e` (Zezuru:
+     Fortune `Usadaro`/`Usatukeni`, Hannan "Usadye. Musadye Z" and the
+     `-sa-` entry example "Usadye: do not eat"); the attested `-a` spelling
+     (Hannan "Usadya. Musadya KM"; FSI's printed `Usaputsa`/`Usariisa`
+     forms) analyzes as a dialect variant of the same construction and is
+     never generated or blacklisted. The Manyika plural suffix `-nyi`
+     (Hannan `-nyi` entry, `Idyanyi`) analyzes as a variant and is never
+     generated.
+   - `number` records the addressee number; FSI Unit 13 Note 2 attests that
+     the plural form may politely address one person, which the API records
+     as number only. The addressee is reported in a dedicated `addressee`
+     slot (surface `usa`/`musa` in the negative), never in the ordinary
+     finite `subject` slot, which stays null.
+   - Extensions reuse the shared gate unchanged (`taurisa` — Fortune TC II;
+     `usafusire`, `musakurungire` — FSI Unit 32 on the reviewed
+     `-kurungira` stem).
+   - Refusals: `plural` with an `object` and a truthy `reflexive` return
+    `422 GENERATION_UNSUPPORTED` with `reason:
+    deferred_pending_evidence` and stable boundaries
+    `plural_with_object_concord` / `reflexive_imperative` (no attested
+    witness). Divergent stems (`-ti`, `-nzi`) and the defective pro-verb
+    `-na` are refused with `lemma_stem` reasons instead of a fabricated
+    surface. Unwitnessed `a`-vowel boundaries (`sa-` before an `a`-initial
+    object concord or stem; an `a`-final object concord before an
+    `a`-initial stem, evaluated on the stem as built after extensions)
+    return `422 GENERATION_UNSUPPORTED` with
+    `field: imperative_boundary` and the stable boundary code while
+    independently supported readings stay available.
+   - Shared generation/analysis scope: the refusals above are mirrored by
+    inferred analysis. The plural-object and divergent-stem/pro-verb
+    restrictions are enforced on both sides — analysis infers no such
+    readings and records a `deferred_imperative_plural_object` or
+    `excluded_divergent_stem_imperative` lane when the excluded reading
+    (including extension-derived candidates) would have resolved to
+    supported lexical material; a-vowel boundary deferrals keep the
+    `deferred_imperative_boundary` lane policy. Exact lexical results,
+    plural commands without objects, singular object-marked commands, and
+    finite/infinitive readings on the same lemmas are unchanged.
+
+## Analysis additions (morphology-rules-v6)
+`POST /v1/analyze` gains bounded imperative readings under
+`analysis_type: "imperative"` with `mood`, `polarity`, `addressee`, `object`,
+`verb_stem`, `extensions`, and `final_vowel` slots (the finite `subject` slot
+stays null). Every reading is lexically gated through the shared stem
+machinery: a spelling is never called an imperative merely because it ends in
+a familiar shape, and a bare vowelless-radical spelling (`dya`) gets no
+imperative reading because the attested imperative of `-dya` is `idya`.
+Imperative readings are additive: exact lexical results, ku- infinitive
+readings, and finite readings of the same surface stay available
+(`kudai` keeps both the `ku` + `-dai` infinitive reading and the
+`-kuda` + `-i` plural imperative reading).
+
+The shared imperative stem scope is enforced identically by inferred
+analysis: divergent stems (`-ti`, `-nzi`) and the defective pro-verb `-na`
+never authorize an imperative reading (`excluded_divergent_stem_imperative`
+lane when a reading would have resolved), and the plural imperative with an
+object concord is deferred on both sides (`deferred_imperative_plural_object`
+lane). Deferred `a`-vowel boundaries keep the `deferred_imperative_boundary`
+lane policy. Exact lexical results, plural commands without objects,
+singular object-marked commands, and finite/infinitive readings on the same
+lemmas are unchanged.
+
 ## Response
 
 Successful responses use the standard v1 envelope and include:
@@ -217,9 +297,17 @@ message only mentions extensions when none were requested.
   `-ur-`/`-or-`, are refused at generation and excluded from inferred
   analyses until their per-lemma distribution is source-verified; attested
   forms resolve only as their own reviewed verb-stem lemmas
+- imperatives: plural with an object concord, reflexive imperatives, the
+  chi- exclusive/polite imperative, the rega- prohibitive, and the three
+  unwitnessed `a`-vowel boundaries are deferred with structured refusals
+  enforced identically by generation and inferred analysis (the
+  plural-object and divergent-stem/pro-verb restrictions carry
+  `deferred_imperative_plural_object` / `excluded_divergent_stem_imperative`
+  lanes); the Manyika `-nyi` plural suffix analyzes as a variant and is
+  never generated
 
 ## Rule-set activation
-The implemented morphology rules are `morphology-rules-v5` (see the rule
+The implemented morphology rules are `morphology-rules-v6` (see the rule
 cards' `affected_rule_set` and `MORPHOLOGY_RULES_VERSION` in
 `shona_api/morphology/services.py`). The version returned to API consumers is
 validated, not echoed: analyze and generate return `503
@@ -227,12 +315,13 @@ MORPHOLOGY_RULES_VERSION_UNSUPPORTED` when the current `DataRelease` declares
 any other `rule_set_version`, and search keeps serving lexical results while
 reporting `morphology_enrichment.status = "unavailable"` with the same code.
 To serve corrected behaviour, create or promote a `DataRelease` with
-`--rule-set-version morphology-rules-v5`. Incoming version labels are never
+`--rule-set-version morphology-rules-v6`. Incoming version labels are never
 silently rewritten, and no live release records are mutated by this change.
 
-Rule-set history: v5 keeps the v4 infinitive rules and the v3 extension,
-evidence-gate, and sequence rules unchanged and corrects only the finite
-joining rule (see the finite rule card `fortune.verbal.slots.001`); v4 added
-the infinitive negation/object/reflexive and generation lane (see the
-infinitive rule card `fortune.verbal.infinitive.001`).
-
+Rule-set history: v6 adds the imperative lanes (new cards
+`fortune.verbal.imperative.001` and
+`fortune.verbal.imperative.negative.001`) and keeps the v5 finite, v4
+infinitive, and v3 extension rules byte-identical; v5 corrected only the
+finite joining rule (see the finite rule card `fortune.verbal.slots.001`);
+v4 added the infinitive negation/object/reflexive and generation lane (see
+the infinitive rule card `fortune.verbal.infinitive.001`).

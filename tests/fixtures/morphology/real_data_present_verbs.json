@@ -28,12 +28,52 @@
         "text": "handikubadanudzi",
         "rule_id": "fortune.concord.object.001",
         "object_surface": "ku"
+      },
+      {
+        "name": "positive_imperative_singular",
+        "text": "badanudza",
+        "rule_id": "fortune.verbal.imperative.001"
+      },
+      {
+        "name": "positive_imperative_plural",
+        "text": "badanudzai",
+        "rule_id": "fortune.verbal.imperative.001"
+      },
+      {
+        "name": "negative_imperative_singular",
+        "text": "usabadanudze",
+        "rule_id": "fortune.verbal.imperative.negative.001"
+      },
+      {
+        "name": "negative_imperative_plural",
+        "text": "musabadanudze",
+        "rule_id": "fortune.verbal.imperative.negative.001"
+      },
+      {
+        "name": "positive_imperative_class_object",
+        "text": "vabadanudze",
+        "rule_id": "fortune.verbal.imperative.001",
+        "object_surface": "va"
+      },
+      {
+        "name": "negative_imperative_class_object",
+        "text": "usavabadanudze",
+        "rule_id": "fortune.verbal.imperative.negative.001",
+        "object_surface": "va"
       }
     ],
     "unsupported_observed_forms": [
       {
         "form": "badanudzwa",
         "reason": "passive or extension-like surface outside present v1 support"
+      },
+      {
+        "form": "musavabadanudze",
+        "reason": "deferred imperative plural-with-object combination (plural_with_object_concord; generation refuses and inferred analysis reports a deferred_imperative_plural_object lane)"
+      },
+      {
+        "form": "musavabadanudza",
+        "reason": "same deferred imperative plural-with-object combination on the -a terminal variant (plural_with_object_concord lane deferred_imperative_plural_object)"
       }
     ]
   },
@@ -54,6 +94,21 @@
         "name": "negative_person_subject",
         "text": "handibadanuki",
         "rule_id": "fortune.verbal.negation.001"
+      },
+      {
+        "name": "positive_imperative_singular",
+        "text": "badanuka",
+        "rule_id": "fortune.verbal.imperative.001"
+      },
+      {
+        "name": "positive_imperative_plural",
+        "text": "badanukai",
+        "rule_id": "fortune.verbal.imperative.001"
+      },
+      {
+        "name": "negative_imperative_singular",
+        "text": "usabadanuke",
+        "rule_id": "fortune.verbal.imperative.negative.001"
       }
     ],
     "unsupported_observed_forms": []
@@ -83,6 +138,16 @@
         "text": "kuambura",
         "rule_id": "fortune.verbal.infinitive.001",
         "verb_stem_surface": "ambura"
+      },
+      {
+        "name": "positive_imperative_singular",
+        "text": "ambura",
+        "rule_id": "fortune.verbal.imperative.001"
+      },
+      {
+        "name": "positive_imperative_plural",
+        "text": "amburai",
+        "rule_id": "fortune.verbal.imperative.001"
       }
     ],
     "unsupported_observed_forms": [
@@ -105,6 +170,14 @@
       {
         "form": "kusaambura",
         "reason": "negative infinitive across deferred sa-/a-stem boundary"
+      },
+      {
+        "form": "usaambure",
+        "reason": "negative imperative across deferred sa-/a-stem boundary"
+      },
+      {
+        "form": "aambure",
+        "reason": "deferred a-final object concord + a-initial stem boundary (imperative)"
       }
     ]
   },
@@ -137,6 +210,26 @@
         "text": "kuziva",
         "rule_id": "fortune.verbal.infinitive.001",
         "verb_stem_surface": "ziva"
+      },
+      {
+        "name": "positive_imperative_singular",
+        "text": "ziva",
+        "rule_id": "fortune.verbal.imperative.001"
+      },
+      {
+        "name": "positive_imperative_plural",
+        "text": "zivai",
+        "rule_id": "fortune.verbal.imperative.001"
+      },
+      {
+        "name": "negative_imperative_singular",
+        "text": "usazive",
+        "rule_id": "fortune.verbal.imperative.negative.001"
+      },
+      {
+        "name": "negative_imperative_plural",
+        "text": "musazive",
+        "rule_id": "fortune.verbal.imperative.negative.001"
       }
     ],
     "unsupported_observed_forms": []

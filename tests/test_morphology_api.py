@@ -202,6 +202,38 @@ def test_real_data_present_verb_corpus_generates_supported_forms(
         "positive_infinitive": {
             "generation_type": "infinitive",
         },
+        "positive_imperative_singular": {
+            "generation_type": "imperative",
+            "number": "singular",
+            "polarity": "positive",
+        },
+        "positive_imperative_plural": {
+            "generation_type": "imperative",
+            "number": "plural",
+            "polarity": "positive",
+        },
+        "negative_imperative_singular": {
+            "generation_type": "imperative",
+            "number": "singular",
+            "polarity": "negative",
+        },
+        "negative_imperative_plural": {
+            "generation_type": "imperative",
+            "number": "plural",
+            "polarity": "negative",
+        },
+        "positive_imperative_class_object": {
+            "generation_type": "imperative",
+            "number": "singular",
+            "polarity": "positive",
+            "object": {"type": "noun_class", "class_number": "2"},
+        },
+        "negative_imperative_class_object": {
+            "generation_type": "imperative",
+            "number": "singular",
+            "polarity": "negative",
+            "object": {"type": "noun_class", "class_number": "2"},
+        },
     }
 
     for record in records:
@@ -448,9 +480,11 @@ def test_analyze_endpoint_returns_structured_unsupported_failure(
     assert body["error"]["code"] == "ANALYSIS_UNSUPPORTED"
     assert body["error"]["detail"] == {
         "normalized": "handibuda",
-        "supported_shape": "ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb_stem / subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i",
+        "supported_shape": "ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb_stem / subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i / imperative: bare_stem [+ plural -i] or usa-/musa- + [object_concord] + stem_ending_in_e_or_a",
         "supported_rule_ids": [
             "fortune.verbal.infinitive.001",
+            "fortune.verbal.imperative.001",
+            "fortune.verbal.imperative.negative.001",
             "fortune.verbal.slots.001",
             "fortune.verbal.negation.001",
             "fortune.concord.object.001",
