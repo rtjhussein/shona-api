@@ -9,7 +9,7 @@ future backlog items.
 ```powershell
 python -m pip install -e ".[dev]"
 python manage.py migrate
-python manage.py ensure_current_release --version 2026.09.local --label "Local development release" --rule-set-version morphology-rules-v5
+python manage.py ensure_current_release --version 2026.09.local --label "Local development release" --rule-set-version morphology-rules-v6
 python manage.py runserver
 ```
 
@@ -18,8 +18,8 @@ response envelope can expose `data_release` and `rule_set_version`. If no
 current release exists, the API returns `CURRENT_RELEASE_NOT_CONFIGURED` with
 the setup command above in `error.detail.setup_command`. The release must also
 declare the morphology rules version this deployment implements
-(`morphology-rules-v5`; v5 keeps the v4 infinitive and v3 extension rules
-unchanged and corrects the finite vowel-boundary joining rule): otherwise analyze
+(`morphology-rules-v6`; v6 adds the imperative lanes and keeps the v5
+finite, v4 infinitive, and v3 extension rules unchanged): otherwise analyze
 and generate return `503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED`, and search
 keeps serving lexical results while reporting
 `morphology_enrichment.status = "unavailable"`.
@@ -81,8 +81,9 @@ Search currently supports exact lemma and exact form lookup using the v1
 orthography normalizer. Empty searches return `SEARCH_QUERY_REQUIRED`.
 Zero-result searches return a successful envelope with `count: 0` and a
 `zero_result` object. When search can analyze a supported verb form such as
-`ndinobuda` or a simple `ku-` infinitive such as `kubuda`, the response also
-includes `morphology` and `morphology_enrichment` with linked lemma details.
+`ndinobuda`, a simple `ku-` infinitive such as `kubuda`, or an imperative
+such as `usadye` or `budai`, the response also includes `morphology` and
+`morphology_enrichment` with linked lemma details.
 Unsupported or failed morphology enrichment keeps the search response
 successful and records the fallback under `zero_result.morphology_enrichment`
 when there are no exact matches. Some unsupported surfaces include
@@ -178,17 +179,25 @@ Example:
 }
 ```
 
-It also supports single-token positive present verb forms shaped as:
+It also supports single-token positive present verb forms
+(`subject_concord + no + [object_concord] + verb_stem`), negative present
+verb forms (`ha + subject_concord + [object_concord] + verb_stem` ending in
+`-i`), and imperative forms: positive bare stems (`buda`), the plural `-i`
+suffix (`budai`), the prothetic `i-` for monosyllabic radicals (`idya`,
+`idyai`), singular object-marked imperatives (`riise`, `muradzike`), and
+negative commands (`usadye`, `musadye`, `usariisa`).
 
 Unsupported forms return `ANALYSIS_UNSUPPORTED` with detail about the supported
 shape. Infinitive complements, progressive/exclusive `-cha-`/`-chi-`
 infinitives, tone, and complex verbal morphology remain outside v1 support;
-two infinitive `a`-vowel boundaries (`sa-` before an `a`-initial concord or
-stem; `a`-final concord before an `a`-initial stem) are deferred pending
-evidence and return structured unsupported responses. Ambiguous forms return
-competing readings (no-object, object, reflexive) ordered by confidence.
-Passive or extension-like surfaces may include a future-lane explanation and
-rule-card ID in `error.detail.future_lanes`.
+`a`-vowel boundaries without source evidence (infinitive `sa-` boundaries,
+finite concord|stem contacts, and the imperative `sa-`/object-concord
+contacts) are deferred pending evidence and return structured unsupported
+responses. Ambiguous forms return competing readings (no-object, object,
+reflexive, imperative) ordered by confidence; imperative addressee
+information is reported in a dedicated `addressee` slot, never as a finite
+subject prefix. Passive or extension-like surfaces may include a future-lane
+explanation and rule-card ID in `error.detail.future_lanes`.
 
 ## 7. Generate a supported morphology form
 
@@ -214,15 +223,26 @@ Content-Type: application/json
 
 Generation v1 supports reviewed verb-stem lemmas, the finite
 `subject_concord + no + [object_concord] + verb_stem` shape with the
-documented verb extensions, and a `generation_type: "infinitive"` branch
-(`ku + [sa] + [object_concord | zvi-reflexive] + verb_stem`, e.g. `kusaziva`).
-Finite `a`-vowel boundaries without source evidence (an `a`-final subject or
-object concord immediately before an `a`-initial stem) are deferred with a
-structured `finite_boundary` refusal, and the negated `-no-` present terminal
-is the Standard Shona `-i` (`handidyi`-type; the Zezuru `-e` spelling stays
-analyzable). Evidence-gated allomorphs (causative
-styles `dz` and `ts`, reversive style `short`) return `422
-EXTENSION_UNVERIFIED` on both branches; other unsupported feature requests
+documented verb extensions, a `generation_type: "infinitive"` branch
+(`ku + [sa] + [object_concord | zvi-reflexive] + verb_stem`, e.g.
+`kusaziva`), and a `generation_type: "imperative"` branch
+(`number` singular/plural plus `polarity`: the positive singular is the bare
+stem, the plural adds `-i`, the singular object-marked imperative is
+`object_concord + stem + -e`, and negative commands are `usa-`/`musa-` +
+stem + `-e`, e.g. `buda`, `budai`, `idya`, `riise`, `usadye`, `musadye`).
+Finite and imperative `a`-vowel boundaries without source evidence are
+deferred with structured `finite_boundary` / `imperative_boundary`
+refusals; the imperative plural-with-object combination and
+divergent-stem/pro-verb imperative readings are refused and excluded on
+both generation and analysis (`deferred_imperative_plural_object` /
+`excluded_divergent_stem_imperative` lanes), while plural commands without
+objects and singular object-marked commands stay supported.
+The negated `-no-` present terminal is the Standard Shona
+`-i` (`handidyi`-type; the Zezuru `-e` spelling stays analyzable); the
+negative imperative terminal is generated as `-e` with the attested `-a`
+spelling analyzed as a dialect variant. Evidence-gated allomorphs
+(causative styles `dz` and `ts`, reversive style `short`) return `422
+EXTENSION_UNVERIFIED` on all branches; other unsupported feature requests
 return `GENERATION_UNSUPPORTED`. See `docs/morphology/generate_endpoint.md`
 for the full contract.
 
@@ -234,7 +254,7 @@ Protected public API success responses use:
 {
   "api_version": "v1",
   "data_release": "2026.09.0",
-  "rule_set_version": "morphology-rules-v5",
+  "rule_set_version": "morphology-rules-v6",
   "generated_at": "2026-05-12T12:00:00Z",
   "data": {}
 }

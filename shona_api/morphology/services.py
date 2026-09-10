@@ -11,10 +11,12 @@ GENERATOR_VERSION = "shona-morphology-generator-v1"
 # The rule-set version implemented by this code. Public endpoints validate the
 # serving release's rule_set_version against it (Finding 5 policy): responses
 # never echo a version label the engine does not execute.
-MORPHOLOGY_RULES_VERSION = "morphology-rules-v5"
+MORPHOLOGY_RULES_VERSION = "morphology-rules-v6"
 RULES_VERSION_ERROR_CODE = "MORPHOLOGY_RULES_VERSION_UNSUPPORTED"
 SUPPORTED_RULE_ID = "fortune.verbal.slots.001"
 INFINITIVE_RULE_ID = "fortune.verbal.infinitive.001"
+IMPERATIVE_RULE_ID = "fortune.verbal.imperative.001"
+IMPERATIVE_NEGATIVE_RULE_ID = "fortune.verbal.imperative.negative.001"
 EXTENSIONS_RULE_ID = "fortune.verbal.extensions.001"
 REVERSIVE_RULE_ID = "fortune.verbal.reversive.001"
 REPETITIVE_RULE_ID = "fortune.verbal.repetitive.001"
@@ -28,22 +30,49 @@ INFINITIVE_SOURCE_LOCATOR = (
     "Fortune Grammatical Constructions, section 3.3.18 Noun Class 15, "
     "PDF pages 90-91 (printed pp. 78-79)"
 )
+IMPERATIVE_SOURCE_LOCATOR = (
+    "FSI Shona Basic Course, Unit 13 Note 2 (printed pp. 126-127; PDF p. 144); "
+    "Unit 32 note and exercises 3-4 (printed pp. 323-324; PDF pp. 341-342); "
+    "Unit 34 Notes 1-4 (printed pp. 338-342; PDF pp. 356-360); Hannan "
+    "front matter, TABLE OF VERB FORMS, Imperative Mood (printed p. xvii; "
+    "PDF p. 19), -i entry (PDF p. 239), i- entry (PDF p. 239), -nyi entry "
+    "(PDF p. 513), -sa- entry (PDF p. 613); Fortune Vol. 1, 2.10.2.2 "
+    "(printed p. 20; PDF p. 32), 2.10.2.4(f)(ii) Tone Conjugation II "
+    "(printed p. 23; PDF p. 35), penultimate i- (printed p. 37; PDF p. 48), "
+    "enclitic-vocative examples (printed pp. 122-123; PDF pp. 134-135)"
+)
 SUPPORTED_TENSE_ASPECT_MARKER = "no"
 INFINITIVE_PREFIX = "ku"
 INFINITIVE_NEGATIVE_MARKER = "sa"
 INFINITIVE_REFLEXIVE_SURFACE = "zvi"
 INFINITIVE_ANALYZER_CONFIDENCE = 0.82
+IMPERATIVE_ANALYZER_CONFIDENCE = 0.82
 # Bounded infinitive ambiguity budget: at most this many ku- readings
 # (polarity x no-object/reflexive/object-concord x stem candidates) are
 # collected before the remaining segmentations are skipped.
 _MAX_INFINITIVE_ANALYSES = 12
+IMPERATIVE_NEGATIVE_MARKER = "sa"
+IMPERATIVE_NEGATIVE_SINGULAR_PREFIX = "usa"
+IMPERATIVE_NEGATIVE_PLURAL_PREFIX = "musa"
+IMPERATIVE_PLURAL_SUFFIX = "i"
+IMPERATIVE_PLURAL_SUFFIX_VARIANT = "nyi"
+IMPERATIVE_MONOSYLLABIC_PROTHETIC = "i"
+_IMPERATIVE_VOWELS = frozenset({"a", "e", "i", "o", "u"})
+# Bounded imperative ambiguity budget: at most this many imperative readings
+# (polarity x addressee number x no-object/object-concord x stem candidates)
+# are collected before the remaining segmentations are skipped.
+_MAX_IMPERATIVE_ANALYSES = 12
 SUPPORTED_ANALYSIS_SHAPE = (
     "ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb_stem / "
     "subject_concord + no + [object_concord] + verb_stem / "
-    "ha + subject_concord + [object_concord] + verb_stem_ending_in_i"
+    "ha + subject_concord + [object_concord] + verb_stem_ending_in_i / "
+    "imperative: bare_stem [+ plural -i] or usa-/musa- + [object_concord] "
+    "+ stem_ending_in_e_or_a"
 )
 SUPPORTED_ANALYSIS_RULE_IDS = [
     INFINITIVE_RULE_ID,
+    IMPERATIVE_RULE_ID,
+    IMPERATIVE_NEGATIVE_RULE_ID,
     SUPPORTED_RULE_ID,
     "fortune.verbal.negation.001",
     "fortune.concord.object.001",
@@ -360,8 +389,19 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
     analyses: list[dict[str, object]] = []
     infinitive_deferred: list[str] = []
     finite_deferred: list[str] = []
+    imperative_deferred: list[str] = []
+    imperative_excluded_stems: list[str] = []
+    imperative_plural_object_hits: list[str] = []
     pro_verb_exclusions: list[str] = []
     analyses.extend(_analyze_ku_infinitive(normalized, infinitive_deferred))
+    analyses.extend(
+        _analyze_imperative(
+            normalized,
+            imperative_deferred,
+            imperative_excluded_stems,
+            imperative_plural_object_hits,
+        )
+    )
 
     analyses.extend([
         analysis
@@ -384,7 +424,13 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
             "supported_rule_ids": SUPPORTED_ANALYSIS_RULE_IDS,
         }
         future_lanes = _unsupported_future_lanes(
-            normalized, infinitive_deferred, finite_deferred, pro_verb_exclusions
+            normalized,
+            infinitive_deferred,
+            finite_deferred,
+            pro_verb_exclusions,
+            imperative_deferred,
+            imperative_plural_object_hits,
+            imperative_excluded_stems,
         )
         if future_lanes:
             detail["future_lanes"] = future_lanes
@@ -395,9 +441,12 @@ def analyze_text(raw_text: str, *, rule_set_version: str) -> dict[str, object]:
                 "are ku- infinitive forms (ku + [sa] + [object_concord | "
                 "zvi-reflexive] + reviewed verb stem), positive present verb "
                 "forms (subject concord + 'no' + [object_concord] + verb_stem), "
-                "and negative present verb forms (ha- + subject concord + "
+                "negative present verb forms (ha- + subject concord + "
                 "[object_concord] + verb_stem ending in -i, with the attested "
-                "Zezuru -e spelling analyzed as a dialect variant)."
+                "Zezuru -e spelling analyzed as a dialect variant), and "
+                "imperative forms (bare stem or stem + plural -i in the "
+                "positive; usa-/musa- + [object_concord] + stem ending in -e "
+                "or the attested -a dialect variant in the negative)."
             ),
             detail=detail,
         )
@@ -426,6 +475,13 @@ def generate_form(
     lemma = _get_generation_verb_stem(lemma_public_id)
     if features.get("generation_type") == "infinitive":
         return _generate_infinitive(
+            lemma_public_id=lemma_public_id,
+            lemma=lemma,
+            features=features,
+            rule_set_version=rule_set_version,
+        )
+    if features.get("generation_type") == "imperative":
+        return _generate_imperative(
             lemma_public_id=lemma_public_id,
             lemma=lemma,
             features=features,
@@ -923,6 +979,9 @@ def _unsupported_future_lanes(
     deferred_boundaries: list[str] | tuple[str, ...] = (),
     finite_deferred_boundaries: list[str] | tuple[str, ...] = (),
     pro_verb_exclusions: list[str] | tuple[str, ...] = (),
+    imperative_deferred_boundaries: list[str] | tuple[str, ...] = (),
+    imperative_plural_object_hits: list[str] | tuple[str, ...] = (),
+    imperative_excluded_stems: list[str] | tuple[str, ...] = (),
 ) -> list[dict[str, object]]:
     lanes = []
     if pro_verb_exclusions:
@@ -974,9 +1033,70 @@ def _unsupported_future_lanes(
                 "rule_card_ids": [SUPPORTED_RULE_ID],
             }
         )
+    for boundary in imperative_deferred_boundaries:
+        lanes.append(
+            {
+                "code": "deferred_imperative_boundary",
+                "message": (
+                    "This surface matches an imperative construction across "
+                    "a vowel boundary deferred pending linguistic evidence "
+                    f"({boundary}); it is not claimed to be ungrammatical, "
+                    "and no reading is inferred for it."
+                ),
+                "support_status": "deferred_pending_evidence",
+                "boundary": boundary,
+                "rule_card_ids": [
+                    IMPERATIVE_RULE_ID,
+                    IMPERATIVE_NEGATIVE_RULE_ID,
+                ],
+            }
+        )
+    if imperative_plural_object_hits:
+        lanes.append(
+            {
+                "code": "deferred_imperative_plural_object",
+                "message": (
+                    "This surface matches a plural imperative with an object "
+                    "concord, a combination deferred pending linguistic "
+                    "evidence (boundary plural_with_object_concord; no "
+                    "attested witness in the available sources). It is not "
+                    "claimed to be ungrammatical, and no reading is inferred "
+                    "for it; the surface still resolves through exact lexical "
+                    "lookup and any other supported construction."
+                ),
+                "support_status": "deferred_pending_evidence",
+                "boundary": "plural_with_object_concord",
+                "rule_card_ids": [
+                    IMPERATIVE_RULE_ID,
+                    IMPERATIVE_NEGATIVE_RULE_ID,
+                ],
+            }
+        )
+    if imperative_excluded_stems:
+        lanes.append(
+            {
+                "code": "excluded_divergent_stem_imperative",
+                "message": (
+                    "This surface matches an imperative reading derived from "
+                    f"the divergent stem {sorted(set(imperative_excluded_stems))[0]} "
+                    "(no terminal -a; Fortune 3.3.18), for which no imperative "
+                    "construction is attested. That reading is not inferred "
+                    "and is not claimed to be ungrammatical; the surface "
+                    "still resolves through exact lexical lookup and any "
+                    "other supported construction (finite, infinitive)."
+                ),
+                "support_status": "not_supported",
+                "excluded_stem_headwords": sorted(set(imperative_excluded_stems)),
+                "rule_card_ids": [
+                    IMPERATIVE_RULE_ID,
+                    IMPERATIVE_NEGATIVE_RULE_ID,
+                ],
+            }
+        )
     if (
         not deferred_boundaries
         and not finite_deferred_boundaries
+        and not imperative_deferred_boundaries
         and normalized.startswith("ku")
         and len(normalized) > 2
     ):
@@ -2339,12 +2459,877 @@ def _generate_infinitive(
     }
 
 
+#
+# Imperative constructions (morphology-rules-v6).
+#
+# Sources (validated against the local PDFs, not inherited):
+# - FSI Unit 13, Note 2 (printed pp. 126-127; PDF p. 144): the plural
+#   affirmative imperative is "the stem of the verb, plus /-i/ (in some
+#   dialects /-nyi/)"; examples Nyorai, Taurai, Garai pasi; the singular
+#   "is like the plural except that it lacks the suffix" (dialogue: Pinda.
+#   Enter!, Pindai). "The plural form may be used in speaking to one
+#   person, as a mark of respect."
+# - Hannan front matter, TABLE OF VERB FORMS, Imperative Mood (printed
+#   p. xvii; PDF p. 19): affirmative Idya / Idyai / Idyanyi M; negative
+#   "Usadya. Musadya KM" / "Usadye. Musadye Z"; exclusive Chidya (a
+#   separate construction, deferred). Hannan -i entry (PDF p. 239): "-i pl
+#   v suffix. Ipai: you (pl) give"; i- entry (PDF p. 239): "prefixal form
+#   of imperative of monosyllabic v, sg & pl. Idya: eat (sg)! Idyai: eat
+#   (pl)!"; -nyi entry (PDF p. 513): Manyika plural suffix.
+# - FSI Unit 32, note and exercises 3-4 (printed pp. 323-324; PDF
+#   pp. 341-342): negative commands usa-/musa- + stem; "the final vowel in
+#   negative commands may be /-a/ (as in /usaputsa/) or /-e/
+#   (/usaputse/), depending on the dialect".
+# - FSI Unit 34, Notes 1, 2, 4 (printed pp. 338-342; PDF pp. 356-360):
+#   object-marked imperatives Ipe/Ape/Adye/Ridye/Imwe, Riise/Uise,
+#   Muradzike/Varadzike/Aise, and the negative object forms
+#   Usarisa/Usauisa/Usadzise: the object-marked imperative stem ends in -e,
+#   and adjacent vowels are kept (Riise, Aise, Usauisa).
+# - Fortune 2.10.2.2 (printed p. 20; PDF p. 32) and Tone Conjugation II,
+#   2.10.2.4(f)(ii) (printed p. 23; PDF p. 35): the imperative inflection
+#   completes the radical with a terminal vowel (tem-a, bik-a, zoror-a,
+#   tever-a; i-p-a, i-rw-a) and carries extended radicals (tauris-a,
+#   tever-a, kanganis-a). The "penultimate i-" of C-shape radicals is
+#   attested at i-d-a (printed p. 37; PDF p. 48).
+# - Hannan -sa- entry (PDF p. 613): sa- marks the negation of the
+#   imperative ("Usadye: do not eat. Kusadya: to not eat.").
+# - Negative terminal dialect split: -e is the Zezuru spelling (Fortune
+#   Usadaro/Usatukeni, printed pp. 122-123; the FSI teaching forms; Hannan
+#   "Usadye Z"); -a is the Karanga/Korekore spelling (Hannan "Usadya.
+#   Musadya KM"; FSI "/usaputsa/"). Generation emits -e; -a spellings
+#   analyze as dialect variants of the same construction, never blacklisted.
+#
+# Deferred (deferred_pending_evidence, never claimed ungrammatical): the
+# plural imperative with an object concord and reflexive imperatives have
+# no attested witness in the available sources; the a-vowel contacts
+# object|a-initial stem, sa-|a-initial object and sa-|a-initial stem are
+# unwitnessed (attested imperative contacts keep adjacent vowels: Riise,
+# Aise, Usauisa). The chi- exclusive imperative (Hannan front matter;
+# Fortune TC X, printed p. 24; FSI Unit 35, printed p. 348), the rega-
+# prohibitive (Fortune printed p. 112) and the interrogative -ei/-nyi
+# enclitic (Hannan -i entry) are separate constructions and stay out of
+# scope. The defective pro-verb -na has no attested imperative and is
+# excluded from imperative readings on both sides.
+#
+
+_IMPERATIVE_SUPPORTED_SHAPE = (
+    "stem | stem+i | object_concord + stem_radical + e (positive) / "
+    "usa|musa + [object_concord] + stem_radical + e (negative)"
+)
+_IMPERATIVE_SUPPORTED_RULE_IDS = [
+    IMPERATIVE_RULE_ID,
+    IMPERATIVE_NEGATIVE_RULE_ID,
+    "fortune.concord.object.001",
+]
+_IMPERATIVE_ALLOWED_FEATURES = frozenset(
+    {"generation_type", "polarity", "number", "object", "extensions"}
+)
+
+IMPERATIVE_DEFERRED_REASON = "deferred_pending_evidence"
+
+
+def _radical_is_vowelless(stem: str) -> bool:
+    """True for C-shape radicals that take the prothetic i- imperative prefix.
+
+    Fortune 2.10.2.2 (i-p-a, i-rw-a), the "penultimate i-" note (i-d-a) and
+    Hannan's i- entry (Idya, Idyai) attest the prefix for monosyllabic
+    radicals. The product rule applies it exactly when the stem minus its
+    terminal -a contains no vowel; vowel-bearing radicals never take it.
+    """
+    radical = stem[:-1] if stem.endswith("a") else stem
+    return not any(char in _IMPERATIVE_VOWELS for char in radical)
+
+
+def _imperative_boundary_deferred(
+    *,
+    polarity: str,
+    object_surface: str | None,
+    stem_surface: str,
+) -> str | None:
+    """Deferred a-vowel-boundary policy for the imperative lanes.
+
+    Returns a stable boundary code when the morpheme sequence crosses an
+    `a`-vowel contact without applicable source evidence, else None. The
+    deferred contacts are: negative `sa-` immediately followed by an
+    `a`-initial object concord or an `a`-initial stem, and an `a`-final
+    object concord immediately followed by an `a`-initial stem (evaluated
+    on the stem as built after extensions; the imperative terminal sits at
+    the end and does not change the first character). Attested imperative
+    contacts keep adjacent vowels (Riise, Aise, Usauisa, FSI Unit 34).
+    Arguments are morphemes, never substrings of the finished word, so
+    supported combinations sharing letters are unaffected. Finite and
+    infinitive lanes run their parallel policies with their own codes.
+    """
+    if polarity == "negative":
+        if object_surface is not None:
+            if object_surface.startswith("a"):
+                return "sa_before_a_initial_object"
+        elif stem_surface.startswith("a"):
+            return "sa_before_a_initial_stem"
+    if (
+        object_surface is not None
+        and object_surface.endswith("a")
+        and stem_surface.startswith("a")
+    ):
+        return "object_before_a_initial_stem"
+    return None
+
+
+def _deferred_imperative_generation(
+    *, boundary: str, features: dict[str, object]
+) -> GenerationFailure:
+    """Structured refusal for a deferred imperative vowel boundary."""
+    return GenerationFailure(
+        code="GENERATION_UNSUPPORTED",
+        message=(
+            "Unsupported v1 generation feature: imperative_boundary. This "
+            "morpheme combination crosses a vowel boundary deferred pending "
+            "linguistic evidence; it is not claimed to be grammatically "
+            "impossible, and no alternative spelling is generated."
+        ),
+        detail={
+            "field": "imperative_boundary",
+            "boundary": boundary,
+            "reason": IMPERATIVE_DEFERRED_REASON,
+            "received": features,
+            "supported": [
+                "imperative constructions that avoid sa- before an a-initial "
+                "object concord or stem, and object concords ending in a "
+                "before an a-initial stem"
+            ],
+            "supported_shape": _IMPERATIVE_SUPPORTED_SHAPE,
+            "supported_rule_ids": _IMPERATIVE_SUPPORTED_RULE_IDS,
+        },
+    )
+
+
+def _deferred_imperative_feature(
+    *, field: str, received, boundary: str
+) -> GenerationFailure:
+    """Structured refusal for a deferred imperative feature combination."""
+    return GenerationFailure(
+        code="GENERATION_UNSUPPORTED",
+        message=(
+            f"Unsupported v1 generation feature: {field}. No available source "
+            "attests this imperative combination, so no form is invented for "
+            "it; the combination is deferred pending evidence, not claimed "
+            "to be ungrammatical."
+        ),
+        detail={
+            "field": field,
+            "received": received,
+            "boundary": boundary,
+            "reason": IMPERATIVE_DEFERRED_REASON,
+            "supported_shape": _IMPERATIVE_SUPPORTED_SHAPE,
+            "supported_rule_ids": _IMPERATIVE_SUPPORTED_RULE_IDS,
+        },
+    )
+
+
+def _unsupported_imperative_generation(
+    *, field: str, received, supported
+) -> GenerationFailure:
+    """GENERATION_UNSUPPORTED with the imperative shape context.
+
+    The shared extension/object gates report the finite shape; imperative
+    requests re-contextualize those errors instead of echoing a shape the
+    caller did not request.
+    """
+    return GenerationFailure(
+        code="GENERATION_UNSUPPORTED",
+        message=f"Unsupported v1 generation feature: {field}.",
+        detail={
+            "field": field,
+            "received": received,
+            "supported": supported,
+            "supported_shape": _IMPERATIVE_SUPPORTED_SHAPE,
+            "supported_rule_ids": _IMPERATIVE_SUPPORTED_RULE_IDS,
+        },
+    )
+
+
+def _normalize_imperative_generation_extensions(
+    extensions_feature: object,
+) -> list[dict[str, object]]:
+    """Shared extension gate (Finding 4 intact) with imperative-shaped errors."""
+    try:
+        return _normalize_generation_extensions(extensions_feature)
+    except GenerationFailure as exc:
+        if exc.code != "GENERATION_UNSUPPORTED":
+            raise
+        raise _unsupported_imperative_generation(
+            field=exc.detail["field"],
+            received=exc.detail["received"],
+            supported=exc.detail["supported"],
+        ) from exc
+
+
+def _resolve_imperative_generation_object(
+    obj: dict[str, object] | None,
+) -> dict[str, object] | None:
+    """Shared object-concord resolution with imperative-shaped errors."""
+    try:
+        return _resolve_generation_object(obj)
+    except GenerationFailure as exc:
+        if exc.code != "GENERATION_UNSUPPORTED":
+            raise
+        raise _unsupported_imperative_generation(
+            field=exc.detail["field"],
+            received=exc.detail["received"],
+            supported=exc.detail["supported"],
+        ) from exc
+
+
+def _validate_imperative_generation_features(features: dict[str, object]) -> None:
+    """Strict gate for the imperative generation branch.
+
+    An explicit allowlist names the only supported top-level fields
+    (generation_type, polarity, number, object, extensions); finite-only
+    subject/tense_aspect, mood, or any other grammatical field is rejected
+    with 422 instead of silently ignored. Reflexive imperatives are deferred
+    (no attested witness), so a truthy `reflexive` is refused with the
+    deferred reason; an explicit `reflexive: false` matches omission.
+    """
+    for field_name in features:
+        if field_name == "reflexive":
+            if features.get("reflexive"):
+                raise _deferred_imperative_feature(
+                    field="reflexive",
+                    received=features.get("reflexive"),
+                    boundary="reflexive_imperative",
+                )
+            continue
+        if field_name not in _IMPERATIVE_ALLOWED_FEATURES:
+            raise _unsupported_imperative_generation(
+                field=field_name,
+                received=features.get(field_name),
+                supported=sorted(_IMPERATIVE_ALLOWED_FEATURES),
+            )
+    if features.get("polarity", "positive") not in ("positive", "negative"):
+        raise _unsupported_imperative_generation(
+            field="polarity",
+            received=features.get("polarity"),
+            supported=["positive", "negative"],
+        )
+    if features.get("number", "singular") not in ("singular", "plural"):
+        raise _unsupported_imperative_generation(
+            field="number",
+            received=features.get("number"),
+            supported=["singular", "plural"],
+        )
+    obj = features.get("object", None)
+    if obj is not None and obj != "" and not isinstance(obj, dict):
+        raise _unsupported_imperative_generation(
+            field="object",
+            received=obj,
+            supported=["structured object feature or None"],
+        )
+    if "extensions" in features:
+        _normalize_imperative_generation_extensions(features.get("extensions"))
+
+
+def _imperative_polarity_slot(polarity: str) -> dict[str, object]:
+    """Shared imperative polarity slot; analyzer and generator agree on it."""
+    if polarity == "negative":
+        return {
+            "surface": IMPERATIVE_NEGATIVE_MARKER,
+            "value": "negative",
+            "label": "negative imperative marker",
+        }
+    return {
+        "surface": "",
+        "value": "positive",
+        "label": "No negative marker in the supported imperative pattern.",
+    }
+
+
+def _imperative_addressee_slot(number: str, polarity: str) -> dict[str, object]:
+    """Imperative addressee slot, never folded into the finite subject slot.
+
+    The addressee of an imperative is second person. Only the negative
+    imperative spells the addressee concord overtly (usa- singular, musa-
+    plural; Hannan front matter Imperative Mood). The plural form may
+    politely address one person (FSI Unit 13, Note 2), which the API records
+    as number only, never as a separate subject reading.
+    """
+    if polarity == "negative":
+        surface = (
+            IMPERATIVE_NEGATIVE_PLURAL_PREFIX
+            if number == "plural"
+            else IMPERATIVE_NEGATIVE_SINGULAR_PREFIX
+        )
+    else:
+        surface = ""
+    return {
+        "surface": surface,
+        "person": "second",
+        "number": number,
+        "label": "imperative addressee",
+    }
+
+
+def _imperative_mood_slot(suffix_surface: str) -> dict[str, object]:
+    """Mood slot; the plural positive suffix (-i, or the Manyika -nyi) lives here."""
+    return {
+        "surface": suffix_surface,
+        "value": "imperative",
+        "label": "imperative mood",
+    }
+
+
+def _build_imperative_analysis(
+    *,
+    normalized: str,
+    polarity: str,
+    number: str,
+    suffix_surface: str,
+    object_candidate: dict[str, object] | None,
+    stem_surface: str,
+    lemma,
+    extensions: list[dict[str, object]],
+) -> dict[str, object]:
+    rule_id = (
+        IMPERATIVE_NEGATIVE_RULE_ID if polarity == "negative" else IMPERATIVE_RULE_ID
+    )
+    confidence = IMPERATIVE_ANALYZER_CONFIDENCE
+    if object_candidate is not None:
+        confidence = min(confidence, object_candidate["confidence"])
+    return {
+        "analysis_type": "imperative",
+        "confidence": confidence,
+        "rule_id": rule_id,
+        "lemma": _lemma_payload(lemma),
+        "source": {
+            "rule_card_id": rule_id,
+            "source_key": "source_fortune",
+            "source_locator": IMPERATIVE_SOURCE_LOCATOR,
+        },
+        "slots": {
+            "subject": None,
+            "tense_aspect": None,
+            "mood": _imperative_mood_slot(suffix_surface),
+            "polarity": _imperative_polarity_slot(polarity),
+            "addressee": _imperative_addressee_slot(number, polarity),
+            "object": _subject_slot(object_candidate) if object_candidate is not None else None,
+            "reflexive": None,
+            "verb_stem": {
+                "surface": stem_surface,
+                "lemma_public_id": lemma.public_id,
+            },
+            "extensions": extensions,
+            "final_vowel": {
+                "surface": stem_surface[-1],
+                "value": stem_surface[-1],
+            },
+        },
+        "phonology": compute_phonology_fields(normalized),
+        "limitations": [
+            "v1 analyzes only single-token imperatives: positive bare stems, "
+            "the plural -i (or attested Manyika -nyi) suffix, singular "
+            "object-marked imperatives, and negative usa-/musa- commands.",
+            "Plural with an object concord, reflexive imperatives, the chi- "
+            "exclusive imperative, and tone are not analyzed.",
+            "Divergent stems without terminal -a and the defective pro-verb "
+            "-na resolve only as their own reviewed lemmas.",
+        ],
+    }
+
+
+def _imperative_stem_supported(headword: str) -> bool:
+    """Shared imperative stem scope, enforced by generation and analysis.
+
+    Supported imperative stems are reviewed verb-stem lemmas whose
+    normalized stem ends in terminal -a (Fortune 2.10.2.2: the imperative
+    completes the radical with a terminal vowel; FSI Unit 13 Note 2). Two
+    stem families have no attested imperative construction and are outside
+    the supported scope on both sides: divergent stems without terminal -a
+    (-ti/-nzi, Fortune 3.3.18; generation refuses them with reason
+    divergent_stem_without_terminal_a) and the defective pro-verb -na (its
+    own paradigm; FSI Unit 12: pro-verb stems keep their final vowels).
+    Other constructions on the same lemmas (finite, infinitive, exact
+    lexical lookup) are unaffected.
+    """
+    return headword.endswith("a") and headword not in _PRO_VERB_STEMS
+
+
+def _imperative_plural_object_deferred(
+    number: str, object_candidate: dict[str, object] | None
+) -> bool:
+    """Shared plural-with-object deferral, enforced by generation and analysis.
+
+    No available source attests a plural imperative with an object concord
+    (FSI Unit 34's object-marked commands are all singular-addressee), so
+    generation refuses the combination (boundary
+    plural_with_object_concord, reason deferred_pending_evidence) and
+    analysis infers no such reading for either negative terminal variant.
+    Plural commands without objects and singular object-marked commands
+    stay supported.
+    """
+    return number == "plural" and object_candidate is not None
+
+
+def _imperative_stem_candidates(
+    stem: str,
+    divergent_exclusions: list[str] | None = None,
+) -> list[tuple[object, list[dict[str, object]]]]:
+    """Imperative stem resolution under the shared stem scope.
+
+    Every imperative reading resolves through this gate, so the supported
+    stem scope cannot drift between generation and inferred analysis: only
+    reviewed verb-stem lemmas passing _imperative_stem_supported (terminal
+    -a, not the defective pro-verb -na) become candidates, including
+    extension-derived candidates. The defective pro-verb exclusion is
+    silent (documented in the negative imperative card); excluded divergent
+    stems are recorded in `divergent_exclusions` when provided so the
+    analysis can report an identifiable deferred construction without
+    inferring a reading.
+    """
+    candidates: list[tuple[object, list[dict[str, object]]]] = []
+    for lemma, extensions in _get_stem_candidates(stem):
+        headword = lemma.normalized_headword
+        if _imperative_stem_supported(headword):
+            candidates.append((lemma, extensions))
+            continue
+        if headword in _PRO_VERB_STEMS:
+            continue
+        if divergent_exclusions is not None and lemma.headword not in divergent_exclusions:
+            divergent_exclusions.append(lemma.headword)
+    return candidates
+
+def _analyze_imperative(
+    normalized: str,
+    deferred: list[str] | None = None,
+    divergent_exclusions: list[str] | None = None,
+    plural_object_hits: list[str] | None = None,
+) -> list[dict[str, object]]:
+    """Bounded imperative readings: polarity x addressee number x objects.
+
+    Every reading is lexically gated through the shared stem machinery, so a
+    spelling is never called an imperative merely because it ends in a
+    familiar suffix. The bare-stem singular reading additionally requires a
+    vowel-bearing radical: a spelling like `dya` is not the imperative of
+    `-dya` (that is `idya`, Hannan i- entry), so it gets no bare reading.
+    Deferred a-vowel boundaries are recorded only when the excluded reading
+    would resolve to reviewed lexical material, mirroring the other lanes.
+    The shared generation deferrals are mirrored here: plural imperative
+    readings with an object concord are never inferred for either negative
+    terminal variant, and divergent stems (-ti/-nzi) never authorize an
+    imperative reading; both deferrals are recorded when the excluded
+    reading would have resolved.
+    """
+    analyses: list[dict[str, object]] = []
+    seen: set[tuple[object, ...]] = set()
+
+    def add(
+        *,
+        polarity: str,
+        number: str,
+        suffix_surface: str,
+        stem_surface: str,
+        object_candidate: dict[str, object] | None,
+        lookup_stem: str,
+    ) -> bool:
+        """Append readings for one segmentation; True when the budget is spent."""
+        if not lookup_stem:
+            return False
+        boundary = _imperative_boundary_deferred(
+            polarity=polarity,
+            object_surface=(
+                object_candidate["surface"] if object_candidate is not None else None
+            ),
+            stem_surface=stem_surface,
+        )
+        stem_candidates = _imperative_stem_candidates(
+            lookup_stem, divergent_exclusions
+        )
+        if boundary is not None:
+            if stem_candidates and deferred is not None and boundary not in deferred:
+                deferred.append(boundary)
+            return False
+        if not stem_candidates:
+            return False
+        for lemma, extensions in stem_candidates:
+            key = (
+                lemma.public_id,
+                stem_surface,
+                tuple(
+                    (item["type"], item.get("style"), item["surface"])
+                    for item in extensions
+                ),
+                polarity,
+                number,
+                _object_features_key(object_candidate),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            analyses.append(
+                _build_imperative_analysis(
+                    normalized=normalized,
+                    polarity=polarity,
+                    number=number,
+                    suffix_surface=suffix_surface,
+                    object_candidate=object_candidate,
+                    stem_surface=stem_surface,
+                    lemma=lemma,
+                    extensions=extensions,
+                )
+            )
+            if len(analyses) >= _MAX_IMPERATIVE_ANALYSES:
+                return True
+        return False
+
+    # 1. Positive singular: the bare stem (vowel-bearing radical), or the
+    #    prothetic i- form of a vowelless-radical stem. The shared stem
+    #    scope gate (divergent stems, pro-verbs) applies before any
+    #    imperative reading is built.
+    if _imperative_stem_candidates(
+        normalized, divergent_exclusions
+    ) and not _radical_is_vowelless(normalized):
+        if add(
+            polarity="positive",
+            number="singular",
+            suffix_surface="",
+            stem_surface=normalized,
+            lookup_stem=normalized,
+            object_candidate=None,
+        ):
+            return analyses
+    if (
+        normalized.startswith(IMPERATIVE_MONOSYLLABIC_PROTHETIC)
+        and len(normalized) > 1
+    ):
+        inner = normalized[1:]
+        if inner.endswith("a") and _radical_is_vowelless(inner):
+            if add(
+                polarity="positive",
+                number="singular",
+                suffix_surface="",
+                stem_surface=inner,
+                lookup_stem=inner,
+                object_candidate=None,
+            ):
+                return analyses
+
+    # 2. Positive plural: stem + -i (or the attested Manyika -nyi variant),
+    #    including the prothetic i- form of vowelless-radical stems.
+    for suffix in (IMPERATIVE_PLURAL_SUFFIX, IMPERATIVE_PLURAL_SUFFIX_VARIANT):
+        if not normalized.endswith(suffix) or len(normalized) <= len(suffix):
+            continue
+        body = normalized[: -len(suffix)]
+        options: list[tuple[str, str]] = []
+        if body.endswith("a") and not _radical_is_vowelless(body):
+            options.append((body, body))
+        if (
+            body.startswith(IMPERATIVE_MONOSYLLABIC_PROTHETIC)
+            and body[1:].endswith("a")
+            and _radical_is_vowelless(body[1:])
+        ):
+            options.append((body[1:], body[1:]))
+        for stem_surface, lookup_stem in options:
+            if add(
+                polarity="positive",
+                number="plural",
+                suffix_surface=suffix,
+                stem_surface=stem_surface,
+                lookup_stem=lookup_stem,
+                object_candidate=None,
+            ):
+                return analyses
+
+    # 3. Positive object-marked singular: object concord + stem_radical + e
+    #    (FSI Unit 34; Hannan chidye). The object concord supplies the onset,
+    #    so monosyllabic radicals need no prothetic here.
+    for object_candidate in _candidate_object_concords():
+        oc_surface = object_candidate["surface"]
+        if not normalized.startswith(oc_surface):
+            continue
+        rest = normalized[len(oc_surface):]
+        if not rest.endswith("e"):
+            continue
+        for lookup_stem in (rest[:-1] + "a", rest):
+            if add(
+                polarity="positive",
+                number="singular",
+                suffix_surface="",
+                stem_surface=rest,
+                lookup_stem=lookup_stem,
+                object_candidate=object_candidate,
+            ):
+                return analyses
+
+    # 4. Negative: usa-/musa- + [object concord] + stem, with the Zezuru -e
+    #    (terminal restored for lookup) and Karanga -a (identity) spellings
+    #    as dialect variants of one construction (FSI Unit 32; Hannan
+    #    front matter; Fortune Usadaro).
+    for prefix, number in (
+        (IMPERATIVE_NEGATIVE_PLURAL_PREFIX, "plural"),
+        (IMPERATIVE_NEGATIVE_SINGULAR_PREFIX, "singular"),
+    ):
+        if not normalized.startswith(prefix):
+            continue
+        rest = normalized[len(prefix):]
+        if not rest:
+            continue
+
+        def negative_options(
+            stem: str,
+        ) -> list[tuple[str, str]]:
+            """Stem readings inside a negative imperative.
+
+            -e spellings restore the terminal to -a for the lexical lookup
+            and also try the surface itself; -a spellings keep the lexical
+            terminal (Hannan "Usadya. Musadya KM") and look up as-is. There
+            is no prothetic i- in the negative imperative (Usadya, not
+            *Usidya).
+            """
+            options: list[tuple[str, str]] = []
+            if stem.endswith("e"):
+                options.append((stem, stem[:-1] + "a"))
+                options.append((stem, stem))
+            elif stem.endswith("a"):
+                options.append((stem, stem))
+            return options
+
+        for stem_surface, lookup_stem in negative_options(rest):
+            if add(
+                polarity="negative",
+                number=number,
+                suffix_surface="",
+                stem_surface=stem_surface,
+                lookup_stem=lookup_stem,
+                object_candidate=None,
+            ):
+                return analyses
+        for object_candidate in _candidate_object_concords():
+            oc_surface = object_candidate["surface"]
+            if not rest.startswith(oc_surface):
+                continue
+            inner = rest[len(oc_surface):]
+            if not inner:
+                continue
+            if _imperative_plural_object_deferred(number, object_candidate):
+                # Shared generation deferral (boundary
+                # plural_with_object_concord): no plural object reading is
+                # inferred for either negative terminal variant or through
+                # extension-derived candidates. The deferral is recorded
+                # only when the excluded reading would have resolved to
+                # supported lexical material, mirroring the boundary lanes.
+                for _, lookup_stem in negative_options(inner):
+                    if _imperative_stem_candidates(
+                        lookup_stem, divergent_exclusions
+                    ):
+                        if plural_object_hits is not None and oc_surface not in plural_object_hits:
+                            plural_object_hits.append(oc_surface)
+                        break
+                continue
+            for stem_surface, lookup_stem in negative_options(inner):
+                if add(
+                    polarity="negative",
+                    number=number,
+                    suffix_surface="",
+                    stem_surface=stem_surface,
+                    lookup_stem=lookup_stem,
+                    object_candidate=object_candidate,
+                ):
+                    return analyses
+    return analyses
+
+
+def _generate_imperative(
+    *,
+    lemma_public_id: str,
+    lemma,
+    features: dict[str, object],
+    rule_set_version: str,
+) -> dict[str, object]:
+    _validate_imperative_generation_features(features)
+    object_candidate = _resolve_imperative_generation_object(features.get("object"))
+    normalized_exts = _normalize_imperative_generation_extensions(
+        features.get("extensions", [])
+    )
+
+    canonical_headword = lemma.normalized_headword
+    if not _imperative_stem_supported(canonical_headword):
+        if canonical_headword in _PRO_VERB_STEMS:
+            raise GenerationFailure(
+                code="GENERATION_UNSUPPORTED",
+                message=(
+                    "Unsupported v1 generation feature: lemma_stem. The defective "
+                    "pro-verb stem has no attested imperative construction in the "
+                    "available sources (its own paradigm; FSI Unit 12: pro-verb "
+                    "stems keep their final vowels), so no imperative form is "
+                    "invented for it."
+                ),
+                detail={
+                    "field": "lemma_stem",
+                    "received": lemma.headword,
+                    "reason": "defective_pro_verb_stem",
+                    "supported": [
+                        "reviewed verb-stem lemmas with attested imperative shapes"
+                    ],
+                    "supported_shape": _IMPERATIVE_SUPPORTED_SHAPE,
+                    "supported_rule_ids": _IMPERATIVE_SUPPORTED_RULE_IDS,
+                },
+            )
+        # Divergent stems (Fortune 3.3.18 footnote: -ti, -nzi and their
+        # extended forms take no terminal -a) have no attested imperative
+        # shape; refuse instead of fabricating a surface. Such stems still
+        # analyze as their own reviewed lemmas, and the same shared scope
+        # (_imperative_stem_supported) excludes them from inferred
+        # imperative readings.
+        raise GenerationFailure(
+            code="GENERATION_UNSUPPORTED",
+            message=(
+                "Unsupported v1 generation feature: lemma_stem. The lemma stem "
+                "does not end in terminal -a, so no supported imperative shape "
+                "applies to it."
+            ),
+            detail={
+                "field": "lemma_stem",
+                "received": lemma.headword,
+                "reason": "divergent_stem_without_terminal_a",
+                "supported": ["reviewed verb-stem lemmas ending in terminal -a"],
+                "supported_shape": _IMPERATIVE_SUPPORTED_SHAPE,
+                "supported_rule_ids": _IMPERATIVE_SUPPORTED_RULE_IDS,
+            },
+        )
+    if normalized_exts:
+        extended_base, applied_extensions = _apply_extensions(canonical_headword, normalized_exts)
+        stem_val = extended_base + "a"
+    else:
+        stem_val = canonical_headword
+        applied_extensions = []
+
+    polarity = features.get("polarity", "positive")
+    number = features.get("number", "singular")
+
+    if _imperative_plural_object_deferred(number, object_candidate):
+        raise _deferred_imperative_feature(
+            field="number",
+            received=features.get("number"),
+            boundary="plural_with_object_concord",
+        )
+
+    boundary = _imperative_boundary_deferred(
+        polarity=polarity,
+        object_surface=(
+            object_candidate["surface"] if object_candidate is not None else None
+        ),
+        stem_surface=stem_val,
+    )
+    if boundary is not None:
+        raise _deferred_imperative_generation(boundary=boundary, features=features)
+
+    stem_radical = stem_val[:-1]
+    prothetic = (
+        IMPERATIVE_MONOSYLLABIC_PROTHETIC
+        if polarity == "positive" and _radical_is_vowelless(stem_val)
+        else ""
+    )
+    if polarity == "positive":
+        if number == "plural":
+            parts = [prothetic, stem_val, IMPERATIVE_PLURAL_SUFFIX]
+            in_form_stem = stem_val
+            suffix_surface = IMPERATIVE_PLURAL_SUFFIX
+        elif object_candidate is not None:
+            # Object-marked imperatives carry terminal -e (FSI Unit 34:
+            # Riise, Adye, Muradzike; Hannan chidye "eat it"). The object
+            # concord supplies the onset, so C-shape radicals need no
+            # prothetic here (Ipe, FSI Unit 34).
+            parts = [object_candidate["surface"], stem_radical + "e"]
+            in_form_stem = stem_radical + "e"
+            suffix_surface = ""
+        else:
+            parts = [prothetic, stem_val]
+            in_form_stem = stem_val
+            suffix_surface = ""
+    else:
+        # Negative imperatives keep the bare stem (Hannan "Usadya", not
+        # *Usidya) and spell the addressee in usa-/musa-.
+        parts = [
+            IMPERATIVE_NEGATIVE_PLURAL_PREFIX
+            if number == "plural"
+            else IMPERATIVE_NEGATIVE_SINGULAR_PREFIX
+        ]
+        if object_candidate is not None:
+            parts.append(object_candidate["surface"])
+        parts.append(stem_radical + "e")
+        in_form_stem = stem_radical + "e"
+        suffix_surface = ""
+    form = "".join(parts)
+
+    if object_candidate is not None:
+        confidence = min(IMPERATIVE_ANALYZER_CONFIDENCE, object_candidate["confidence"])
+    else:
+        confidence = IMPERATIVE_ANALYZER_CONFIDENCE
+    generated = {
+        "generation_type": "imperative",
+        "form": form,
+        "normalized": normalize_search_query(form),
+        "confidence": confidence,
+        "rule_id": (
+            IMPERATIVE_NEGATIVE_RULE_ID if polarity == "negative" else IMPERATIVE_RULE_ID
+        ),
+        "lemma": _lemma_payload(lemma),
+        "slots": {
+            "subject": None,
+            "tense_aspect": None,
+            "mood": _imperative_mood_slot(suffix_surface),
+            "polarity": _imperative_polarity_slot(polarity),
+            "addressee": _imperative_addressee_slot(number, polarity),
+            "object": _subject_slot(object_candidate) if object_candidate is not None else None,
+            "reflexive": None,
+            "verb_stem": {
+                "surface": in_form_stem,
+                "lemma_public_id": lemma.public_id,
+            },
+            "extensions": applied_extensions,
+            "final_vowel": {
+                "surface": in_form_stem[-1],
+                "value": in_form_stem[-1],
+            },
+        },
+        "phonology": compute_phonology_fields(form),
+    }
+    warnings = [
+        {
+            "code": "GENERATION_PARTIAL_RULE_SET",
+            "message": "v1 generation supports only single-token imperative forms.",
+        },
+        {
+            "code": "TONE_NOT_GENERATED",
+            "message": "Tone is not generated.",
+        },
+    ]
+    supported_rule_ids = [generated["rule_id"]]
+    if object_candidate is not None:
+        supported_rule_ids.append("fortune.concord.object.001")
+    supported_rule_ids.extend(_rule_ids_for_extensions(applied_extensions))
+    return {
+        "input": {
+            "lemma_public_id": lemma_public_id,
+            "features": features,
+        },
+        "generator_version": GENERATOR_VERSION,
+        "rule_set_version": rule_set_version,
+        "confidence": generated["confidence"],
+        "generated": generated,
+        "warnings": warnings,
+        "metadata": {
+            "supported_shape": _IMPERATIVE_SUPPORTED_SHAPE,
+            "supported_rule_ids": supported_rule_ids,
+            "normalizer": SEARCH_NORMALIZER_VERSION,
+        },
+    }
+
+
 def _validate_supported_generation_features(features: dict[str, object]) -> None:
     if features.get("generation_type") != "verb_form":
         raise _unsupported_generation(
             field="generation_type",
             received=features.get("generation_type"),
-            supported=["verb_form"],
+            supported=["verb_form", "infinitive", "imperative"],
         )
     if features.get("tense_aspect") != "present":
         raise _unsupported_generation(

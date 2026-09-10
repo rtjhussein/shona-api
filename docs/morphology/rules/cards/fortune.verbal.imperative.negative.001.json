@@ -1,0 +1,145 @@
+{
+  "rule_card_schema_version": "2026-05-23",
+  "rule_id": "fortune.verbal.imperative.negative.001",
+  "title": "negative imperative constructions: usa-/musa- + stem with the attested -e/-a dialect terminals",
+  "source_key": "source_fortune",
+  "source_locator": "Hannan front matter TABLE OF VERB FORMS, Imperative Mood (printed p. xvii; PDF p. 19): negative \"Usadya. Musadya KM\" / \"Usadye. Musadye Z\" (Do not eat) and \"Usachidya. Musachidya\" (the chi- exclusive, a separate deferred construction); Hannan -sa- entry (PDF p. 613): \"-sa- KKoMZ p in neg of Pres Subjunct, in Past Indic, par & subjunct, & in neg of hortative, imperative & infin. ... Usadye: do not eat. Kusadya: to not eat.\"; FSI Unit 32 note and exercises 3-4 (printed pp. 323-324; PDF p. 341): \"the final vowel in negative commands may be /-a/ (as in /usaputsa/) or /-e/ (/usaputse/), depending on the dialect\", with singular exercise 3 (Usapinda, Usaputsa, Usagadzira, Usachera, Usadonhesa, Usafusira, Usahara) and plural exercise 4 (Musapfutsa, Musaisa, Musasevha, Musakurungira, Musakwidibidza, Musabura, Musabvisa, Musageza, Musatsvaira) printed with the -a terminal; Fortune Vol. 1 (Zezuru grammar), printed pp. 122-123 (PDF pp. 134-135): Usadaro mwanawe! (Don't do that, child!), Musadaro vanami! (Don't do that, children!), Usatukeni! (Don't swear at me!) - the -e terminal; FSI Unit 34 Note 2 (printed pp. 339-340; PDF p. 357): object-marked negative commands Usariisa / Usauisa / Usadziisa (the -a spellings of oc + full stem with adjacent vowels retained: ri|i, u|i, dzi|i).",
+  "rule_domain": "verbal_constructions",
+  "rule_type": "construction_slot",
+  "rule_summary": "Negative imperative lane for morphology-rules-v6: second-person addressee concord (u singular, mu plural) + negative imperative prefix sa- (Hannan -sa- entry: sa- in the negation of the imperative) + optional object concord + verb stem. The final vowel is a dialect split with both spellings attested: -e (Zezuru: Hannan \"Usadye. Musadye Z\"; Fortune Usadaro/Usatukeni) and -a (Karanga/Korekore: Hannan \"Usadya. Musadya KM\"; FSI's own printed exercises). The API generates the -e terminal (the Zezuru spelling of the Fortune grammar, Hannan's Z tag and its own -sa- entry example) and analyzes both spellings as the same construction, never blacklisting the -a variant. Object-marked forms are attested for the singular addressee (FSI Unit 34: Usariisa/Usauisa/Usadziisa) with adjacent vowels retained; there is no prothetic i- in the negative imperative (Hannan prints Usadya/Usadye, not *Usidya). Extended stems ride the shared extension machinery (FSI Unit 32: Usafusira applied, Usadonhesa causative, Musakurungira applied) with all v3 evidence gates unchanged. The shared imperative stem scope is enforced identically by generation and inferred analysis: divergent stems (-ti/-nzi, Fortune 3.3.18) and the defective pro-verb -na never authorize an imperative reading, with an excluded_divergent_stem_imperative lane when a reading would have resolved. Deferred pending evidence (never presented as ungrammatical): the plural addressee with an object concord (boundary plural_with_object_concord; enforced on both sides, with a deferred_imperative_plural_object lane when the excluded reading would have resolved), reflexive imperatives, and the a-vowel contacts sa-|a-initial object concord, sa-|a-initial stem, and a-final object concord | a-initial stem (evaluated on the stem as built after extensions). Divergent stems without terminal -a and the defective pro-verb -na are refused and excluded from imperative readings.",
+  "affected_rule_set": "morphology-rules-v6",
+  "inputs": {
+    "lexical_category": "verb",
+    "headword_kind": "verb_stem",
+    "surface_shape": "usa + [object_concord] + stem (sg) | musa + [object_concord] + stem (pl), stem carrying terminal -e (Zezuru, generated) or -a (Karanga/Korekore, analyzed variant)",
+    "generation_features": {
+      "generation_type": "imperative",
+      "number": "singular | plural",
+      "polarity": "negative",
+      "object": "optional structured object feature (singular addressee only)",
+      "extensions": "optional shared extension gate (unchanged from morphology-rules-v3)"
+    }
+  },
+  "conditions": {
+    "dialects": [],
+    "source_scope": "standard unless source says otherwise",
+    "review_blockers": [],
+    "addressee_slots": "the addressee is second person and is reported in a dedicated addressee slot (surface usa/musa), never in the ordinary finite subject-prefix slot, which stays null; the plural form may politely address one person (FSI Unit 13 Note 2), recorded as number only",
+    "negative_terminal_dialect_split": "generation emits -e (Zezuru: Fortune Usadaro/Usatukeni; Hannan \"Usadye. Musadye Z\" and the -sa- entry example \"Usadye: do not eat\"); the -a spelling (Hannan \"Usadya. Musadya KM\"; FSI's printed Usaputsa/Usapinda/Musaisa/Musakurungira forms; FSI note /usaputsa/) is an analyzed dialect variant of the same construction, never blacklisted; -a spellings keep the lexical terminal and are looked up as-is, while -e spellings restore the terminal to -a for the lexical lookup",
+    "no_prothetic_in_negative": "negative imperatives of monosyllabic stems keep the bare stem (Hannan Usadya/Usadye); the prothetic i- belongs to the affirmative lane",
+    "shared_extension_policy": "extension evidence gating (dz/ts causative, short reversive) and the causative < applicative < reciprocal < reversive < repetitive < neuter < passive product sequence apply unchanged from morphology-rules-v3",
+    "deferred_combinations": "plural with an object concord and reflexive imperatives return 422 GENERATION_UNSUPPORTED with reason deferred_pending_evidence and stable boundaries plural_with_object_concord / reflexive_imperative; analysis infers no such readings, and the plural-object deferral is enforced identically on both sides for both negative terminal variants (a deferred_imperative_plural_object lane records the deferral when the excluded reading, including extension-derived candidates, would have resolved to supported lexical material) (the shared-surface zvi keeps only its class-8 object reading here)",
+    "deferred_vowel_boundaries": "sa- immediately before an a-initial object concord (sa_before_a_initial_object) or an a-initial stem (sa_before_a_initial_stem), and an a-final object concord immediately before an a-initial stem (object_before_a_initial_stem), are deferred pending applicable evidence: generation refuses them with 422 GENERATION_UNSUPPORTED (field imperative_boundary, reason deferred_pending_evidence) and analysis infers no reading across them, recording a deferred_imperative_boundary lane only when the excluded reading would have resolved lexically; no contracted or unattested-hiatus spelling is invented",
+    "excluded_stems": "the shared imperative stem scope is enforced by generation and analysis alike: only reviewed verb-stem lemmas ending in terminal -a and outside the defective pro-verb set support imperative readings; divergent stems (-ti/-nzi, Fortune 3.3.18) are refused with reason divergent_stem_without_terminal_a and excluded from imperative analysis readings (excluded_divergent_stem_imperative lane naming the excluded stem when a reading would have resolved); the defective pro-verb -na is refused with reason defective_pro_verb_stem and excluded from imperative analysis readings; other constructions on the same lemmas (finite, infinitive, exact lexical lookup) are unaffected",
+    "object_marked_singular_addressee": "attested for usa- with class and person concords (FSI Unit 34: Usariisa ri|, Usauisa u|, Usadziisa dzi|); adjacent vowels are kept at attested contacts; plural with an object concord has no witness and is deferred"
+  },
+  "outputs": {
+    "analysis_fields": [
+      "analysis_type imperative with mood, polarity (surface sa), addressee (usa/musa, second person), object, verb_stem, extensions, final_vowel slots"
+    ],
+    "generation_fields": [
+      "form, normalized, rule_id, lemma, slots, phonology, warnings"
+    ],
+    "model_fields": []
+  },
+  "evidence": {
+    "examples": [
+      {
+        "surface": "usadye",
+        "lemma_headword": "-dya",
+        "status": "source_attested",
+        "note": "Hannan front matter Imperative Mood (printed p. xvii; PDF p. 19) \"Usadye\" (Z) and the -sa- entry example (PDF p. 613) \"Usadye: do not eat\": singular negative imperative with the Zezuru terminal."
+      },
+      {
+        "surface": "usadya",
+        "lemma_headword": "-dya",
+        "status": "source_attested",
+        "note": "Hannan front matter \"Usadya\" (KM): the Karanga/Korekore spelling of the same construction; the -a spelling keeps the lexical terminal and analyzes as-is."
+      },
+      {
+        "surface": "musadye",
+        "lemma_headword": "-dya",
+        "status": "source_attested",
+        "note": "Hannan front matter \"Musadye Z\": plural addressee marker musa-."
+      },
+      {
+        "surface": "usaputsa",
+        "lemma_headword": "-putsa",
+        "status": "source_attested_shape",
+        "note": "FSI Unit 32 note (printed p. 323): \"/usaputsa/\" named verbatim; exercise 3 prints the -a spellings (Usapinda, Usaputsa, Usagadzira, Usachera, Usadonhesa, Usafusira). The API builds this shape on reviewed stems; -putsa is the plan-documented witness stem shape, not a fixture."
+      },
+      {
+        "surface": "usadaro",
+        "lemma_headword": "-daro",
+        "status": "source_attested_shape",
+        "note": "Fortune printed p. 122 (PDF p. 134): \"Usadaro mwanawe! (Don't do that, child!)\" and \"Musadaro vanami!\" - the Zezuru -e-terminal construction on the -dar- radical (printed with tone as Usadaro)."
+      },
+      {
+        "surface": "usariisa",
+        "lemma_headword": "-isa",
+        "status": "source_attested",
+        "note": "FSI Unit 34 Note 2 (printed p. 340) \"Usariisa pamubhedha\" (Don't put it (bhuku, class 5) on the bed): usa + ri + isa, adjacent ri|i vowels retained, -a terminal."
+      },
+      {
+        "surface": "usauisa",
+        "lemma_headword": "-isa",
+        "status": "source_attested",
+        "note": "FSI Unit 34 Note 2 \"Usauisa muhari\" (murivi, class 3): usa + u + isa; sa|u and u|i contacts retained."
+      },
+      {
+        "surface": "usadziisa",
+        "lemma_headword": "-isa",
+        "status": "source_attested_shape",
+        "note": "FSI Unit 34 Note 2 \"Usadziisa muhari\" (shushururu, class 10): usa + dzi + isa; the API builds the shape on the -isa fixture stem."
+      },
+      {
+        "surface": "usafusira",
+        "lemma_headword": "-fusa",
+        "status": "source_attested_shape",
+        "note": "FSI Unit 32 exercise 3 \"Usafusira mbeu\" (don't water the seeds): applied extension -ir- inside the negative imperative; the API builds it with the shared applied rule and the generated -e terminal."
+      },
+      {
+        "surface": "musakurungira",
+        "lemma_headword": "-kurungira",
+        "status": "source_attested",
+        "note": "FSI Unit 32 exercise 4 \"Musakurungira sadza\": plural negative command on the reviewed -kurungira stem (Hannan -kurungira entry: smooth with a stone; mix water and meal); the API generates the -e terminal variant musakurungire."
+      }
+    ],
+    "counterexamples": [
+      {
+        "surface": "usaambure",
+        "note": "usa- + a-initial stem (-ambura): the sa|a-initial-stem contact has no witness in the available sources; deferred with sa_before_a_initial_stem. Generation refuses it and analysis infers no reading (deferred_imperative_boundary lane when lexical material resolves)."
+      },
+      {
+        "surface": "usaaambure",
+        "note": "usa- + class-6 object concord a + a-initial stem: the sa|a and a|a contacts are both unwitnessed; deferred (sa_before_a_initial_object evaluated first)."
+      },
+      {
+        "surface": "usati",
+        "note": "Divergent stem -ti without terminal -a: no attested imperative shape; refused at generation and unresolved in analysis."
+      },
+      {
+        "surface": "usana",
+        "note": "The defective pro-verb -na (own -ne/-na paradigm; FSI Unit 12: pro-verb stems keep their final vowels) has no attested imperative construction; refused at generation and excluded from imperative readings."
+      }
+    ],
+    "notes": [
+      "FSI's own printed exercise forms use the -a terminal while its note attests both terminals; Fortune's Zezuru grammar and Hannan's Z-tagged table row plus the -sa- entry example use -e. The generated dialect is -e; the -a spelling is analyzed, never blacklisted.",
+      "Tone is excluded from the API; the FSI note's tone marks on the negative-command final vowels are out of scope.",
+      "The chi- exclusive negative imperative (Usachidya. Musachidya, Hannan front matter) is a separate construction and stays deferred with its locator recorded."
+    ]
+  },
+  "qa": {
+    "extraction_confidence": 0.85,
+    "review_state": "approved",
+    "review_decision": "approved_for_bounded_negative_imperative_slice_except_deferred_combinations",
+    "reviewer_notes": "The usa-/musa- shapes, the -e/-a dialect split, the singular object-marked forms, and the extended-stem negative commands are each attested (Hannan front matter and -sa- entry; FSI Units 32 and 34; Fortune pp. 122-123). The generated -e terminal is a documented product choice among the two attested dialect spellings, anchored on the Zezuru sources of the rule set; the -a spelling stays analyzable. Deferred: plural+object, reflexive imperatives, and the three unwitnessed a-vowel contacts. No independent linguistic review of the enabled patterns has occurred. Supervisor correction pass (same unreleased v6): the plural-object and divergent-stem deferrals are now enforced identically by inferred analysis (deferred_imperative_plural_object and excluded_divergent_stem_imperative lanes), closing the generation/analysis asymmetry where musaridye/musaridya surfaces analyzed as plural imperatives with an object concord."
+  },
+  "api_safety": {
+    "analyzer_consumes": true,
+    "generator_consumes": true,
+    "public_endpoint_safe": true,
+    "requires_review_before_public": false,
+    "backward_compatibility": "Additive under morphology-rules-v6: analyze gains negative imperative readings (analysis_type imperative, polarity negative) for surfaces that previously returned 422 ANALYSIS_UNSUPPORTED (usadye/usadya, musadye, usariisa/usauisa-type object forms), and search enrichment reports them as matched through the shared analyzer. No previously supported analysis is removed; the -a dialect spellings are analyzed variants, never blacklisted, and an independently reviewed stem resolving the same surface keeps its reading. Deferred combinations and boundaries return structured 422 refusals with stable reasons. The serving release must declare morphology-rules-v6 or endpoints return 503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED. Supervisor correction pass (same unreleased v6): plural imperative readings with an object concord and divergent-stem imperative readings (musaridye-type, ti/nzi) that previously leaked through inferred analysis and search are excluded; the deferrals are recorded with deferred_imperative_plural_object and excluded_divergent_stem_imperative lanes, while exact lexical results, plural commands without objects, singular object-marked commands, and finite/infinitive readings on the same lemmas are unchanged."
+  }
+}
