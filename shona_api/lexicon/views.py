@@ -483,6 +483,12 @@ class SearchView(APIView):
                 "normalizer": SEARCH_NORMALIZER_VERSION,
             },
             "count": len(results),
+            # `count` is how many results are in this response, which is all it
+            # has ever meant. A client that needs to know whether more exist had
+            # no way to ask: reaching the limit is the signal, and it is stated
+            # rather than left to be inferred from count == limit.
+            "limit": filters["limit"],
+            "truncated": len(results) >= filters["limit"],
             "results": SearchResultSerializer(results, many=True).data,
         }
         active_filters = self._active_filter_payload(filters)

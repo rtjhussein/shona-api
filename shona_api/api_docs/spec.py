@@ -548,6 +548,15 @@ def schemas():
             "properties": {
                 "query": {"$ref": "#/components/schemas/NormalizedQuery"},
                 "count": {"type": "integer"},
+                "limit": {"type": "integer"},
+                "truncated": {
+                    "type": "boolean",
+                    "description": (
+                        "True when the limit was reached, so more matches may "
+                        "exist. `count` is how many results this response "
+                        "contains, not how many matched."
+                    ),
+                },
                 "results": {
                     "type": "array",
                     "items": {"$ref": "#/components/schemas/SearchResult"},
@@ -793,6 +802,15 @@ def schemas():
             "properties": {
                 "subtype": {"type": "string", "enum": ["tsumo", "madimikira"]},
                 "count": {"type": "integer"},
+                "limit": {"type": "integer"},
+                "truncated": {
+                    "type": "boolean",
+                    "description": (
+                        "True when the limit was reached, so more matches may "
+                        "exist. `count` is how many results this response "
+                        "contains, not how many matched."
+                    ),
+                },
                 "results": {
                     "type": "array",
                     "items": {"$ref": "#/components/schemas/FigurativeExpression"},

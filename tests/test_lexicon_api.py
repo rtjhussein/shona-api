@@ -896,3 +896,49 @@ def test_search_orders_homographs_totally(client, api_key, current_release):
     assert response.status_code == 200
     returned = [result["lemma"]["public_id"] for result in response.json()["data"]["results"]]
     assert returned == ["lemma_aaa_homograph", "lemma_zzz_homograph"]
+
+
+@pytest.mark.django_db
+def test_search_reports_whether_the_limit_was_reached(
+    client, api_key, current_release, canonical_lemma
+):
+    """`count` is how many results this response contains, not how many matched.
+
+    A client had no way to tell a complete result set from a truncated one: with
+    30 matches and the default limit of 20 it saw `count: 20` and nothing else.
+    """
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "buda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["count"] == len(data["results"])
+    assert data["limit"] == 20
+    assert data["truncated"] is False or data["truncated"] is True
+    # The signal must agree with what it claims: truncated means the limit was
+    # reached, so a short result set is never reported as truncated.
+    assert data["truncated"] == (data["count"] >= data["limit"])
+
+
+@pytest.mark.django_db
+def test_search_reports_truncation_when_the_limit_is_reached(
+    client, api_key, current_release, canonical_lemma
+):
+    publish_canonical_bundle(canonical_lemma)
+
+    response = client.get(
+        "/v1/search",
+        {"q": "buda", "limit": 1},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["limit"] == 1
+    assert data["count"] == 1
+    assert data["truncated"] is True
