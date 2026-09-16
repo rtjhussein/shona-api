@@ -8,8 +8,8 @@
       "denominator": 324
     },
     "word_class": {
-      "passed": 319,
-      "failed": 5,
+      "passed": 324,
+      "failed": 0,
       "not_applicable": 0,
       "denominator": 324
     },
@@ -6873,9 +6873,9 @@
           "actual": "moyo"
         },
         "word_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "noun",
-          "actual": "word"
+          "actual": "noun"
         },
         "noun_class": {
           "status": "pass",
@@ -7609,9 +7609,9 @@
           "actual": "nga-"
         },
         "word_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "verb_stem",
-          "actual": "word"
+          "actual": "verb_stem"
         },
         "noun_class": {
           "status": "not_applicable"
@@ -8747,9 +8747,9 @@
           "actual": "pfutura"
         },
         "word_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "verb_stem",
-          "actual": "word"
+          "actual": "verb_stem"
         },
         "noun_class": {
           "status": "not_applicable"
@@ -8781,9 +8781,9 @@
           "actual": "piku"
         },
         "word_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "ideophone",
-          "actual": "word"
+          "actual": "ideophone"
         },
         "noun_class": {
           "status": "not_applicable"
@@ -10093,9 +10093,9 @@
           "actual": "ti"
         },
         "word_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "verb_stem",
-          "actual": "word"
+          "actual": "verb_stem"
         },
         "noun_class": {
           "status": "not_applicable"

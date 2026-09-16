@@ -14,6 +14,22 @@ POS_LABELS = {
 }
 VERB_GRAMMAR_CODES = {"i", "t", "vi", "vt"}
 
+# The word classes this model represents, keyed by the part of speech as Hannan
+# writes it. Matching is on the whole first token, never on a prefix: `n'a n'a`
+# is an ideophone headword whose first word starts with "n", and a prefix match
+# on "n" reads it as a noun.
+ATTESTED_HEADWORD_KINDS = {
+    "n": "noun",
+    "ideo": "ideophone",
+    "ideophone": "ideophone",
+    "v": "verb_stem",
+    "vt": "verb_stem",
+    "vi": "verb_stem",
+    "vti": "verb_stem",
+    "defective": "verb_stem",
+    "def": "verb_stem",
+}
+
 
 class HannanParseError(ValueError):
     """Raised when strict Hannan entry parsing cannot produce a useful parse."""
@@ -272,6 +288,25 @@ def _consume_noun_metadata(
     return rest, noun
 
 
+# A headword may be several words ("munhondo churu", "n'a n'a n'a"), so the
+# tone bracket -- not the first space -- marks where it ends. Lines without a
+# bracket fall back to the first token.
+BRACKETED_HEADER_RE = re.compile(
+    r"^(?P<dagger>\u2020*)(?P<headword>.+?)\s+\[(?P<tone>[^\]]*)\]\s*(?P<body>.*)$"
+)
+BARE_HEADER_RE = re.compile(r"^(?P<dagger>\u2020*)(?P<headword>\S+)\s+(?P<body>.*)$")
+
+
+def _split_headword_and_body(raw_entry_text: str) -> tuple[str, str] | None:
+    """Return the headword and everything after it, or ``None`` if unreadable."""
+    text = " ".join(str(raw_entry_text).strip().replace("\\u2020", "\u2020").split())
+    for pattern in (BRACKETED_HEADER_RE, BARE_HEADER_RE):
+        match = pattern.match(text)
+        if match is not None:
+            return match.group("headword"), match.group("body").strip()
+    return None
+
+
 def read_attested_noun_classes(raw_entry_text: str) -> list[str]:
     """Noun classes the source line attests, in the order Hannan lists them.
 
@@ -281,17 +316,38 @@ def read_attested_noun_classes(raw_entry_text: str) -> list[str]:
     directly. An empty list means the line records no class; it is not evidence
     that the entry has none.
     """
-    text = " ".join(str(raw_entry_text).strip().replace("\\u2020", "\u2020").split())
-    header = re.match(r"^(?P<dagger>\u2020)?(?P<headword>\S+)(?:\s+\[[^\]]*\])?\s*(?P<body>.*)$", text)
-    if header is None:
+    split = _split_headword_and_body(raw_entry_text)
+    if split is None:
         return []
-    body = header.group("body").strip()
+    _, body = split
     _, body = _consume_entry_dialects(body)
     pos_code, body = _consume_pos(body)
     if pos_code != "n":
         return []
     classes, _ = _read_noun_classes(body)
     return classes
+
+
+def read_attested_headword_kind(raw_entry_text: str) -> str | None:
+    """Headword kind the source line attests, or ``None`` when it names none we model.
+
+    The line's part of speech is authoritative in the same way its noun class is:
+    parsers published entries the source marks as a verb, noun, or ideophone
+    under the generic ``word`` kind, which the morphology engine does not read
+    (it resolves verb stems by ``headword_kind``), so those entries are
+    unreachable rather than merely mislabelled.
+
+    ``None`` means the line records no category this model represents -- an
+    adjective, interjection, concord, and so on -- and is not evidence that the
+    published kind is wrong.
+    """
+    split = _split_headword_and_body(raw_entry_text)
+    if split is None:
+        return None
+    _, body = split
+    _, body = _consume_entry_dialects(body)
+    token, _ = _split_first_token(body)
+    return ATTESTED_HEADWORD_KINDS.get(token.strip(".,;:").casefold())
 
 
 def _parse_senses(

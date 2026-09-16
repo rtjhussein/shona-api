@@ -898,3 +898,56 @@ def test_publish_uses_the_parser_class_when_the_line_class_has_no_row(
 
     assert bundle.lemma.noun_class.class_number == "5"
     assert bundle.lemma.provenance["attested_noun_class_unmapped"] is True
+
+
+@pytest.mark.django_db
+def test_publish_prefers_the_word_class_attested_by_the_source_line(hannan_source):
+    """Regression: entries the line marks as a verb published as generic `word`.
+
+    The morphology engine resolves verb stems by `headword_kind`, so a
+    misclassified stem is unreachable by /v1/analyze rather than merely
+    mislabelled. The parser's conflicting reading is recorded, not discarded.
+    """
+    parser_output = _noun_parser_output(classes=[5])
+    parser_output["headword"] = "-ti"
+    parser_output["headword_kind"] = "word"
+    parser_output["part_of_speech"] = {"code": "v", "label": "verb"}
+    parser_output["noun"] = {}
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_646:entry_011:ti_defective",
+        raw_text="†-ti [L]KKoMZ defective v Say. Think. Do.",
+        parser_output=parser_output,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.headword_kind == "verb_stem"
+    assert bundle.lemma.provenance["attested_headword_kind"] == "verb_stem"
+    assert bundle.lemma.provenance["parser_headword_kind"] == "word"
+
+
+@pytest.mark.django_db
+def test_publish_keeps_the_parser_kind_when_the_line_names_no_modelled_class(
+    hannan_source, noun_class_five
+):
+    """An adjective or interjection has no modelled kind; do not force one."""
+    parser_output = _noun_parser_output(classes=[5])
+    parser_output["headword"] = "zanhi"
+    parser_output["headword_kind"] = "word"
+    parser_output["noun"] = {}
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_900:entry_001:zanhi",
+        raw_text="zanhi [HL]M adj Cold.",
+        parser_output=parser_output,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.headword_kind == "word"
+    assert "attested_headword_kind" not in bundle.lemma.provenance
