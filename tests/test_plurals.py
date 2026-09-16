@@ -54,6 +54,11 @@ from shona_api.morphology.plurals import (
         ("dzanza", "mats-", "matsanza", "ts", "dz", True),
         # k -> g with the labialisation preserved.
         ("gwai", "makw-", "makwai", "kw", "gw", True),
+        # The stated change applied to the labialised series, where the /w/ both
+        # forms share is carried through: Hannan attests `bwipwi ... pl: mapw-`
+        # and `dwiri ... pl: matw-`.
+        ("bwipwi", "mapw-", "mapwipwi", "pw", "bw", True),
+        ("dwiri", "matw-", "matwiri", "tw", "dw", True),
         # Already voiced: the stated change is voiceless -> voiced, so nothing happens.
         ("biku", "mab-", "mabiku", "b", "b", False),
         ("derere", "mad-", "maderere", "d", "d", False),

@@ -149,8 +149,14 @@ RULE_SUPPORTED_ALLOMORPHS = {
     "dzv": "dzv",
     "gw": "gw",
     "bw": "bw",
-    # k -> g with the labialisation preserved.
+    # The stated changes applied to the labialised and prepalatalised series,
+    # where the /w/ that both forms share is carried through: (2) p, t ->
+    # voiced implosive gives pw -> bw and tw -> dw, exactly as (3) k -> g gives
+    # kw -> gw. Attested in Hannan: `bwipwi [LH]K n 5, pl: mapw-` and
+    # `dwiri [LH]Z n 5, pl: matw-`.
     "kw": "gw",
+    "pw": "bw",
+    "tw": "dw",
     # Breathy-voiced consonants are already voiced, so the change from
     # voiceless to voiced does not touch them. Fortune lists /bh/ and /dh/ in
     # the phoneme inventory of 1.6 (printed pp. 3-6); shona-core-v2 could not
