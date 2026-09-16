@@ -73,3 +73,34 @@ def test_compute_phonology_fields_returns_payload_for_future_save_hooks():
         "syllables": ["zi", "mba", "bwe"],
         "syllable_count": 3,
     }
+
+
+def test_v3_reads_breathy_and_labialised_consonants_as_one_grapheme():
+    """Fortune lists /bh/ and /dh/ as single phonemes (1.6), and states that
+    most consonants combine with /w/ (1.8) -- which the inventory already
+    encoded for `bw`, `kw`, and others but not for these.
+
+    shona-core-v2 split them, so `grapheme_count` was wrong for every word
+    containing one, and the noun-plural rule could not read a prefix like
+    `mabh-` at all.
+    """
+    assert segment_graphemes("bhachi") == ["bh", "a", "ch", "i"]
+    assert segment_graphemes("dhani") == ["dh", "a", "n", "i"]
+    assert segment_graphemes("barwe") == ["b", "a", "rw", "e"]
+    assert segment_graphemes("dwitwi") == ["dw", "i", "tw", "i"]
+    assert segment_graphemes("chidywa") == ["ch", "i", "dyw", "a"]
+    # Syllabification is unaffected: a syllable still closes on its vowel.
+    assert syllabify_word("bhachi") == ["bha", "chi"]
+    assert syllabify_word("barwe") == ["ba", "rwe"]
+
+
+def test_every_inventory_version_stays_registered():
+    """A stored record names the inventory that produced it, so old versions
+    must keep resolving."""
+    for version in ("shona-core-v1", "shona-core-v2", "shona-core-v3"):
+        assert get_grapheme_inventory(version).version == version
+
+    v1 = get_grapheme_inventory("shona-core-v1")
+    v2 = get_grapheme_inventory("shona-core-v2")
+    v3 = get_grapheme_inventory("shona-core-v3")
+    assert set(v1.graphemes) <= set(v2.graphemes) <= set(v3.graphemes)

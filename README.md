@@ -282,6 +282,10 @@ python manage.py repair_noun_classes
 python manage.py repair_headword_kinds --dry-run
 python manage.py repair_headword_kinds
 
+# Rebuild stored phonology after an inventory bump
+python manage.py recompute_phonology --dry-run
+python manage.py recompute_phonology
+
 # Publish derived noun plurals as Form records
 python manage.py publish_noun_plurals --dry-run
 python manage.py publish_noun_plurals
@@ -356,7 +360,7 @@ a future import that quietly drops noun-class coverage fails the gate instead of
 degrading the lexicon unnoticed. Raise a baseline deliberately, with
 `python tools/evaluate_lexical_qa.py ... --write-baseline`.
 
-A highly comprehensive suite of **580 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
+A highly comprehensive suite of **584 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 

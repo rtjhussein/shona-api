@@ -36,6 +36,10 @@ from shona_api.morphology.plurals import (
         # Fortune 3.3.8(3): "voiced depressor" before /k, pf, ch, tsv/.
         ("gadzi", "mak-", "makadzi", "k", "g"),
         ("bveni", "mapf-", "mapfeni", "pf", "bv"),
+        # shona-core-v3 reads bh and dh as one grapheme each, so their prefixes
+        # are readable; Fortune lists both in the phoneme inventory (1.6).
+        ("bhachi", "mabh-", "mabhachi", "bh", "bh"),
+        ("dhani", "madh-", "madhani", "dh", "dh"),
         ("jacha", "mach-", "machacha", "ch", "j"),
         # Fortune 3.3.8(4): "voiced affricate depressor" before /ts, f, s, sv, sh/.
         ("dzanza", "mats-", "matsanza", "ts", "dz"),
@@ -106,10 +110,13 @@ def test_the_first_recorded_form_wins_and_the_rest_are_alternatives():
 @pytest.mark.parametrize(
     "headword, recorded, noun_class, code",
     [
-        # The source states no allomorph for bh or dh, and the graphemes are
-        # absent from the phonology inventory, so the pair cannot be checked.
-        ("bhachi", ["mabh-"], "5", PLURAL_ALLOMORPH_UNVERIFIED),
-        ("dhani", ["madh-"], "5", PLURAL_ALLOMORPH_UNVERIFIED),
+        # A consonant the source states no allomorph for and the data does not
+        # attest as a depressor: `dywai` would need `w -> dy`, which is not a
+        # change the source describes.
+        ("dywai", ["mady-"], "5", PLURAL_ALLOMORPH_UNVERIFIED),
+        # `gwa` records `mag-`, whose final `g` implies a surface `g`, but the
+        # headword begins `gw` -- a labialisation the source does not describe.
+        ("gwa", ["mag-"], "5", PLURAL_ALLOMORPH_UNVERIFIED),
         # A vowel-final prefix carries a syllable of the stem (madhi- + dhibha
         # -> madhibha); no verified source states that shape.
         ("dhibha", ["madhi-"], "5", PLURAL_PREFIX_FORM_UNVERIFIED),

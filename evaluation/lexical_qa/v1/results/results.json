@@ -32,8 +32,8 @@
       "denominator": 324
     },
     "plural_form": {
-      "passed": 18,
-      "failed": 24,
+      "passed": 21,
+      "failed": 21,
       "not_applicable": 282,
       "denominator": 42
     },
@@ -41,7 +41,7 @@
   },
   "coverage": {
     "nouns_with_source_plural": 42,
-    "with_a_published_form": 18
+    "with_a_published_form": 21
   },
   "results": [
     {
@@ -478,11 +478,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "mabh"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "mabheseni"
+          ]
         }
       },
       "unresolved": false
@@ -3153,11 +3155,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "madh"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "madhende"
+          ]
         }
       },
       "unresolved": false
@@ -12440,11 +12444,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "mabh"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "mabhebhuro"
+          ]
         }
       },
       "unresolved": false

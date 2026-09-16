@@ -78,6 +78,16 @@ RULE_SUPPORTED_ALLOMORPHS = {
     "bw": "bw",
     # k -> g with the labialisation preserved.
     "kw": "gw",
+    # Breathy-voiced consonants are already voiced, so the change from
+    # voiceless to voiced does not touch them. Fortune lists /bh/ and /dh/ in
+    # the phoneme inventory of 1.6 (printed pp. 3-6); shona-core-v2 could not
+    # read them as one grapheme, which is why a prefix like `mabh-` arrived
+    # here as a trailing `h`.
+    "bh": "bh",
+    "dh": "dh",
+    # Labialised consonants whose base is already voiced.
+    "dw": "dw",
+    "dyw": "dyw",
 }
 
 PLURAL_ALLOMORPHS = SOURCE_ATTESTED_ALLOMORPHS | RULE_SUPPORTED_ALLOMORPHS

@@ -94,6 +94,35 @@ SHONA_CORE_V2_GRAPHEMES = SHONA_CORE_V1_GRAPHEMES + (
     "nk",
 )
 
+# shona-core-v3 adds two consonants Fortune lists in his phoneme inventory and
+# the labialised combinations the inventory already encodes for other
+# consonants but was missing for these. From Fortune Vol 1, chapter 1:
+#
+# - `/dh/` and `/bh/` are single phonemes: the alveolar series is given as
+#   "/t, dh, nd, n/", and "/bh, mh, z/" are listed among the murmured or
+#   breathy-voiced consonants (1.6, printed pp. 3-6). shona-core-v2 split them,
+#   which also left the noun-plural rule unable to read a prefix like `mabh-`.
+# - "Most consonant phonemes combine with the phoneme /w/ to produce sound
+#   combinations which are symbolised in Shona by the letter combinations
+#   /pw/, /rw/, /kw/ and so on" (1.8, printed p. 7). v2 already encodes that
+#   pattern as `bw`, `gw`, `hw`, `kw`, `mw`, `pw`, `sw`, `tw`, `vw`, `zw`; v3
+#   completes it with the attested `dw`, `rw`, `zhw`, `nhw`, `chw`, and with
+#   `dyw`, the combination of the multisegment `dy` with /w/.
+#
+# Headwords affected, measured before the change: bh 628, dh 720, rw 470,
+# dw 100, zhw 70, dyw 28, nhw 13, chw 7.
+SHONA_CORE_V3_GRAPHEMES = SHONA_CORE_V2_GRAPHEMES + (
+    "bh",
+    "dh",
+    "dw",
+    "rw",
+    "zhw",
+    "nhw",
+    "chw",
+    "dyw",
+)
+
+
 SHONA_CORE_V1_INVENTORY = GraphemeInventory(
     version="shona-core-v1",
     graphemes=SHONA_CORE_V1_GRAPHEMES,
@@ -104,13 +133,19 @@ SHONA_CORE_V1_INVENTORY = GraphemeInventory(
 # `grapheme_count`, `syllables`, and `syllable_count`; run
 # `manage.py recompute_phonology` afterwards to bring stored records onto the
 # new inventory.
-DEFAULT_GRAPHEME_INVENTORY = GraphemeInventory(
+SHONA_CORE_V2_INVENTORY = GraphemeInventory(
     version="shona-core-v2",
     graphemes=SHONA_CORE_V2_GRAPHEMES,
 )
 
+DEFAULT_GRAPHEME_INVENTORY = GraphemeInventory(
+    version="shona-core-v3",
+    graphemes=SHONA_CORE_V3_GRAPHEMES,
+)
+
 GRAPHEME_INVENTORIES = {
     SHONA_CORE_V1_INVENTORY.version: SHONA_CORE_V1_INVENTORY,
+    SHONA_CORE_V2_INVENTORY.version: SHONA_CORE_V2_INVENTORY,
     DEFAULT_GRAPHEME_INVENTORY.version: DEFAULT_GRAPHEME_INVENTORY,
 }
 
