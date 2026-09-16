@@ -22,6 +22,7 @@ Reads `db/shona.sqlite3` read-only and `local_source_cache/hannan_dictionary.txt
 from __future__ import annotations
 
 import collections
+import os
 import re
 import sqlite3
 import sys
@@ -174,6 +175,7 @@ def main() -> int:
 
     duplicates = 0
     misreads = 0
+    misread_pairs = []
     for head in heads:
         key_word = head.lstrip("-").casefold()
         near = buckets.get((len(key_word), key_word[:2]))
@@ -183,11 +185,43 @@ def main() -> int:
                     duplicates += 1
                 else:
                     misreads += 1
+                    misread_pairs.append((head, candidate))
                 break
+    # Both units are printed because they differ, and confusing them costs an
+    # afternoon: the counts above are INSTANCES, one per published row, while the
+    # queue holds distinct (headword, spelling) PAIRS. They diverge wherever a
+    # spelling is published more than once -- and 2,915 published spellings are,
+    # so 72 instances of the misread class are 60 distinct pairs.
     print(f"    whose text spelling is already published (duplicate class): {duplicates:,}")
     print(f"    whose text spelling is absent (misread class):              {misreads:,}")
+    print(f"      of which distinct spellings:                             {len(set(misread_pairs)):,}")
     for published_head, text_form in samples[:10]:
         print(f"    published {published_head!r}  text {text_form!r}")
+
+    queue = os.environ.get("AUDIT_QUEUE")
+    if queue:
+        # Pages come from the published record's own extraction unit: the text
+        # spelling lives in the flat cache file and carries no locator, but the
+        # record derived from that entry does, and it is the same page.
+        pages = {}
+        for object_id, locator in cursor.execute(
+            "select canonical_record_object_id, source_location_reference "
+            "from extraction_extractionunit where canonical_record_object_id is not null"
+        ):
+            if object_id:
+                pages.setdefault(str(object_id).replace("-", "").casefold(), locator)
+        by_headword = {}
+        for lemma_id, headword in cursor.execute(
+            "select id, headword from lexicon_lemma where review_state='published'"
+        ):
+            by_headword[(headword or "").strip()] = pages.get(
+                str(lemma_id).replace("-", "").casefold(), "locate_by_search"
+            )
+        with open(queue, "w", encoding="utf-8") as handle:
+            handle.write("published_headword\ttext_spelling\tsource_locator\n")
+            for head, text_form in sorted(set(misread_pairs)):
+                handle.write(f"{head}\t{text_form}\t{by_headword.get(head, 'locate_by_search')}\n")
+        print(f"    queue written: {queue} ({len(set(misread_pairs)):,} rows)")
     connection.close()
     return 0
 

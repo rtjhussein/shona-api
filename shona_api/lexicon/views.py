@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models.functions import Length
 from django.http import Http404
 from django.utils import timezone
 from rest_framework import status
@@ -20,12 +21,17 @@ from .models import Lemma
 from .part_of_speech import CANONICAL_POS_CODES
 from .search import (
     DEFAULT_SEARCH_LIMIT,
+    DEFAULT_WORDLIST_LIMIT,
     MAX_SEARCH_LIMIT,
+    MAX_WORDLIST_LIMIT,
     SEARCH_NORMALIZER_VERSION,
+    compile_grapheme_pattern,
     filter_json_array,
     filter_public_lemmas,
     normalize_search_query,
+    order_public_ids_by_seed,
     public_lemma_queryset,
+    search_public_lemmas_by_grapheme_pattern,
     search_public_records,
     search_public_records_fuzzy,
 )
@@ -54,6 +60,18 @@ DIALECT_FILTERS = {
     "ko": "Ko",
     "m": "M",
     "z": "Z",
+}
+
+# Wordlist filters the product requirements name but the published lexicon
+# cannot back. They are refused rather than ignored: accepting `guessable=true`
+# and returning unfiltered lemmas would report a filter that was never applied.
+UNSUPPORTED_WORDLIST_FILTERS = {
+    "guessable": "no published field records whether a lemma is guessable",
+    "character_length": (
+        "character length is not stored; use 'length', 'min_length', or 'max_length'"
+    ),
+    "labels": "published lemmas carry no labels field",
+    "exclude_labels": "published lemmas carry no labels field",
 }
 
 
