@@ -157,7 +157,7 @@
       "id": "multiword-ideophone-tone-truncated",
       "title": "Multi-word ideophones publish only the first word's tone pattern",
       "field": "tone",
-      "status": "open",
+      "status": "mitigated",
       "kind": "source_defect",
       "summary": "A two-word ideophone headword carries one tone group per word (`kwakwara kwakwara [LLL LLL]`), and some entries publish only the first group (`LLL`). Four of the forty entries audited on Hannan page 300 do this, so the loss is real but NOT universal: `badara badara` publishes `LLL LLL` correctly, and `bha bha bha` publishes `H H H`.",
       "sources": [
@@ -178,14 +178,15 @@
         "Not a missing capability: the engine already stores a multi-word bracket correctly elsewhere (`munhondo churu` -> LLL HH), so the loss is in the ideophone path.",
         "Measured after the audit: 1,174 of the 6,272 ideophone lemmas have a multi-word headword, and the published shapes differ between them -- some keep one group per word, some keep only the first, some join the groups without a space (`bambai bambai` -> `LLHLLH`)."
       ],
-      "resolution_needed": "26 of the 1,205 multi-word ideophones hold a pattern that cannot cover every word -- a bounded repair, not a project. Read those 26 brackets against the scan first, because some ideophones may legitimately carry one group for the whole expression (`kwa kwa kwa` with `L`), then fix the ideophone path to keep the whole bracket. The non-ideophone records already answer the modelling question: `munhondo churu` stores `LLL HH`.",
-      "impact": "26 of 1,205 multi-word ideophones, sized by tools/size_audit_candidates.py"
+      "resolution_needed": "Nothing on the tone path. Three of the same rows carried a wrong headword, which was a separate defect and was fixed in #137; the one that could not be renamed is registered as duplicate-ideophone-fragment-na-na.",
+      "impact": "26 of 1,205 multi-word ideophones, sized by tools/size_audit_candidates.py",
+      "resolution": "Repaired in PR #133: 24 of the 26 candidates were corrected from the scan, each pattern having held one tone group where the page prints one per word. The remaining 2 were documented as false positives of the screen rather than defects - `shwa shwaba shwaba` has a leading `shwa` belonging to the preceding entry, and `ti ti ti (ti, ti ...)` prints a covering pattern on a line whose glyphs are corrupt. The screen now reports 1 candidate and that candidate is the corrupt line."
     },
     {
       "id": "multiword-headword-syllables-carry-the-space",
       "title": "Syllabification of a multi-word headword carries the space into the next syllable",
       "field": "syllables / graphemes",
-      "status": "open",
+      "status": "mitigated",
       "kind": "source_defect",
       "summary": "A multi-word headword is syllabified as one string, so the space becomes part of the following syllable: `bye bye` stores ['bye', ' bye'] and `shwaba shwaba` stores ['shwa', 'ba', ' shwa', 'ba']. A client splitting on whitespace gets a leading space on half the syllables, and a game reading syllable_count sees double the words' count.",
       "sources": [
@@ -199,8 +200,9 @@
         "Found while repairing two headwords from the scan on 2026-09-16; the syllables were recomputed by the current code, so this is behaviour, not stale data.",
         "Syllabification closes each syllable on a vowel and the space is not in the grapheme inventory, so it falls through as a single-character segment and attaches to the next syllable."
       ],
-      "resolution_needed": "Decide whether syllables should be a flat list containing the space or a list of per-word lists. The flat list is what every existing record holds, so the cheaper fix is to syllabify per word and concatenate. Needs sizing first: 1,483 published headwords contain a space.",
-      "impact": "every multi-word headword; 1,483 published lemmas carry the shape"
+      "resolution_needed": null,
+      "impact": "every multi-word headword; 1,483 published lemmas carry the shape",
+      "resolution": "Fixed, not merely decided: compute_phonology_fields segmented the raw headword, so the space became a grapheme and attached to the start of the next syllable (`bye bye` stored 7 graphemes and ['bye', ' bye']). Each word is now segmented on its own (PR #136), and the same defect in the bound-morpheme marker was fixed and both cohorts recomputed - 14,947 lemmas in PR #140. No published lemma now holds a syllable beginning with a space or the marker as a grapheme, so the flat-list question is settled in favour of the flat list."
     },
     {
       "id": "duplicate-ideophone-fragment-na-na",
