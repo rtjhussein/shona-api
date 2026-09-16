@@ -1,0 +1,35 @@
+{
+  "note": "Tone patterns read from the Hannan scan for the 24 multi-word ideophones whose stored pattern could not cover every word. Read by the IdeophoneBrackets pass on 2026-09-16, 26 candidates checked, 0 unreadable, 2 were false positives of the screen and are absent here.",
+  "locator_note": "ToneRecord.pattern is replaced with the scan's bracket; the group separator follows the printed spacing.",
+  "corrections": {
+    "bve bve": "HH H",
+    "kururu kururu": "HHH HHH",
+    "kwa kwa kwa": "LL L",
+    "kwabada kwabada": "LLL LLL",
+    "kwakwara kwakwara": "LLL LLL",
+    "kwakwari kwakwari": "LLL LLL",
+    "kwakwasha kwakwasha": "LLL LLL",
+    "kwangwandi kwangwandi": "LLH LLH",
+    "kwangwazhi kwangwazhi": "LLL LLL",
+    "kwarau kwarau": "LLL LLL",
+    "kwashara kwashara": "LLL LLL",
+    "ndo ndo ndo": "H H H",
+    "ndu ndu ndu": "H H H",
+    "ndu-u ndu-u ndu-u": "HHH",
+    "ndunduru ndunduru": "HLL HLL",
+    "ndyu ndyu": "HH",
+    "ndyu ndyu ndyu": "H H H",
+    "nenere nenere": "HLL HLL",
+    "n'a n'a n'a": "H H H",
+    "n'a n'a": "L LL",
+    "n'a dzi n'a dzi": "L H L H"
+  },
+  "followups": {
+    "headword_wrong": [
+      "bve bve (scan prints 'bye bye', three tokens)",
+      "n'a n'a (page prints three tokens)",
+      "shwa shwaba shwaba (the leading 'shwa' belongs to the preceding entry)"
+    ],
+    "dialect_variants": "kwasvai kwasvai has two records (Z and M); the doubled entry prints each pattern twice, so both are doubled rather than replaced"
+  }
+}
