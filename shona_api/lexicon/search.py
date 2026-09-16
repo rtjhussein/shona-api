@@ -183,7 +183,7 @@ def search_public_records_fuzzy(normalized_query, *, filters=None):
         public_lemma_queryset(filters)
         .annotate(similarity=TrigramSimilarity("normalized_headword", normalized_query))
         .filter(similarity__gte=0.3)
-        .order_by("-similarity")
+        .order_by("-similarity", "public_id")
     )
     lemma_results = [
         {
@@ -201,7 +201,7 @@ def search_public_records_fuzzy(normalized_query, *, filters=None):
         public_form_queryset(filters)
         .annotate(similarity=TrigramSimilarity("normalized_form", normalized_query))
         .filter(similarity__gte=0.3)
-        .order_by("-similarity")
+        .order_by("-similarity", "public_id")
     )
     form_results = [
         {

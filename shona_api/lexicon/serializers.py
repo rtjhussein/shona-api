@@ -215,7 +215,7 @@ def resolve_cross_reference_target(target: str) -> dict[str, str] | None:
             review_state=ReviewState.PUBLISHED,
             normalized_headword__iexact=normalized_target,
         )
-        .order_by("normalized_headword", "headword")
+        .order_by("normalized_headword", "headword", "public_id")
         .first()
     )
     if lemma is None:

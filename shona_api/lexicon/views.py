@@ -514,7 +514,7 @@ class LemmaListView(APIView):
         if filters["random"]:
             queryset = queryset.order_by("?")
         else:
-            queryset = queryset.order_by("normalized_headword", "headword")
+            queryset = queryset.order_by("normalized_headword", "headword", "public_id")
 
         # Apply limit/slicing
         limit = filters["limit"]

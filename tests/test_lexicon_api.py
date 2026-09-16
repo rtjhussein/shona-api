@@ -851,3 +851,39 @@ def test_search_endpoint_does_not_trigger_fuzzy_when_exact_succeeds(
     assert body["data"]["results"][0]["match_type"] == "exact_lemma"
 
 
+
+
+@pytest.mark.django_db
+def test_search_orders_homographs_totally(client, api_key, current_release):
+    """Homographs share the normalized headword and the headword itself.
+
+    Hannan has four entries for `gufu`, so ordering by
+    (normalized_headword, headword) does not order them at all and the endpoint
+    returned whatever the database happened to produce -- stable on SQLite,
+    but not guaranteed on Postgres across plan changes or after an update moves
+    a row. A total tie-break on public_id makes the order defined.
+
+    The rows are given public_ids in reverse insertion order so the assertion
+    fails if the order is left to the storage engine rather than to the query.
+    """
+    lemmas = [
+        Lemma.objects.create(
+            headword="gufu",
+            headword_kind=Lemma.HeadwordKind.NOUN,
+            part_of_speech_code="n",
+            review_state=ReviewState.PUBLISHED,
+        )
+        for _ in range(2)
+    ]
+    Lemma.objects.filter(pk=lemmas[0].pk).update(public_id="lemma_zzz_homograph")
+    Lemma.objects.filter(pk=lemmas[1].pk).update(public_id="lemma_aaa_homograph")
+
+    response = client.get(
+        "/v1/search",
+        {"q": "gufu"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    returned = [result["lemma"]["public_id"] for result in response.json()["data"]["results"]]
+    assert returned == ["lemma_aaa_homograph", "lemma_zzz_homograph"]
