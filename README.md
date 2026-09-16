@@ -309,6 +309,22 @@ and a `plural_kind` of `standard` or `honorific`, so a consumer can tell the
 plural it can count with from the one that is honorific. See
 `docs/morphology/noun-plural-plan-2026-09-16.md`.
 
+### Source conflicts
+
+Facts the sources disagree about, or that block the corpus pending research,
+are recorded in `evaluation/conflicts/open.json` — each with both sides quoted,
+their locators, what was checked, and **what would settle it**. Registering one
+materialises it onto the affected records as `ReviewNote` rows, so it reaches
+the editorial queue rather than living in a file nobody opens:
+
+```powershell
+python manage.py sync_source_conflicts --dry-run
+python manage.py sync_source_conflicts
+```
+
+Idempotent, and never deletes a note: closing a conflict is an editorial act.
+See `evaluation/conflicts/README.md` for the format.
+
 ### Lexical QA — published lexicon against its source lines
 
 `evaluation/lexical_qa/` scores the published lexicon against the verbatim
@@ -372,7 +388,7 @@ a future import that quietly drops noun-class coverage fails the gate instead of
 degrading the lexicon unnoticed. Raise a baseline deliberately, with
 `python tools/evaluate_lexical_qa.py ... --write-baseline`.
 
-A highly comprehensive suite of **594 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
+A highly comprehensive suite of **597 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 

@@ -1,0 +1,90 @@
+{
+  "version": "conflicts-2026-09-16",
+  "note": "Conflicts between sources, or between a source and the published corpus, that need research or an expert ruling before they can be resolved. See README.md for the format. `sync_source_conflicts` materialises the affected rows as ReviewNote records so each conflict reaches the editorial queue rather than living only in this file.",
+  "conflicts": [
+    {
+      "id": "class-9-takes-class-6-plural",
+      "title": "Hannan records class 9 nouns with class 6 plurals; Fortune does not list class 9 among class 6's correlating singulars",
+      "field": "noun_class / plural prefix",
+      "status": "open",
+      "kind": "source_conflict",
+      "summary": "Fortune Vol 1 3.3.9 (printed p.52) states class 6 nouns 'are correlative plurals of nouns in cll. 5, 11, 21, 1a, 1 and 14' and enumerates them; class 9 is absent from that list. Hannan records class 9 nouns whose plural prefix is ma-, a class 6 shape.",
+      "sources": [
+        {
+          "source": "Fortune, Shona Grammatical Constructions Vol. 1, 3.3.9",
+          "locator": "printed p.52, PDF p.64; local_source_cache/fortune_constructions.txt line 4055",
+          "claim": "class 6 correlates with 5, 11, 21, 1a, 1, 14 (class 9 not listed)"
+        },
+        {
+          "source": "Hannan, Standard Shona Dictionary (scan)",
+          "locator": "key_documents/hannan_dictionary.pdf, dictionary p.28, PDF p.52",
+          "claim": "budiriro n 9, pl: mab- -- a class 9 noun with a class 6 plural",
+          "verbatim": "budiriro [HHHL]KMZ n 9, pl: mab-, Success. 2. Progress (cultural)."
+        }
+      ],
+      "evidence": [
+        "The scan was read directly with tools/render_dictionary_entry.py; this is not an extraction artefact.",
+        "Several other class 9 rows in the audit work list carry mab-/mabv-/mabw- shapes, so this is likely a group rather than one entry."
+      ],
+      "affected_worklist": "evaluation/plural_scan_audit/worklist.tsv",
+      "affected_filter": "^mab",
+      "resolution_needed": "A ruling on whether the Hannan class assignment or the Fortune correlation list governs. Needs either a third source that states class 9's plural behaviour, or a Shona grammarian's judgement. Until then the plural derivation refuses these entries, which is the correct behaviour under the evidence policy.",
+      "impact": "9 records in the audit work list carry the shape; their plurals are withheld"
+    },
+    {
+      "id": "hannan-2b-not-in-fortune-2b",
+      "title": "Hannan's class 2b label does not match Fortune's class 2b definition",
+      "field": "noun_class",
+      "status": "open",
+      "kind": "source_conflict",
+      "summary": "Hannan labels the amai/ambuya-type nouns 'n 2b'. Fortune Vol 1 3.3.5 defines class 2b as the prefix /a-/ occurring with two stems only (amai, ambuya) and gives no plural. There is no NounClass row for 2b, so those records carry no class at all.",
+      "sources": [
+        {
+          "source": "Fortune, Shona Grammatical Constructions Vol. 1, 3.3.5",
+          "locator": "printed p.46, PDF p.58",
+          "claim": "class 2b is /a-/, occurring with the two stems mai and mbuya"
+        },
+        {
+          "source": "Hannan, Standard Shona Dictionary (scan)",
+          "locator": "extraction units under hannan:page_002:*",
+          "claim": "amai, amaiguru, ambuya and relatives are labelled n 2b"
+        }
+      ],
+      "evidence": [
+        "Nine published records carry the parser's class value '2b' with no NounClass row to resolve to.",
+        "Their plurals are recorded as full forms (madzimai, vadzimbuya), so the plural itself is attested and publishes; only the class is unresolved."
+      ],
+      "affected_class_values": [
+        "2b",
+        "2m"
+      ],
+      "resolution_needed": "Decide whether to add NounClass rows for Hannan's sub-labels (2b, 2m) with a concord taken from a source, or to remap them to an existing class. Adding a row requires an evidence-backed concord; the number of affected records is small (10).",
+      "impact": "10 published records with no noun class",
+      "affected_parser_class_values": [
+        "2b",
+        "2m"
+      ]
+    },
+    {
+      "id": "dictionary-text-cyrillic-homoglyphs",
+      "title": "The dictionary text extraction contains Cyrillic homoglyphs",
+      "field": "source quality (all fields read from the text)",
+      "status": "mitigated",
+      "kind": "source_defect",
+      "summary": "local_source_cache/hannan_dictionary.txt contains 1,313 Cyrillic lookalike characters (U+0430 а, U+0442 т, U+041C М and others) where Latin letters belong. Any value read from that file could carry them into a published surface form.",
+      "sources": [
+        {
+          "source": "local_source_cache/hannan_dictionary.txt",
+          "locator": "whole file",
+          "claim": "e.g. map- appears as mаp- with U+0430"
+        }
+      ],
+      "evidence": [
+        "Counted by scanning the file for the Cyrillic block: 1,313 characters.",
+        "Reading from the text was introduced for plural prefixes at the same time as the normaliser, so no homoglyph has reached a published form."
+      ],
+      "resolution_needed": "None for the plural path, which normalises before use. Worth re-running the extraction or normalising at ingest if the text is ever used for other fields; an unresolved homoglyph is invisible in review.",
+      "impact": "none on published data; a latent hazard for any future consumer of that file"
+    }
+  ]
+}
