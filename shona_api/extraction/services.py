@@ -21,6 +21,8 @@ from shona_api.lexicon.examples import (
     normalize_example_pairs,
 )
 from shona_api.lexicon.models import Form, Lemma, NounClass, Sense, ToneRecord
+from shona_api.lexicon.part_of_speech import canonical_pos_code
+from shona_api.parsers.hannan import read_attested_noun_classes
 
 from .gpt_jsonl import build_tone_record_payloads, validate_publishable_parser_output
 from .models import ExtractionUnit
@@ -95,13 +97,16 @@ def publish_reviewed_extraction_unit(
             )
 
         provenance = _build_shared_provenance(extraction_unit)
+        noun_class, noun_class_provenance = _resolve_noun_class(
+            extraction_unit, parser_output
+        )
 
         lemma = Lemma.objects.create(
             headword=parser_output.get("headword") or extraction_unit.raw_text.strip(),
             headword_kind=_map_headword_kind(parser_output.get("headword_kind")),
             part_of_speech_code=_parser_pos_code(parser_output),
             part_of_speech_label=_parser_pos_label(parser_output),
-            noun_class=_parser_noun_class(parser_output),
+            noun_class=noun_class,
             dialects=list(parser_output.get("dialects") or []),
             comparative_bantu_marker=bool(
                 parser_output.get("comparative_bantu_marker", False)
@@ -112,6 +117,7 @@ def publish_reviewed_extraction_unit(
                 headword=parser_output.get("headword"),
                 headword_kind=parser_output.get("headword_kind", "unknown"),
                 part_of_speech=_parser_part_of_speech(parser_output),
+                **noun_class_provenance,
             ),
             review_state=ReviewState.PUBLISHED,
         )
@@ -313,6 +319,36 @@ def _record_provenance(
     }
 
 
+def _resolve_noun_class(
+    extraction_unit: ExtractionUnit, parser_output: dict[str, object]
+) -> tuple[NounClass | None, dict[str, object]]:
+    """Resolve the noun class a new record should carry.
+
+    The verbatim source line is the authority: parsers dropped Hannan's
+    sub-class letter, so ``n 1a`` arrived as class ``1`` and ``n 1a (M), 5 (Z)``
+    as no class at all. When the line attests a class that maps to a reviewed
+    ``NounClass`` row, that wins; otherwise the parser's reading is used. A
+    disagreement is recorded rather than resolved silently.
+    """
+    attested = read_attested_noun_classes(extraction_unit.raw_text)
+    parser_class = _parser_noun_class(parser_output)
+    if not attested:
+        return parser_class, {}
+
+    attested_class = NounClass.objects.filter(class_number=attested[0]).first()
+    if attested_class is None:
+        return parser_class, {
+            "attested_noun_classes": attested,
+            "attested_noun_class_unmapped": True,
+        }
+    if parser_class is not None and parser_class.class_number != attested_class.class_number:
+        return attested_class, {
+            "attested_noun_classes": attested,
+            "parser_noun_class": parser_class.class_number,
+        }
+    return attested_class, {"attested_noun_classes": attested}
+
+
 def _parser_part_of_speech(parser_output: dict[str, object]) -> dict[str, str] | None:
     part_of_speech = parser_output.get("part_of_speech")
     return part_of_speech if isinstance(part_of_speech, dict) else None
@@ -322,8 +358,10 @@ def _parser_pos_code(parser_output: dict[str, object]) -> str:
     part_of_speech = _parser_part_of_speech(parser_output)
     if part_of_speech:
         code = part_of_speech.get("code")
-        if isinstance(code, str):
-            return code
+        if isinstance(code, str) and code.strip():
+            # Parsers spell the same category several ways ("vt" / "v t");
+            # canonicalise so part_of_speech_code is usable as a filter key.
+            return canonical_pos_code(code)
     return ""
 
 
@@ -346,6 +384,14 @@ def _parser_entry_grammar(parser_output: dict[str, object]) -> list[str]:
 
 
 def _parser_noun_class(parser_output: dict[str, object]) -> NounClass | None:
+    """Resolve the reviewed NounClass record for a parsed noun entry.
+
+    Parsers emit the Hannan class number either as a string or as a JSON
+    number (``"5"`` or ``5``); both must resolve. An unmapped value -- Hannan
+    sub-classes such as ``2b`` that have no ``NounClass`` row -- is skipped
+    rather than ending the search, so a later mapped value on the same entry
+    still wins.
+    """
     if _map_headword_kind(parser_output.get("headword_kind")) != Lemma.HeadwordKind.NOUN:
         return None
     noun_payload = parser_output.get("noun")
@@ -355,8 +401,19 @@ def _parser_noun_class(parser_output: dict[str, object]) -> NounClass | None:
     if not isinstance(classes, list):
         return None
     for class_number in classes:
-        if isinstance(class_number, str) and class_number.strip():
-            return NounClass.objects.filter(class_number=class_number.strip()).first()
+        # bool is an int subclass; a boolean is never a class number.
+        if isinstance(class_number, bool):
+            continue
+        if isinstance(class_number, int):
+            class_number = str(class_number)
+        if not isinstance(class_number, str):
+            continue
+        candidate = class_number.strip()
+        if not candidate:
+            continue
+        noun_class = NounClass.objects.filter(class_number=candidate).first()
+        if noun_class is not None:
+            return noun_class
     return None
 
 

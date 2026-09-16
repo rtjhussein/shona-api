@@ -216,7 +216,11 @@ class Lemma(PhonologyFieldsMixin, CanonicalRecord):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ("normalized_headword", "headword")
+        # `public_id` makes the order total: homographs share the normalized
+        # headword and often the headword itself ("gufu" has four entries),
+        # and without a final tie-break their relative order is whatever the
+        # database happens to return.
+        ordering = ("normalized_headword", "headword", "public_id")
         indexes = [
             models.Index(fields=("normalized_headword", "part_of_speech_code")),
             models.Index(fields=("review_state", "headword_kind")),
@@ -382,7 +386,12 @@ class Form(PhonologyFieldsMixin, CanonicalRecord):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ("lemma__normalized_headword", "form_kind", "normalized_form")
+        ordering = (
+            "lemma__normalized_headword",
+            "form_kind",
+            "normalized_form",
+            "public_id",
+        )
         indexes = [
             models.Index(fields=("normalized_form", "form_kind")),
             models.Index(fields=("review_state", "form_kind")),

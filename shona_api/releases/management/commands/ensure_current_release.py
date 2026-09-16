@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 
+from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
 from shona_api.releases.models import DataRelease
 
 
@@ -24,8 +25,14 @@ class Command(BaseCommand):
         parser.add_argument(
             "--rule-set-version",
             dest="rule_set_version",
-            required=True,
-            help="Morphology/phonology rule-set version exposed by this release.",
+            default=MORPHOLOGY_RULES_VERSION,
+            help=(
+                "Morphology/phonology rule-set version exposed by this release. "
+                "Defaults to the rule set this checkout implements "
+                f"({MORPHOLOGY_RULES_VERSION}); a release whose rule_set_version "
+                "is not the implemented one makes the analyze and generate "
+                "endpoints return 503 MORPHOLOGY_RULES_VERSION_UNSUPPORTED."
+            ),
         )
 
     def handle(self, *args, **options):

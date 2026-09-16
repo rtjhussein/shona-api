@@ -189,30 +189,109 @@ def _consume_entry_grammar(body: str, pos_code: str | None) -> tuple[list[str], 
     return [], body
 
 
+# A noun class is a number with an optional sub-class letter (1, 1a, 2a). Hannan
+# separates alternatives with '&' or '/' and may qualify each alternative with a
+# dialect: "n 1a (M), 5 (Z), pl: vana- (M), mag- (Z)". `pl:` is optional -- many
+# entries have no plural -- and the definition follows the metadata.
+NOUN_CLASS_TOKEN_RE = re.compile(
+    r"^\s*(?P<class_number>\d+[a-z]?)(?:\s*\((?P<dialect>[A-Za-z]+)\))?"
+)
+NOUN_CLASS_SEPARATOR_RE = re.compile(r"^\s*[&/,]\s*")
+NOUN_PLURAL_RE = re.compile(r"^\s*,?\s*pl:\s*(?P<plurals>[^,]+)")
+# A plural entry is a prefix ("map-"), optionally with a dialect restriction
+# ("mab- (M)"). A following item is consumed only when it still looks like a
+# prefix, so a short definition is not mistaken for one.
+NOUN_PLURAL_ITEM_RE = re.compile(r"[A-Za-z'’\-]+-\s*(?:\([A-Za-z]+\))?")
+
+
+def _read_noun_classes(body: str) -> tuple[list[str], str]:
+    """Return the class alternatives at the head of ``body`` and the remainder."""
+    classes: list[str] = []
+    rest = body
+    while True:
+        match = NOUN_CLASS_TOKEN_RE.match(rest)
+        if match is None:
+            break
+        classes.append(match.group("class_number"))
+        rest = rest[match.end() :]
+        separator = NOUN_CLASS_SEPARATOR_RE.match(rest)
+        if separator is None:
+            break
+        candidate = rest[separator.end() :]
+        if NOUN_CLASS_TOKEN_RE.match(candidate) is None:
+            break
+        rest = candidate
+    return classes, rest
+
+
+def _read_plural_prefixes(rest: str) -> tuple[list[str], str]:
+    """Return the plural prefixes after ``pl:`` and the remainder.
+
+    A group may list several prefixes joined by ``&`` (``pl: mab- & map-``), and
+    a following comma-separated item continues the list when it still looks like
+    a prefix (``pl: vana- (M), mag- (Z)``).
+    """
+    plural_match = NOUN_PLURAL_RE.match(rest)
+    if plural_match is None:
+        return [], rest
+    prefixes = [
+        prefix.strip()
+        for prefix in re.split(r"\s*&\s*", plural_match.group("plurals"))
+        if prefix.strip()
+    ]
+    remainder = rest[plural_match.end() :]
+    if remainder.startswith(","):
+        parts = remainder.split(",")
+        consumed = 1
+        for part in parts[1:]:
+            if not NOUN_PLURAL_ITEM_RE.fullmatch(part.strip()):
+                break
+            prefixes.extend(
+                prefix.strip()
+                for prefix in re.split(r"\s*&\s*", part.strip())
+                if prefix.strip()
+            )
+            consumed += 1
+        remainder = ",".join(parts[consumed:])
+    return prefixes, remainder
+
+
 def _consume_noun_metadata(
     body: str, pos_code: str | None
 ) -> tuple[str, dict[str, Any] | None]:
     if pos_code != "n":
         return body, None
 
-    noun_match = re.match(
-        r"^(?P<classes>\d+(?:\s*/\s*\d+)?),\s*pl:\s*(?P<plurals>[^,]+),\s*(?P<body>.*)$",
-        body,
-    )
-    if not noun_match:
+    classes, rest = _read_noun_classes(body)
+    if not classes:
         return body, {"classes": [], "plural_prefixes": []}
 
-    classes = [
-        int(class_number)
-        for class_number in re.split(r"\s*/\s*", noun_match.group("classes"))
-    ]
-    plural_prefixes = [
-        prefix.strip()
-        for prefix in re.split(r"\s*&\s*", noun_match.group("plurals"))
-        if prefix.strip()
-    ]
+    plural_prefixes, rest = _read_plural_prefixes(rest)
+    rest = re.sub(r"^\s*,\s*", "", rest)
     noun = {"classes": classes, "plural_prefixes": plural_prefixes}
-    return noun_match.group("body"), noun
+    return rest, noun
+
+
+def read_attested_noun_classes(raw_entry_text: str) -> list[str]:
+    """Noun classes the source line attests, in the order Hannan lists them.
+
+    The published corpus was produced by parsers that dropped the sub-class
+    letter, so ``n 1a`` reached the database as class ``1``. The source line is
+    the authority for what class an entry belongs to, and this reads it
+    directly. An empty list means the line records no class; it is not evidence
+    that the entry has none.
+    """
+    text = " ".join(str(raw_entry_text).strip().replace("\\u2020", "\u2020").split())
+    header = re.match(r"^(?P<dagger>\u2020)?(?P<headword>\S+)(?:\s+\[[^\]]*\])?\s*(?P<body>.*)$", text)
+    if header is None:
+        return []
+    body = header.group("body").strip()
+    _, body = _consume_entry_dialects(body)
+    pos_code, body = _consume_pos(body)
+    if pos_code != "n":
+        return []
+    classes, _ = _read_noun_classes(body)
+    return classes
 
 
 def _parse_senses(

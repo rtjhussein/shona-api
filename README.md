@@ -233,7 +233,7 @@ Successful responses are returned in a standard envelope:
 | **GET** | `/v1/figurative-expressions/tsumo/{public_id}` | Retrieve details of a specific proverb. | `public_id` (e.g., `expr_xyz789`) |
 | **GET** | `/v1/figurative-expressions/madimikira` | List active reviewed idioms. | None |
 | **GET** | `/v1/figurative-expressions/madimikira/{public_id}` | Retrieve details of a specific idiom. | `public_id` |
-| **POST** | `/v1/analyze` | Run rule-based morphological analysis on a single verb form (positive/negative present tense). | `{"text": "ndinobuda"}` |
+| **POST** | `/v1/analyze` | Run rule-based morphological analysis on a single verb form (finite present tense, `ku-` infinitive, or imperative). | `{"text": "ndinobuda"}` |
 | **POST** | `/v1/generate` | Synthesize an inflected verb form from a stem lemma, grammatical features, and polarity. | `{"lemma_public_id": "...", "features": {...}}` |
 
 ---
@@ -250,6 +250,61 @@ segment_graphemes("mwana") # Returns ['mw', 'a', 'n', 'a']
 count_syllables("mwana") # Returns 2
 ```
 
+### Language Data Maintenance
+
+Commands that keep stored linguistic fields consistent with the rules this
+checkout implements. `check_language_readiness` is the gate: it exits non-zero
+when the current release's rule-set version is not the one the code executes
+(which makes `/v1/analyze` and `/v1/generate` return `503`) or when stored
+phonology fields come from a superseded grapheme inventory.
+
+```powershell
+# Report whether the release and stored phonology fields match the code
+python manage.py check_language_readiness
+
+# Bring stored grapheme/syllable fields onto the active inventory after a bump
+python manage.py recompute_phonology --dry-run
+python manage.py recompute_phonology
+
+# Collapse part-of-speech code spellings onto the canonical vocabulary
+python manage.py normalize_part_of_speech --dry-run
+python manage.py normalize_part_of_speech
+
+# Recover noun classes from parser output already on file
+python manage.py rederive_noun_classes --dry-run
+python manage.py rederive_noun_classes
+
+# Correct noun classes that disagree with the attested source line
+python manage.py repair_noun_classes --dry-run
+python manage.py repair_noun_classes
+```
+
+`recompute_phonology`, `normalize_part_of_speech`, `rederive_noun_classes`, and
+`repair_noun_classes` write with `bulk_update` on purpose: `Lemma` has a
+`post_save` receiver that runs curriculum tagging for published records, and a
+repair must not rewrite pedagogical metadata as a side effect.
+
+`rederive_noun_classes` reads the *parser output*; `repair_noun_classes` reads
+the *source line*, which is the authority when the two disagree. Both are
+read-only until invoked without `--dry-run`.
+
+### Lexical QA — published lexicon against its source lines
+
+`evaluation/lexical_qa/` scores the published lexicon against the verbatim
+Hannan lines it came from. Expectations come from `tools/lexical_qa.py`, a
+reader written from the documented line format that imports nothing from
+`shona_api`, so a disagreement with the LLM-produced corpus is meaningful.
+See `evaluation/lexical_qa/v1/README.md` for the current baseline and the
+defects it reports.
+
+```powershell
+python tools/build_lexical_qa_corpus.py --check-only
+python tools/evaluate_lexical_qa.py --corpus evaluation/lexical_qa/v1/corpus.json --out evaluation/lexical_qa/v1/results
+pytest tests/test_lexical_qa_evaluation.py -q
+```
+
+The evaluator opens `db/shona.sqlite3` read-only; it cannot write to it.
+
 ### OpenAPI Spec Generation
 Re-generate and commit changes to the OpenAPI specification using:
 ```powershell
@@ -260,7 +315,7 @@ python manage.py generate_openapi_spec
 
 ## 🧪 Running Tests
 
-A highly comprehensive suite of **219 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, and rule-based morphology.
+A highly comprehensive suite of **515 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), and the lexical QA harness (`evaluation/lexical_qa/v1`).
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 

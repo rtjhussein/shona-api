@@ -17,6 +17,7 @@ from shona_api.releases.services import (
 )
 
 from .models import Lemma
+from .part_of_speech import CANONICAL_POS_CODES
 from .search import (
     DEFAULT_SEARCH_LIMIT,
     MAX_SEARCH_LIMIT,
@@ -45,7 +46,7 @@ HEADWORD_KIND_FILTERS = {
     Lemma.HeadwordKind.IDEOPHONE,
     Lemma.HeadwordKind.UNKNOWN,
 }
-POS_FILTERS = {"n", "vi", "vt", "v t", "v i", "adj", "adv", "ideo", "interj"}
+POS_FILTERS = set(CANONICAL_POS_CODES)
 DIALECT_FILTERS = {
     "k": "K",
     "ko": "Ko",
@@ -513,7 +514,7 @@ class LemmaListView(APIView):
         if filters["random"]:
             queryset = queryset.order_by("?")
         else:
-            queryset = queryset.order_by("normalized_headword", "headword")
+            queryset = queryset.order_by("normalized_headword", "headword", "public_id")
 
         # Apply limit/slicing
         limit = filters["limit"]

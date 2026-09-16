@@ -1,0 +1,2863 @@
+{
+  "version": "source-backed-eval-v1-proposed",
+  "corpus_hash": "sha256:f40ed432e7f0c30a",
+  "code_revision": "01e8ce7",
+  "rule_set_version": "morphology-rules-v6",
+  "results": [
+    {
+      "case_id": "SRC-001",
+      "category": "FIN-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:19.932311Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_iez4jvo655ahvfmgslkgiwabzm\",\"features\":{\"generation_type\":\"verb_form\",\"polarity\":\"positive\",\"subject\":{\"number\":\"singular\",\"person\":\"first\",\"type\":\"person\"},\"tense_aspect\":\"present\"}},\"generator_version\":\"shona-morphology-'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'ndinotaura', want 'ndinotaura'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.slots.001', want 'fortune.verbal.slots.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:19.953577Z\",\"data\":{\"query\":{\"raw\":\"ndinotaura\",\"normalized\":\"ndinotaura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\"'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-002",
+      "category": "FIN-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:19.965068Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_egku4vgzyjgnvphagjsgy66pxy\",\"features\":{\"generation_type\":\"verb_form\",\"polarity\":\"positive\",\"subject\":{\"number\":\"singular\",\"person\":\"second\",\"type\":\"person\"},\"tense_aspect\":\"present\"}},\"generator_version\":\"shona-morphology'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'unodzidzisa', want 'unodzidzisa'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.slots.001', want 'fortune.verbal.slots.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:19.995261Z\",\"data\":{\"query\":{\"raw\":\"unodzidzisa\",\"normalized\":\"unodzidzisa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidenc'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"dzidzisa\"}, \"rule_id\": \"fortune.ver",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-003",
+      "category": "FIN-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.031823Z\",\"data\":{\"query\":{\"raw\":\"unotaura\",\"normalized\":\"unotaura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0.8'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-004",
+      "category": "FIN-POS",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-005",
+      "category": "FIN-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.073620Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_jqtsb75lnfdznajvhq4tsd2svi\",\"features\":{\"generation_type\":\"verb_form\",\"polarity\":\"positive\",\"subject\":{\"number\":\"plural\",\"person\":\"first\",\"type\":\"person\"},\"tense_aspect\":\"present\"}},\"generator_version\":\"shona-morphology-ge'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'tinogona', want 'tinogona'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.slots.001', want 'fortune.verbal.slots.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.093487Z\",\"data\":{\"query\":{\"raw\":\"tinogona\",\"normalized\":\"tinogona\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0.8'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"gona\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-006",
+      "category": "FIN-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.104358Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_iokgst24hveh5h46sfosuckpzu\",\"features\":{\"generation_type\":\"verb_form\",\"polarity\":\"positive\",\"subject\":{\"number\":\"singular\",\"person\":\"second\",\"type\":\"person\"},\"tense_aspect\":\"present\"}},\"generator_version\":\"shona-morphology'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'unoda', want 'unoda'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.slots.001', want 'fortune.verbal.slots.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.131337Z\",\"data\":{\"query\":{\"raw\":\"unoda\",\"normalized\":\"unoda\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0.84,\"rul'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"da\"}, \"rule_id\": \"fortune.verbal.sl",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-007",
+      "category": "FIN-POS",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-008",
+      "category": "FIN-POS",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-009",
+      "category": "FIN-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.193088Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_iez4jvo655ahvfmgslkgiwabzm\",\"features\":{\"generation_type\":\"verb_form\",\"polarity\":\"negative\",\"subject\":{\"number\":\"singular\",\"person\":\"first\",\"type\":\"person\"},\"tense_aspect\":\"present\"}},\"generator_version\":\"shona-morphology-'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'handitauri', want 'handitauri'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.negation.001', want 'fortune.verbal.negation.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.214583Z\",\"data\":{\"query\":{\"raw\":\"handitauri\",\"normalized\":\"handitauri\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\"'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-010",
+      "category": "FIN-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.233326Z\",\"data\":{\"query\":{\"raw\":\"handizive\",\"normalized\":\"handizive\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-011",
+      "category": "FIN-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.260830Z\",\"data\":{\"query\":{\"raw\":\"hautauri\",\"normalized\":\"hautauri\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0.8'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-012",
+      "category": "FIN-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.282409Z\",\"data\":{\"query\":{\"raw\":\"havatauri\",\"normalized\":\"havatauri\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-013",
+      "category": "FIN-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.304831Z\",\"data\":{\"query\":{\"raw\":\"handidi\",\"normalized\":\"handidi\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0.86,'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"da\"}, \"rule_id\": \"fortune.verbal.ne",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-014",
+      "category": "FIN-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.325685Z\",\"data\":{\"query\":{\"raw\":\"handigoni\",\"normalized\":\"handigoni\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"gona\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-015",
+      "category": "FIN-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.353273Z\",\"data\":{\"query\":{\"raw\":\"hatizadzi\",\"normalized\":\"hatizadzi\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"zadza\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-016",
+      "category": "FIN-NEG",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-017",
+      "category": "INF-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.398142Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_iez4jvo655ahvfmgslkgiwabzm\",\"features\":{\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.82,\"generated\":{\"ge'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kutaura', want 'kutaura'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.419366Z\",\"data\":{\"query\":{\"raw\":\"kutaura\",\"normalized\":\"kutaura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-018",
+      "category": "INF-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.442438Z\",\"data\":{\"query\":{\"raw\":\"kuzorora\",\"normalized\":\"kuzorora\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"zorora\"}, \"rule_id\": \"fortune.verb",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-019",
+      "category": "INF-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.457208Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_glpys32p2bctzcbrzbjtq43rku\",\"features\":{\"generation_type\":\"infinitive\",\"polarity\":\"negative\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.82,\"generated\":{\"ge'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kusaziva', want 'kusaziva'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.481385Z\",\"data\":{\"query\":{\"raw\":\"kusaziva\",\"normalized\":\"kusaziva\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-020",
+      "category": "INF-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.501834Z\",\"data\":{\"query\":{\"raw\":\"kusafa\",\"normalized\":\"kusafa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82,\"'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"fa\"}, \"rule_id\": \"fortune.verbal.i",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-021",
+      "category": "INF-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.539631Z\",\"data\":{\"query\":{\"raw\":\"kusazviziva\",\"normalized\":\"kusazviziva\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":2,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confiden'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (2 analyses)"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (2 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-022",
+      "category": "INF-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.552679Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_tyx3egffh5eatn4w5qgq2nwgke\",\"features\":{\"generation_type\":\"infinitive\",\"object\":{\"type\":\"noun_class\",\"class_number\":\"8\"},\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morph'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kuzvitora', want 'kuzvitora'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.575543Z\",\"data\":{\"query\":{\"raw\":\"kuzvitora\",\"normalized\":\"kuzvitora\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":2,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"tora\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (2 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 1,
+      "failures": [],
+      "notes": [
+        "1 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-023",
+      "category": "INF-POS",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-024",
+      "category": "INF-POS",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-025",
+      "category": "INF-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.617877Z\",\"data\":{\"query\":{\"raw\":\"kuzviziva\",\"normalized\":\"kuzviziva\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":2,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (2 analyses)"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (2 analyses)"
+        },
+        {
+          "name": "search_status",
+          "passed": true,
+          "detail": "got 200, want 200"
+        },
+        {
+          "name": "search_enrichment",
+          "passed": true,
+          "detail": "got 'matched', want 'matched'"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "enrichment": {
+        "status": "matched",
+        "count": 2
+      },
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-026",
+      "category": "INF-POS",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-027",
+      "category": "IMP-SG-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.663841Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_iez4jvo655ahvfmgslkgiwabzm\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"singular\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'taura', want 'taura'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.001', want 'fortune.verbal.imperative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.673993Z\",\"data\":{\"query\":{\"raw\":\"taura\",\"normalized\":\"taura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82,\"ru'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-028",
+      "category": "IMP-SG-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.683337Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_i73u43iwcfep5gcjkn4ulsnbbm\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"singular\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'pinda', want 'pinda'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.001', want 'fortune.verbal.imperative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.698316Z\",\"data\":{\"query\":{\"raw\":\"pinda\",\"normalized\":\"pinda\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82,\"ru'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"pinda\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-029",
+      "category": "IMP-SG-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.707635Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_5lmkbf2mrjgrza7fdgytdv4dzq\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"singular\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'tenga', want 'tenga'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.001', want 'fortune.verbal.imperative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.725559Z\",\"data\":{\"query\":{\"raw\":\"tenga\",\"normalized\":\"tenga\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82,\"ru'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"tenga\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-030",
+      "category": "IMP-PL-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.734198Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_pj6iqnj27zgpvejtkc5c4h2hwm\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"plural\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.8'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'tengesai', want 'tengesai'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.001', want 'fortune.verbal.imperative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.752262Z\",\"data\":{\"query\":{\"raw\":\"tengesai\",\"normalized\":\"tengesai\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":2,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"tengesa\"}, \"rule_id\": \"fortune.ver",
+          "passed": true,
+          "detail": " (2 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 1,
+      "failures": [],
+      "notes": [
+        "1 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-031",
+      "category": "IMP-PL-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.766149Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_iez4jvo655ahvfmgslkgiwabzm\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"plural\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.8'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'taurai', want 'taurai'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.001', want 'fortune.verbal.imperative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.780477Z\",\"data\":{\"query\":{\"raw\":\"taurai\",\"normalized\":\"taurai\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82,\"'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-032",
+      "category": "IMP-SG-POS",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-033",
+      "category": "IMP-SG-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.791813Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_ypeae4pmobf47l2wq6qcb3zyey\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"singular\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'idya', want 'idya'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.001', want 'fortune.verbal.imperative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.808380Z\",\"data\":{\"query\":{\"raw\":\"idya\",\"normalized\":\"idya\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82,\"rule'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"dya\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-034",
+      "category": "IMP-SG-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.827872Z\",\"data\":{\"query\":{\"raw\":\"ipe\",\"normalized\":\"ipe\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.78,\"rule_i'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"pa\"}, \"rule_id\": \"fortune.verbal.i",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-035",
+      "category": "IMP-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.839938Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_ypeae4pmobf47l2wq6qcb3zyey\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"singular\",\"polarity\":\"negative\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'usadye', want 'usadye'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.negative.001', want 'fortune.verbal.imperative.negative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.861693Z\",\"data\":{\"query\":{\"raw\":\"usadye\",\"normalized\":\"usadye\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82,\"'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"dya\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-036",
+      "category": "IMP-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.878780Z\",\"data\":{\"query\":{\"raw\":\"usapinda\",\"normalized\":\"usapinda\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"pinda\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-037",
+      "category": "IMP-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.896549Z\",\"data\":{\"query\":{\"raw\":\"usaputsa\",\"normalized\":\"usaputsa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"putsa\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-038",
+      "category": "IMP-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.908409Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_sv74weprp5hgjkwclm2qynzoze\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"singular\",\"object\":{\"type\":\"noun_class\",\"class_number\":\"5\"},\"polarity\":\"negative\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'usariise', want 'usariise'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.negative.001', want 'fortune.verbal.imperative.negative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.932032Z\",\"data\":{\"query\":{\"raw\":\"usariisa\",\"normalized\":\"usariisa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"isa\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-039",
+      "category": "IMP-NEG",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.942918Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_sv74weprp5hgjkwclm2qynzoze\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"plural\",\"polarity\":\"negative\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.8'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'musaise', want 'musaise'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.negative.001', want 'fortune.verbal.imperative.negative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.966818Z\",\"data\":{\"query\":{\"raw\":\"musaisa\",\"normalized\":\"musaisa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"isa\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-040",
+      "category": "IMP-NEG",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-041",
+      "category": "OBJ",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:20.981155Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_glpys32p2bctzcbrzbjtq43rku\",\"features\":{\"generation_type\":\"verb_form\",\"object\":{\"type\":\"noun_class\",\"class_number\":\"1\"},\"polarity\":\"positive\",\"subject\":{\"number\":\"singular\",\"person\":\"first\",\"type\":\"person\"},\"tense_aspect\":'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'ndinomuziva', want 'ndinomuziva'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.concord.object.001', want 'fortune.concord.object.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.004076Z\",\"data\":{\"query\":{\"raw\":\"ndinomuziva\",\"normalized\":\"ndinomuziva\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":3,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidenc'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.concord",
+          "passed": true,
+          "detail": " (3 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 2,
+      "failures": [],
+      "notes": [
+        "2 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-042",
+      "category": "INF-POS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "search_status",
+          "passed": true,
+          "detail": "got 200, want 200"
+        },
+        {
+          "name": "search_enrichment",
+          "passed": true,
+          "detail": "got 'matched', want 'matched'"
+        }
+      ],
+      "status": "pass",
+      "enrichment": {
+        "status": "matched",
+        "count": 1
+      },
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-043",
+      "category": "OBJ",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.059495Z\",\"data\":{\"query\":{\"raw\":\"ridye\",\"normalized\":\"ridye\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.78,\"ru'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"dya\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-044",
+      "category": "OBJ",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-045",
+      "category": "EXT",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.085538Z\",\"data\":{\"query\":{\"raw\":\"kutsvairwa\",\"normalized\":\"kutsvairwa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"tsvaira\"}, \"rule_id\": \"fortune.ver",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-046",
+      "category": "EXT",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.096537Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_glpys32p2bctzcbrzbjtq43rku\",\"features\":{\"extensions\":[\"neuter\"],\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidenc'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kuzivika', want 'kuzivika'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.114713Z\",\"data\":{\"query\":{\"raw\":\"kuzivika\",\"normalized\":\"kuzivika\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-047",
+      "category": "EXT",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.125465Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_gn4lcesgwvavfkeevtczaujhlm\",\"features\":{\"extensions\":[\"applicative\"],\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"conf'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kutemera', want 'kutemera'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.143776Z\",\"data\":{\"query\":{\"raw\":\"kutemera\",\"normalized\":\"kutemera\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"tema\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-048",
+      "category": "EXT",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.153944Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_3f7cbmnoobagdonembdkogwx7y\",\"features\":{\"extensions\":[\"causative\"],\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confid'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kumukisa', want 'kumukisa'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.181271Z\",\"data\":{\"query\":{\"raw\":\"kumukisa\",\"normalized\":\"kumukisa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"muka\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-049",
+      "category": "EXT",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-050",
+      "category": "EXT",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.191824Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_q7w7oh6rzzfsrialtprwx7zycu\",\"features\":{\"extensions\":[\"repetitive\"],\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confi'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kutukurura', want 'kutukurura'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.210924Z\",\"data\":{\"query\":{\"raw\":\"kutukurura\",\"normalized\":\"kutukurura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"tuka\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-051",
+      "category": "EXT",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.224269Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_64k3gweoyrbblh66nglfdrhlfi\",\"features\":{\"extensions\":[{\"style\":\"long\",\"type\":\"reversive\"}],\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morp'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kupfekenura', want 'kupfekenura'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.246447Z\",\"data\":{\"query\":{\"raw\":\"kupfekenura\",\"normalized\":\"kupfekenura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confiden'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"pfeka\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-052",
+      "category": "EXT",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.258483Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_p37d4m6c2jgxhjim7s3wjj2sca\",\"features\":{\"extensions\":[\"applicative\",\"reciprocal\"],\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-ru'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kupamhidzirana', want 'kupamhidzirana'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.295616Z\",\"data\":{\"query\":{\"raw\":\"kupamhidzirana\",\"normalized\":\"kupamhidzirana\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"co'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"pamhidza\"}, \"rule_id\": \"fortune.ve",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-053",
+      "category": "EXT",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-054",
+      "category": "EXT",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-055",
+      "category": "STEM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.334798Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_r7p4ddihf5blpm73zofkseucwu\",\"features\":{\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.82,\"generated\":{\"ge'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kupa', want 'kupa'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.354806Z\",\"data\":{\"query\":{\"raw\":\"kupa\",\"normalized\":\"kupa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82,\"rule'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"pa\"}, \"rule_id\": \"fortune.verbal.i",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-056",
+      "category": "STEM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.367712Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_ypeae4pmobf47l2wq6qcb3zyey\",\"features\":{\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.82,\"generated\":{\"ge'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kudya', want 'kudya'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.382785Z\",\"data\":{\"query\":{\"raw\":\"kudya\",\"normalized\":\"kudya\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82,\"ru'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"dya\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-057",
+      "category": "STEM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: lemma_stem. The lemma stem does not end in terminal -a, so no supported ku- infinitive shape applies to it.\",\"detail\":{\"field\":\"lemma_stem\",\"received\":\"-ti\",\"reason\":\"divergent_stem_without_terminal_a\",\"supported\":[\"reviewed verb-stem lemmas ending in terminal -a\"],\"supported_shape\":\"ku + [sa'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'lemma_stem' in body"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.412963Z\",\"data\":{\"query\":{\"raw\":\"kuti\",\"normalized\":\"kuti\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82,\"rule'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ti\"}, \"rule_id\": \"fortune.verbal.i",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "analyze_prohibited:{\"analysis_type\": \"imperative\"}",
+          "passed": true,
+          "detail": ""
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-058",
+      "category": "STEM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.428041Z\",\"data\":{\"query\":{\"raw\":\"kunzi\",\"normalized\":\"kunzi\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82,\"ru'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"nzi\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-059",
+      "category": "STEM",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-060",
+      "category": "STEM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.440263Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_ipuupwtn2jgjfmxrh37lwjzyjq\",\"features\":{\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.82,\"generated\":{\"ge'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kuambura', want 'kuambura'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.469051Z\",\"data\":{\"query\":{\"raw\":\"kuambura\",\"normalized\":\"kuambura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"ambura\"}, \"rule_id\": \"fortune.verb",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-061",
+      "category": "STEM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.480695Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_2wdk2phc7jap5lebwj52d54k6a\",\"features\":{\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0.82,\"generated\":{\"ge'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kuenda', want 'kuenda'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.499151Z\",\"data\":{\"query\":{\"raw\":\"kuenda\",\"normalized\":\"kuenda\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82,\"'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"enda\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-062",
+      "category": "STEM",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-063",
+      "category": "STEM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.542432Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_ypeae4pmobf47l2wq6qcb3zyey\",\"features\":{\"extensions\":[\"applicative\"],\"generation_type\":\"infinitive\",\"polarity\":\"positive\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"conf'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'kudyira', want 'kudyira'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.infinitive.001', want 'fortune.verbal.infinitive.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.563253Z\",\"data\":{\"query\":{\"raw\":\"kudyira\",\"normalized\":\"kudyira\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"dya\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-064",
+      "category": "AMB",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-065",
+      "category": "AMB",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.595916Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_glpys32p2bctzcbrzbjtq43rku\",\"features\":{\"generation_type\":\"verb_form\",\"object\":{\"type\":\"noun_class\",\"class_number\":\"8\"},\"polarity\":\"positive\",\"subject\":{\"number\":\"singular\",\"person\":\"first\",\"type\":\"person\"},\"tense_aspect\":'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'ndinozviziva', want 'ndinozviziva'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.concord.object.001', want 'fortune.concord.object.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.618237Z\",\"data\":{\"query\":{\"raw\":\"ndinozviziva\",\"normalized\":\"ndinozviziva\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confide'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.concord",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "round_trip_consistent",
+          "passed": true,
+          "detail": "generate->analyze agreement for scored supported request"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "SRC-066",
+      "category": "AMB",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-067",
+      "category": "AMB",
+      "scored": false,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-068",
+      "category": "DEF",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-069",
+      "category": "DEF",
+      "scored": false,
+      "checks": [],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "SRC-070",
+      "category": "DEF",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.670962Z\",\"data\":{\"query\":{\"raw\":\"kutapwa\",\"normalized\":\"kutapwa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"infinitive\",\"confidence\":0.82'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"infinitive\", \"lemma\": {\"lemma_key\": \"tapa\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-LEX-01",
+      "category": "CT-LEX",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.690690Z\",\"data\":{\"query\":{\"raw\":\"ndinotaurisa\",\"normalized\":\"ndinotaurisa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":2,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confide'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taurisa\"}}",
+          "passed": true,
+          "detail": " (2 analyses)"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura\"}}",
+          "passed": true,
+          "detail": " (2 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-LEX-02",
+      "category": "CT-LEX",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.717244Z\",\"data\":{\"query\":{\"raw\":\"taurisa\",\"normalized\":\"taurisa\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":2,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"taurisa\"}, \"rule_id\": \"fortune.ver",
+          "passed": true,
+          "detail": " (2 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 1,
+      "failures": [],
+      "notes": [
+        "1 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-AMB-01",
+      "category": "CT-AMB",
+      "scored": true,
+      "checks": [
+        {
+          "name": "search_status",
+          "passed": true,
+          "detail": "got 200, want 200"
+        },
+        {
+          "name": "search_text",
+          "passed": true,
+          "detail": "want 'taurisa' in body"
+        }
+      ],
+      "status": "pass",
+      "enrichment": {
+        "status": "matched",
+        "count": 2
+      },
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-AMB-02",
+      "category": "CT-AMB",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:21.800623Z\",\"data\":{\"query\":{\"raw\":\"taurisai\",\"normalized\":\"taurisai\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":2,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"taurisa\"}, \"rule_id\": \"fortune.ver",
+          "passed": true,
+          "detail": " (2 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 1,
+      "failures": [],
+      "notes": [
+        "1 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-SEARCH-01",
+      "category": "CT-SEARCH",
+      "scored": true,
+      "checks": [
+        {
+          "name": "search_status",
+          "passed": true,
+          "detail": "got 200, want 200"
+        },
+        {
+          "name": "search_enrichment",
+          "passed": true,
+          "detail": "got 'matched', want 'matched'"
+        }
+      ],
+      "status": "pass",
+      "enrichment": {
+        "status": "matched",
+        "count": 1
+      },
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-SEARCH-02",
+      "category": "CT-SEARCH",
+      "scored": true,
+      "checks": [
+        {
+          "name": "search_status",
+          "passed": true,
+          "detail": "got 200, want 200"
+        },
+        {
+          "name": "search_enrichment",
+          "passed": true,
+          "detail": "got 'matched', want 'matched'"
+        }
+      ],
+      "status": "pass",
+      "enrichment": {
+        "status": "matched",
+        "count": 1
+      },
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-SEARCH-03",
+      "category": "CT-SEARCH",
+      "scored": true,
+      "checks": [
+        {
+          "name": "search_status",
+          "passed": true,
+          "detail": "got 200, want 200"
+        },
+        {
+          "name": "search_text",
+          "passed": true,
+          "detail": "want 'unverified_extension_derivation' in body"
+        }
+      ],
+      "status": "pass",
+      "enrichment": {},
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-SEARCH-04",
+      "category": "CT-SEARCH",
+      "scored": true,
+      "checks": [
+        {
+          "name": "search_status",
+          "passed": true,
+          "detail": "got 200, want 200"
+        },
+        {
+          "name": "search_absent:\"matched\"",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "search_absent:\"morphology_enrichment\"",
+          "passed": true,
+          "detail": ""
+        }
+      ],
+      "status": "pass",
+      "enrichment": {},
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-01",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: finite_boundary. This morpheme combination crosses a vowel boundary deferred pending linguistic evidence; it is not claimed to be grammatically impossible, and no alternative spelling is generated.\",\"detail\":{\"field\":\"finite_boundary\",\"boundary\":\"object_before_a_initial_stem\",\"reason\":\"deferr'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'object_before_a_initial_stem' in body"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        },
+        {
+          "name": "analyze_lane",
+          "passed": true,
+          "detail": "want lane 'deferred_finite_boundary' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-02",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: infinitive_boundary. This morpheme combination crosses a vowel boundary deferred pending linguistic evidence; it is not claimed to be grammatically impossible, and no alternative spelling is generated.\",\"detail\":{\"field\":\"infinitive_boundary\",\"boundary\":\"sa_before_a_initial_object\",\"reason\":\"'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'sa_before_a_initial_object' in body"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        },
+        {
+          "name": "analyze_lane",
+          "passed": true,
+          "detail": "want lane 'deferred_infinitive_boundary' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-03",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: number. No available source attests this imperative combination, so no form is invented for it; the combination is deferred pending evidence, not claimed to be ungrammatical.\",\"detail\":{\"field\":\"number\",\"received\":\"plural\",\"boundary\":\"plural_with_object_concord\",\"reason\":\"deferred_pending_evi'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'plural_with_object_concord' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-04",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: reflexive. No available source attests this imperative combination, so no form is invented for it; the combination is deferred pending evidence, not claimed to be ungrammatical.\",\"detail\":{\"field\":\"reflexive\",\"received\":true,\"boundary\":\"reflexive_imperative\",\"reason\":\"deferred_pending_evidenc'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'reflexive_imperative' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-05",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: lemma_stem. The defective pro-verb stem does not participate in the negated -no- present terminal rule, so no supported finite negative shape applies to it.\",\"detail\":{\"field\":\"lemma_stem\",\"received\":\"-na\",\"reason\":\"defective_pro_verb_stem\",\"supported\":[\"lexical verb stems whose negated -no- '"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'defective_pro_verb_stem' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-06",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"EXTENSION_UNVERIFIED\",\"message\":\"Unsupported v1 generation feature: extensions. The requested extension allomorph is not source-verified for arbitrary stems, so generation refuses it instead of guessing a derived form.\",\"detail\":{\"field\":\"extensions\",\"received\":{\"style\":\"dz\",\"type\":\"causative\"},\"extension_type\":\"causative\",\"style\":\"dz\",\"reason\":\"lexical_distrib'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'EXTENSION_UNVERIFIED', want 'EXTENSION_UNVERIFIED'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        },
+        {
+          "name": "analyze_lane",
+          "passed": true,
+          "detail": "want lane 'unverified_extension_derivation' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-07",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: extensions.\",\"detail\":{\"field\":\"extensions\",\"received\":\"intensive\",\"supported\":[\"causative\",\"applicative\",\"reciprocal\",\"reversive\",\"repetitive\",\"neuter\",\"passive\"],\"supported_shape\":\"subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_endi'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-08",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: extensions.\",\"detail\":{\"field\":\"extensions\",\"received\":{\"style\":[\"x\"],\"type\":\"causative\"},\"supported\":[\"causative with style in [\\'dz\\', \\'ts\\'] or null\"],\"supported_shape\":\"subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i\",\"sup'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-09",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: extensions.\",\"detail\":{\"field\":\"extensions\",\"received\":[\"passive\",\"causative\"],\"supported\":[\"extension order causative < applicative < reciprocal < reversive < repetitive < neuter < passive (passive outermost)\"],\"supported_shape\":\"subject_concord + no + [object_concord] + verb_stem / ha + sub'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-10",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: extensions.\",\"detail\":{\"field\":\"extensions\",\"received\":[\"causative\",\"causative\"],\"supported\":[\"each extension type at most once per request\"],\"supported_shape\":\"subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i\",\"supported_ru'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-UNSUP-11",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: extensions.\",\"detail\":{\"field\":\"extensions\",\"received\":[\"causative\",\"applicative\",\"reciprocal\",\"passive\"],\"supported\":[\"at most 3 extensions per request\"],\"supported_shape\":\"subject_concord + no + [object_concord] + verb_stem / ha + subject_concord + [object_concord] + verb_stem_ending_in_i\",'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-VAR-01",
+      "category": "CT-VAR",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:22.247964Z\",\"data\":{\"query\":{\"raw\":\"idyanyi\",\"normalized\":\"idyanyi\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.82'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"dya\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-INV-01",
+      "category": "CT-INV",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 400, want 400: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_FEATURES_REQUIRED\",\"message\":\"Generation requires a structured \\'features\\' object.\",\"detail\":{\"field\":\"features\",\"expected_type\":\"object\"}}}'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_FEATURES_REQUIRED', want 'GENERATION_FEATURES_REQUIRED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-INV-02",
+      "category": "CT-INV",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 400, want 400: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_TEXT_REQUIRED\",\"message\":\"Analysis requires a non-empty \\'text\\' string.\",\"detail\":null}}'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_TEXT_REQUIRED', want 'ANALYSIS_TEXT_REQUIRED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-INV-03",
+      "category": "CT-INV",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: mood.\",\"detail\":{\"field\":\"mood\",\"received\":\"indicative\",\"supported\":[\"extensions\",\"generation_type\",\"object\",\"polarity\",\"reflexive\"],\"supported_shape\":\"ku + [sa] + [object_concord | zvi-reflexive] + verb_stem\",\"supported_rule_ids\":[\"fortune.verbal.infinitive.001\",\"fortune.verbal.negation.001\"'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'mood' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-INV-04",
+      "category": "CT-INV",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: subject.\",\"detail\":{\"field\":\"subject\",\"received\":{\"number\":\"singular\",\"person\":\"second\",\"type\":\"person\"},\"supported\":[\"extensions\",\"generation_type\",\"number\",\"object\",\"polarity\"],\"supported_shape\":\"stem | stem+i | object_concord + stem_radical + e (positive) / usa|musa + [object_concord] + st'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'subject' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-INV-05",
+      "category": "CT-INV",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: object.\",\"detail\":{\"field\":\"object\",\"received\":{\"number\":\"singular\",\"person\":\"second\",\"type\":\"person\"},\"supported\":[\"either one object marker or reflexivity, not both\"],\"supported_shape\":\"ku + [sa] + [object_concord | zvi-reflexive] + verb_stem\",\"supported_rule_ids\":[\"fortune.verbal.infinitiv'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-INV-06",
+      "category": "CT-INV",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"GENERATION_UNSUPPORTED\",\"message\":\"Unsupported v1 generation feature: tense_aspect.\",\"detail\":{\"field\":\"tense_aspect\",\"received\":\"present\",\"supported\":[\"extensions\",\"generation_type\",\"number\",\"object\",\"polarity\"],\"supported_shape\":\"stem | stem+i | object_concord + stem_radical + e (positive) / usa|musa + [object_concord] + stem_radical + e (negative)\",\"supporte'"
+        },
+        {
+          "name": "generate_code",
+          "passed": true,
+          "detail": "got 'GENERATION_UNSUPPORTED', want 'GENERATION_UNSUPPORTED'"
+        },
+        {
+          "name": "generate_detail",
+          "passed": true,
+          "detail": "want 'tense_aspect' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-VIS-01",
+      "category": "CT-VIS",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:22.325687Z\",\"data\":{\"query\":{\"raw\":\"ndinotaura\",\"normalized\":\"ndinotaura\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\"'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura\"}, \"rule_id\": \"fortune.verbal",
+          "passed": true,
+          "detail": " (1 analyses)"
+        },
+        {
+          "name": "analyze_prohibited:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"taura_draft\"}}",
+          "passed": true,
+          "detail": ""
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-TERM-01",
+      "category": "CT-TERM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:22.338823Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_glpys32p2bctzcbrzbjtq43rku\",\"features\":{\"generation_type\":\"verb_form\",\"polarity\":\"negative\",\"subject\":{\"number\":\"singular\",\"person\":\"first\",\"type\":\"person\"},\"tense_aspect\":\"present\"}},\"generator_version\":\"shona-morphology-'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'handizivi', want 'handizivi'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.negation.001', want 'fortune.verbal.negation.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:22.355477Z\",\"data\":{\"query\":{\"raw\":\"handizivi\",\"normalized\":\"handizivi\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"verb_form\",\"confidence\":0'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"verb_form\", \"lemma\": {\"lemma_key\": \"ziva\"}, \"rule_id\": \"fortune.verbal.",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-TERM-02",
+      "category": "CT-TERM",
+      "scored": true,
+      "checks": [
+        {
+          "name": "generate_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:22.366387Z\",\"data\":{\"input\":{\"lemma_public_id\":\"lemma_i73u43iwcfep5gcjkn4ulsnbbm\",\"features\":{\"generation_type\":\"imperative\",\"number\":\"singular\",\"polarity\":\"negative\"}},\"generator_version\":\"shona-morphology-generator-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"confidence\":0'"
+        },
+        {
+          "name": "generate_surface",
+          "passed": true,
+          "detail": "got 'usapinde', want 'usapinde'"
+        },
+        {
+          "name": "generate_rule",
+          "passed": true,
+          "detail": "got 'fortune.verbal.imperative.negative.001', want 'fortune.verbal.imperative.negative.001'"
+        },
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 200, want 200: b'{\"api_version\":\"v1\",\"data_release\":\"eval-release\",\"rule_set_version\":\"morphology-rules-v6\",\"generated_at\":\"2026-09-10T19:15:22.383306Z\",\"data\":{\"query\":{\"raw\":\"usapinde\",\"normalized\":\"usapinde\",\"normalizer\":\"shona-orthography-normalizer-v2\"},\"analyzer_version\":\"shona-morphology-analyzer-v1\",\"rule_set_version\":\"morphology-rules-v6\",\"count\":1,\"analyses\":[{\"analysis_type\":\"imperative\",\"confidence\":0.'"
+        },
+        {
+          "name": "analyze_required:{\"analysis_type\": \"imperative\", \"lemma\": {\"lemma_key\": \"pinda\"}, \"rule_id\": \"fortune.verba",
+          "passed": true,
+          "detail": " (1 analyses)"
+        }
+      ],
+      "status": "pass",
+      "unadjudicated_extras": 0,
+      "failures": [],
+      "notes": [
+        "0 unadjudicated extra reading(s)"
+      ]
+    },
+    {
+      "case_id": "CT-SEQ-01",
+      "category": "CT-SEQ",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    },
+    {
+      "case_id": "CT-IMP-SCOPE-01",
+      "category": "CT-UNSUP",
+      "scored": true,
+      "checks": [
+        {
+          "name": "analyze_status",
+          "passed": true,
+          "detail": "got 422, want 422: b'{\"api_version\":\"v1\",\"error\":{\"code\":\"ANALYSIS_UNSUPPORTED\",\"message\":\"No supported v1 analysis matched the input. Supported v1 forms are ku- infinitive forms (ku + [sa] + [object_concord | zvi-reflexive] + reviewed verb stem), positive present verb forms (subject concord + \\'no\\' + [object_concord] + verb_stem), negative present verb forms (ha- + subject concord + [object_concord] + verb_stem ending'"
+        },
+        {
+          "name": "analyze_code",
+          "passed": true,
+          "detail": "got 'ANALYSIS_UNSUPPORTED', want 'ANALYSIS_UNSUPPORTED'"
+        },
+        {
+          "name": "analyze_lane",
+          "passed": true,
+          "detail": "want lane 'excluded_divergent_stem_imperative' in body"
+        }
+      ],
+      "status": "pass",
+      "failures": [],
+      "notes": []
+    }
+  ]
+}

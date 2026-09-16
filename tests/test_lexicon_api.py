@@ -6,6 +6,7 @@ from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Form, Lemma, Sense, ToneRecord
 from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
+from shona_api.phonology import DEFAULT_GRAPHEME_INVENTORY
 from shona_api.releases.models import DataRelease
 
 
@@ -133,7 +134,7 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
             "first_appearance_page": "",
             "frequency_tier": Lemma.FrequencyTier.UNKNOWN,
             "frequency_score": 0.0,
-            "phonology_inventory_version": "shona-core-v1",
+            "phonology_inventory_version": DEFAULT_GRAPHEME_INVENTORY.version,
             "graphemes": ["b", "u", "d", "a"],
             "grapheme_count": 4,
             "syllables": ["bu", "da"],
@@ -197,7 +198,7 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
                 "dialects": [],
                 "grammar": ["nominalized"],
                 "sense_public_id": sense.public_id,
-                "phonology_inventory_version": "shona-core-v1",
+                "phonology_inventory_version": DEFAULT_GRAPHEME_INVENTORY.version,
                 "graphemes": ["mb", "u", "d", "o"],
                 "grapheme_count": 4,
                 "syllables": ["mbu", "do"],
@@ -850,3 +851,39 @@ def test_search_endpoint_does_not_trigger_fuzzy_when_exact_succeeds(
     assert body["data"]["results"][0]["match_type"] == "exact_lemma"
 
 
+
+
+@pytest.mark.django_db
+def test_search_orders_homographs_totally(client, api_key, current_release):
+    """Homographs share the normalized headword and the headword itself.
+
+    Hannan has four entries for `gufu`, so ordering by
+    (normalized_headword, headword) does not order them at all and the endpoint
+    returned whatever the database happened to produce -- stable on SQLite,
+    but not guaranteed on Postgres across plan changes or after an update moves
+    a row. A total tie-break on public_id makes the order defined.
+
+    The rows are given public_ids in reverse insertion order so the assertion
+    fails if the order is left to the storage engine rather than to the query.
+    """
+    lemmas = [
+        Lemma.objects.create(
+            headword="gufu",
+            headword_kind=Lemma.HeadwordKind.NOUN,
+            part_of_speech_code="n",
+            review_state=ReviewState.PUBLISHED,
+        )
+        for _ in range(2)
+    ]
+    Lemma.objects.filter(pk=lemmas[0].pk).update(public_id="lemma_zzz_homograph")
+    Lemma.objects.filter(pk=lemmas[1].pk).update(public_id="lemma_aaa_homograph")
+
+    response = client.get(
+        "/v1/search",
+        {"q": "gufu"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    returned = [result["lemma"]["public_id"] for result in response.json()["data"]["results"]]
+    assert returned == ["lemma_aaa_homograph", "lemma_zzz_homograph"]

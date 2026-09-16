@@ -688,3 +688,213 @@ def test_publish_records_audit_hook_for_the_state_change(approved_extraction_uni
     assert bundle.audit_log.action == "record_state_changed"
     assert bundle.audit_log.target == approved_extraction_unit
     assert bundle.audit_log.metadata["canonical_record_public_id"] == bundle.lemma.public_id
+
+
+def _noun_parser_output(*, classes, pos_label="noun", pos_code="n", definition="Huddle."):
+    """Minimal noun parser output shaped like the real Hannan pipelines emit."""
+    return {
+        "headword": "biku",
+        "headword_kind": "noun",
+        "part_of_speech": {"code": pos_code, "label": pos_label},
+        "dialects": ["K"],
+        "comparative_bantu_marker": False,
+        "tone_pattern": "HL",
+        "tone_records": [],
+        "noun": {"classes": classes},
+        "senses": [
+            {
+                "number": 1,
+                "definition": definition,
+                "dialects": [],
+                "grammar": [],
+                "examples": [],
+                "cross_references": [],
+            }
+        ],
+        "derived_forms": [],
+        "raw_entry_text": "biku [HL]K n 5, pl: mab-, Huddle.",
+        "parse_metadata": {"parser": "test", "completeness": "parsed"},
+    }
+
+
+def _approved_noun_unit(hannan_source, parser_output, *, locator):
+    return ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference=locator,
+        raw_text="biku [HL]K n 5, pl: mab-, Huddle.",
+        parser_output=parser_output,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+
+@pytest.fixture
+def noun_class_five():
+    return NounClass.objects.create(
+        class_number="5", display_order=5, label="Class 5"
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("classes", [[5], ["5"]])
+def test_publish_resolves_noun_class_from_number_and_string_parser_values(
+    hannan_source, noun_class_five, classes
+):
+    """Regression: a string-only guard dropped every JSON number.
+
+    Parsers emit ``"classes": [5]``, so ``isinstance(class_number, str)`` let
+    the loop fall through and every such noun published with a null class --
+    9,678 lemmas in the live corpus.
+    """
+    unit = _approved_noun_unit(
+        hannan_source,
+        _noun_parser_output(classes=classes),
+        locator=f"hannan:page_021:entry_001:biku:{classes[0]}",
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class is not None
+    assert bundle.lemma.noun_class.class_number == "5"
+
+
+@pytest.mark.django_db
+def test_publish_skips_unmapped_class_values_and_keeps_searching(
+    hannan_source, noun_class_five
+):
+    """A class with no NounClass row must not end the search.
+
+    Hannan records sub-classes such as 2b that the seeded class table does not
+    contain; the old loop returned None on the first entry rather than trying
+    the next one.
+    """
+    unit = _approved_noun_unit(
+        hannan_source,
+        _noun_parser_output(classes=["2b", 5]),
+        locator="hannan:page_002:entry_001:amai:fallthrough",
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class.class_number == "5"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "parser_output, expected",
+    [
+        (_noun_parser_output(classes=[]), "no noun class"),
+        (
+            _noun_parser_output(classes=[5], pos_label="oMZ n 9 Eland R 305."),
+            "contains entry text",
+        ),
+        (_noun_parser_output(classes=[5], pos_code=""), "no part-of-speech code"),
+        (_noun_parser_output(classes=[5], definition="   "), "no sense with a definition"),
+    ],
+)
+def test_publish_refuses_entries_missing_core_lexical_facts(
+    hannan_source, parser_output, expected
+):
+    """A dictionary entry without these facts is not publishable.
+
+    Each case reproduces a defect measured in the published corpus: nouns
+    without a class, part-of-speech labels that absorbed the entry text, and
+    entries with no usable definition.
+    """
+    unit = _approved_noun_unit(
+        hannan_source,
+        parser_output,
+        locator=f"hannan:page_021:entry_001:biku:{expected.replace(' ', '_')}",
+    )
+
+    with pytest.raises(ExtractionUnitPublishError) as excinfo:
+        publish_reviewed_extraction_unit(unit)
+
+    assert expected in str(excinfo.value)
+
+
+@pytest.mark.django_db
+def test_publish_stores_a_canonical_part_of_speech_code(hannan_source):
+    """Promotion canonicalises the parser's spelling of the word class.
+
+    Publish would otherwise store "v t" for one transitive verb and "vt" for
+    the next, so a client filtering on either spelling would miss the other.
+    """
+    parser_output = _noun_parser_output(classes=[5])
+    parser_output["headword"] = "-shandura"
+    parser_output["headword_kind"] = "verb_stem"
+    parser_output["part_of_speech"] = {"code": "v t", "label": "transitive verb"}
+    parser_output["noun"] = {}
+    unit = _approved_noun_unit(
+        hannan_source,
+        parser_output,
+        locator="hannan:page_100:entry_001:shandura",
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.part_of_speech_code == "vt"
+
+
+@pytest.mark.django_db
+def test_publish_prefers_the_class_attested_by_the_source_line(hannan_source):
+    """Regression: parsers dropped the sub-class letter, so `n 1a` published as `1`.
+
+    Hannan's class 1a takes a different concord from class 1, and the source line
+    is the authority for which one an entry belongs to. The parser's conflicting
+    reading is recorded rather than discarded.
+    """
+    parser_output = _noun_parser_output(classes=["1"])
+    parser_output["headword"] = "Chikumi"
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_073:entry_015:chikumi",
+        raw_text="Chikumi [LHH]KMZ n 1a June.",
+        parser_output=parser_output,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+    NounClass.objects.create(class_number="1", display_order=1, label="Class 1")
+    NounClass.objects.create(class_number="1a", display_order=10, label="Class 1a")
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class.class_number == "1a"
+    assert bundle.lemma.provenance["parser_noun_class"] == "1"
+    assert bundle.lemma.provenance["attested_noun_classes"] == ["1a"]
+
+
+@pytest.mark.django_db
+def test_publish_falls_back_to_the_parser_when_the_line_attests_no_class(
+    hannan_source, noun_class_five
+):
+    unit = _approved_noun_unit(
+        hannan_source,
+        _noun_parser_output(classes=[5]),
+        locator="hannan:page_021:entry_001:biku:fallback",
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class.class_number == "5"
+
+
+@pytest.mark.django_db
+def test_publish_uses_the_parser_class_when_the_line_class_has_no_row(
+    hannan_source, noun_class_five
+):
+    """An attested class with no reviewed NounClass row must not erase the parser's."""
+    parser_output = _noun_parser_output(classes=[5])
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_002:entry_001:amai:unmapped",
+        raw_text="amai [HL] n 2b, pl: vana-, Mother.",
+        parser_output=parser_output,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class.class_number == "5"
+    assert bundle.lemma.provenance["attested_noun_class_unmapped"] is True

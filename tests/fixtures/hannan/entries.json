@@ -154,7 +154,7 @@
         "dialects": ["K", "M", "Z"],
         "part_of_speech": {"code": "n", "label": "noun"},
         "noun": {
-          "classes": [5],
+          "classes": ["5"],
           "plural_prefixes": ["mab-", "map-"]
         },
         "verb": null,
@@ -453,7 +453,7 @@
         "dialects": ["K", "M", "Z"],
         "part_of_speech": {"code": "n", "label": "noun"},
         "noun": {
-          "classes": [9],
+          "classes": ["9"],
           "plural_prefixes": ["mab-"]
         },
         "verb": null,
@@ -508,7 +508,7 @@
         "dialects": ["K", "Z"],
         "part_of_speech": {"code": "n", "label": "noun"},
         "noun": {
-          "classes": [5],
+          "classes": ["5"],
           "plural_prefixes": ["mab-"]
         },
         "verb": null,

@@ -14,6 +14,13 @@ NUMBERED_SENSE_RE = re.compile(r"\s+(?=[2-9]\.\s+)")
 UNRESOLVED_NUMBERED_SENSE_RE = re.compile(r"\s[2-9]\.\s")
 TONE_BRACKET_RE = re.compile(r"^\s*\S+\s+\[(?P<tone>[^\]]+)\]")
 TONE_PATTERN_RE = re.compile(r"^[HL]+(?:\s+[HL]+)*$")
+# A part-of-speech label is a category name ("noun", "transitive verb"). When a
+# parser mis-slices an entry the label absorbs the rest of the dictionary line
+# ("oMZ n 9 Eland R 305.", "mumba [LLLH]Ko(B)Z n 9 Ritual for ..."). Tone
+# brackets, cross-reference markers, a trailing full stop, and category names
+# longer than any real label are the signatures of that failure.
+POS_LABEL_RESIDUE_RE = re.compile(r"[\[\]]|\bcp\b|\bsee\b|\.\s*$")
+MAX_POS_LABEL_LENGTH = 60
 NORMALIZER_ERROR_CODES = {
     "invalid_publishable_shape",
     "missing_v2_fields",
@@ -102,8 +109,55 @@ def build_tone_record_payloads(parser_output: dict[str, Any]) -> list[dict[str, 
     return []
 
 
-def validate_publishable_parser_output(parser_output: dict[str, Any]) -> list[str]:
+def _validate_lexical_completeness(parser_output: dict[str, Any]) -> list[str]:
+    """Reject parser output that would publish an entry missing core facts.
+
+    The checks cover the fields a consumer actually keys on: part of speech
+    (filtering), noun class (the concord system), and at least one usable
+    definition. They are deliberately structural -- no database lookups -- so
+    they run both on the parse path and again at publication.
+    """
     messages: list[str] = []
+
+    part_of_speech = parser_output.get("part_of_speech")
+    code = part_of_speech.get("code") if isinstance(part_of_speech, dict) else None
+    label = part_of_speech.get("label") if isinstance(part_of_speech, dict) else None
+    if not (isinstance(code, str) and code.strip()):
+        messages.append("Parser output records no part-of-speech code.")
+    if isinstance(label, str) and (
+        POS_LABEL_RESIDUE_RE.search(label) or len(label) > MAX_POS_LABEL_LENGTH
+    ):
+        messages.append(
+            "Parser output part-of-speech label contains entry text rather than "
+            "a category name."
+        )
+
+    if parser_output.get("headword_kind") == "noun":
+        noun = parser_output.get("noun")
+        classes = noun.get("classes") if isinstance(noun, dict) else None
+        if not (
+            isinstance(classes, list)
+            and any(isinstance(value, (str, int)) and str(value).strip() for value in classes)
+        ):
+            messages.append("Parser output records no noun class for a noun entry.")
+
+    senses = parser_output.get("senses")
+    has_definition = False
+    if isinstance(senses, list):
+        for sense in senses:
+            if isinstance(sense, dict):
+                definition = sense.get("definition")
+                if isinstance(definition, str) and definition.strip():
+                    has_definition = True
+                    break
+    if not has_definition:
+        messages.append("Parser output records no sense with a definition.")
+
+    return messages
+
+
+def validate_publishable_parser_output(parser_output: dict[str, Any]) -> list[str]:
+    messages: list[str] = _validate_lexical_completeness(parser_output)
     for sense in parser_output.get("senses") or []:
         if not isinstance(sense, dict):
             continue
