@@ -336,8 +336,17 @@ python manage.py generate_openapi_spec
 
 ## 🧪 Running Tests
 
-**Use the verification gate.** Continuous integration is not running for this
-project, so the safety net lives in the repository and is one command:
+**Work on a branch.** `main` is protected by a committed pre-commit hook
+(`.githooks/pre-commit`) because every change lands through a branch and a pull
+request — the PR body is the review record and the squash commit is the history.
+Enable it once per clone:
+
+```powershell
+git config core.hooksPath .githooks
+```
+
+**Then use the verification gate.** Continuous integration is not running for
+this project, so the safety net lives in the repository and is one command:
 
 ```powershell
 python tools/verify.py            # every gate, exits non-zero if any fails
