@@ -9,7 +9,13 @@ from shona_api.figurative_language.views import (
     TsumoDetailView,
     TsumoListView,
 )
-from shona_api.lexicon.views import LemmaListView, LemmaReadView, SearchView
+from shona_api.lexicon.views import (
+    LemmaListView,
+    LemmaReadView,
+    PatternSearchView,
+    SearchView,
+    WordlistView,
+)
 from shona_api.morphology.views import AnalyzeView, GenerateView
 from shona_api.web.views import (
     CreateLocalAPIKeyView,
@@ -90,6 +96,12 @@ urlpatterns = [
     path("v1/lemmas/", LemmaListView.as_view(), name="lemma-list"),
     path("v1/lemmas/<str:public_id>", LemmaReadView.as_view(), name="lemma-read"),
     path("v1/search", SearchView.as_view(), name="search"),
+    path(
+        "v1/search/pattern",
+        PatternSearchView.as_view(),
+        name="pattern-search",
+    ),
+    path("v1/wordlist", WordlistView.as_view(), name="wordlist"),
     path("health", HealthView.as_view(), name="health"),
     path("health/", HealthView.as_view(), name="health-slash"),
 ]

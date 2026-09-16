@@ -42,6 +42,7 @@ from .serializers import (
     SearchResultSerializer,
     SenseSerializer,
     ToneRecordSerializer,
+    WordlistEntrySerializer,
 )
 
 
@@ -690,6 +691,385 @@ class LemmaListView(APIView):
             build_error_envelope(
                 code="LEMMA_LIST_FILTER_INVALID",
                 message=f"Invalid list filter '{field}'.",
+                detail={
+                    "field": field,
+                    "value": value,
+                    "allowed_values": allowed,
+                },
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class WordlistView(APIView):
+    """Bounded wordlist of published lemmas for word games and drills.
+
+    The catalogue order is the total `public_id` order, optionally rotated by
+    `seed`: a daily puzzle asks for the same seed and gets the same sequence,
+    and a different seed gets a different one, with no shuffle that would
+    change between two identical calls.
+    """
+
+    def get(self, request):
+        try:
+            release_metadata = get_current_release_metadata()
+        except CurrentReleaseNotFound:
+            return build_current_release_missing_response()
+
+        filters, filter_error = self._parse_filters(request)
+        if filter_error:
+            return filter_error
+
+        queryset = self._filtered_queryset(filters)
+        if filters["seed"] is not None:
+            queryset = order_public_ids_by_seed(queryset, filters["seed"])
+
+        limit = filters["limit"]
+        offset = filters["offset"]
+        lemmas = list(queryset[offset : offset + limit])
+
+        data = {
+            # Same contract as /v1/search: `count` is how many lemmas this
+            # response holds, and reaching the limit is what says more exist.
+            "count": len(lemmas),
+            "limit": limit,
+            "offset": offset,
+            "truncated": len(lemmas) >= limit,
+            "results": WordlistEntrySerializer(lemmas, many=True).data,
+        }
+        active_filters = {
+            key: value
+            for key, value in filters.items()
+            if value is not None and key not in ("limit", "offset")
+        }
+        if active_filters:
+            data["filters"] = active_filters
+
+        return Response(
+            build_success_envelope(
+                data=data,
+                release_metadata=release_metadata,
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    def _filtered_queryset(self, filters):
+        # A wordlist page holds up to 500 flat entries and reads no related
+        # rows, so the senses/forms/tone-record prefetches the reading endpoints
+        # carry would be paid for and thrown away. The noun class join stays:
+        # the entry payload includes it.
+        queryset = public_lemma_queryset(filters).prefetch_related(None)
+        if filters["dialect"]:
+            queryset = filter_json_array(queryset, "dialects", filters["dialect"])
+        if filters["grapheme_length"] is not None:
+            queryset = queryset.filter(grapheme_count=filters["grapheme_length"])
+        if filters["syllable_count"] is not None:
+            queryset = queryset.filter(syllable_count=filters["syllable_count"])
+        if any(
+            filters[key] is not None for key in ("length", "min_length", "max_length")
+        ):
+            # `length` bounds the headword's characters, which is what the
+            # PRD's `min_length`/`max_length` game grids ask for. The lexicon
+            # stores no character_length column, so it is measured in SQL.
+            queryset = queryset.annotate(headword_length=Length("headword"))
+            if filters["length"] is not None:
+                queryset = queryset.filter(headword_length=filters["length"])
+            if filters["min_length"] is not None:
+                queryset = queryset.filter(headword_length__gte=filters["min_length"])
+            if filters["max_length"] is not None:
+                queryset = queryset.filter(headword_length__lte=filters["max_length"])
+        return queryset.order_by("public_id")
+
+    def _parse_filters(self, request):
+        unsupported = sorted(
+            field
+            for field in UNSUPPORTED_WORDLIST_FILTERS
+            if field in request.query_params
+        )
+        if unsupported:
+            return None, self._unsupported_filter_response(
+                field=unsupported[0],
+                value=request.query_params.get(unsupported[0], ""),
+            )
+
+        filters = {
+            "pos": None,
+            "frequency_tier": None,
+            "learner_level": None,
+            "dialect": None,
+            "length": None,
+            "min_length": None,
+            "max_length": None,
+            "grapheme_length": None,
+            "syllable_count": None,
+            "seed": None,
+            "limit": DEFAULT_WORDLIST_LIMIT,
+            "offset": 0,
+        }
+
+        for param, choice_class in (
+            ("frequency_tier", Lemma.FrequencyTier),
+            ("learner_level", Lemma.LearnerLevel),
+        ):
+            value = request.query_params.get(param, "").strip()
+            if value:
+                if value not in choice_class.values:
+                    return None, self._invalid_filter_response(
+                        field=param,
+                        value=value,
+                        allowed=choice_class.values,
+                    )
+                filters[param] = value
+
+        pos = request.query_params.get("pos", "").strip()
+        if pos:
+            if pos not in POS_FILTERS:
+                return None, self._invalid_filter_response(
+                    field="pos",
+                    value=pos,
+                    allowed=sorted(POS_FILTERS),
+                )
+            filters["pos"] = pos
+
+        raw_dialect = request.query_params.get("dialect", "").strip()
+        if raw_dialect:
+            dialect = DIALECT_FILTERS.get(raw_dialect.casefold())
+            if not dialect:
+                return None, self._invalid_filter_response(
+                    field="dialect",
+                    value=raw_dialect,
+                    allowed=sorted(DIALECT_FILTERS.values()),
+                )
+            filters["dialect"] = dialect
+
+        for param in (
+            "length",
+            "min_length",
+            "max_length",
+            "grapheme_length",
+            "syllable_count",
+        ):
+            raw_value = request.query_params.get(param, "").strip()
+            if not raw_value:
+                continue
+            try:
+                value = int(raw_value)
+            except ValueError:
+                value = 0
+            if value < 1:
+                return None, self._invalid_filter_response(
+                    field=param,
+                    value=raw_value,
+                    allowed=["positive integer"],
+                )
+            filters[param] = value
+
+        raw_seed = request.query_params.get("seed", "").strip()
+        if raw_seed:
+            try:
+                filters["seed"] = int(raw_seed)
+            except ValueError:
+                return None, self._invalid_filter_response(
+                    field="seed",
+                    value=raw_seed,
+                    allowed=["integer"],
+                )
+
+        raw_limit = request.query_params.get("limit", "").strip()
+        if raw_limit:
+            try:
+                limit = int(raw_limit)
+            except ValueError:
+                limit = 0
+            if limit < 1 or limit > MAX_WORDLIST_LIMIT:
+                return None, self._invalid_filter_response(
+                    field="limit",
+                    value=raw_limit,
+                    allowed=[f"1..{MAX_WORDLIST_LIMIT}"],
+                )
+            filters["limit"] = limit
+
+        raw_offset = request.query_params.get("offset", "").strip()
+        if raw_offset:
+            try:
+                offset = int(raw_offset)
+            except ValueError:
+                offset = -1
+            if offset < 0:
+                return None, self._invalid_filter_response(
+                    field="offset",
+                    value=raw_offset,
+                    allowed=["0.."],
+                )
+            filters["offset"] = offset
+
+        return filters, None
+
+    def _unsupported_filter_response(self, *, field, value):
+        return Response(
+            build_error_envelope(
+                code="WORDLIST_FILTER_UNSUPPORTED",
+                message=(
+                    f"Unsupported wordlist filter '{field}': the published "
+                    "lexicon cannot apply it, so results would not be filtered."
+                ),
+                detail={
+                    "field": field,
+                    "value": value,
+                    "reason": UNSUPPORTED_WORDLIST_FILTERS[field],
+                },
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def _invalid_filter_response(self, *, field, value, allowed):
+        return Response(
+            build_error_envelope(
+                code="WORDLIST_FILTER_INVALID",
+                message=f"Invalid wordlist filter '{field}'.",
+                detail={
+                    "field": field,
+                    "value": value,
+                    "allowed_values": allowed,
+                },
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class PatternSearchView(APIView):
+    """Grapheme-aware wildcard search over published lemma headwords.
+
+    `?` matches exactly one stored grapheme and `*` matches zero or more, so
+    `s?a` never matches `sha`: `sh` is one grapheme and `sha` is two. Candidate
+    rows are narrowed in SQL on the stored `grapheme_count` before any pattern
+    is applied in Python, which bounds the scan to rows that could match.
+    """
+
+    def get(self, request):
+        raw_query = request.query_params.get("q", "")
+        pattern_tokens = compile_grapheme_pattern(raw_query)
+        if not pattern_tokens:
+            return Response(
+                build_error_envelope(
+                    code="PATTERN_QUERY_REQUIRED",
+                    message=(
+                        "Pattern search requires a non-empty 'q' query "
+                        "parameter."
+                    ),
+                ),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            release_metadata = get_current_release_metadata()
+        except CurrentReleaseNotFound:
+            return build_current_release_missing_response()
+
+        filters, filter_error = self._parse_filters(request)
+        if filter_error:
+            return filter_error
+
+        lemmas = search_public_lemmas_by_grapheme_pattern(
+            pattern_tokens,
+            filters={"pos": filters["pos"]},
+            grapheme_length=filters["length"],
+            limit=filters["limit"],
+        )
+        results = [
+            {
+                "result_type": "lemma",
+                "match_type": "grapheme_pattern",
+                "lemma": lemma,
+                "form": None,
+            }
+            for lemma in lemmas
+        ]
+
+        data = {
+            "query": {
+                "raw": raw_query,
+                # The compiled pattern is echoed because it is what actually
+                # matched: `sh` is one token, not two characters.
+                "graphemes": list(pattern_tokens),
+            },
+            "count": len(results),
+            "limit": filters["limit"],
+            "truncated": len(results) >= filters["limit"],
+            "results": SearchResultSerializer(results, many=True).data,
+        }
+        active_filters = self._active_filter_payload(filters)
+        if active_filters:
+            data["query"]["filters"] = active_filters
+
+        return Response(
+            build_success_envelope(
+                data=data,
+                release_metadata=release_metadata,
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    def _parse_filters(self, request):
+        filters = {
+            "pos": None,
+            "length": None,
+            "limit": DEFAULT_SEARCH_LIMIT,
+        }
+
+        pos = request.query_params.get("pos", "").strip()
+        if pos:
+            if pos not in POS_FILTERS:
+                return None, self._invalid_filter_response(
+                    field="pos",
+                    value=pos,
+                    allowed=sorted(POS_FILTERS),
+                )
+            filters["pos"] = pos
+
+        raw_length = request.query_params.get("length", "").strip()
+        if raw_length:
+            try:
+                length = int(raw_length)
+            except ValueError:
+                length = 0
+            if length < 1:
+                return None, self._invalid_filter_response(
+                    field="length",
+                    value=raw_length,
+                    allowed=["positive integer"],
+                )
+            filters["length"] = length
+
+        raw_limit = request.query_params.get("limit", "").strip()
+        if raw_limit:
+            try:
+                limit = int(raw_limit)
+            except ValueError:
+                limit = 0
+            if limit < 1 or limit > MAX_SEARCH_LIMIT:
+                return None, self._invalid_filter_response(
+                    field="limit",
+                    value=raw_limit,
+                    allowed=[f"1..{MAX_SEARCH_LIMIT}"],
+                )
+            filters["limit"] = limit
+
+        return filters, None
+
+    def _active_filter_payload(self, filters):
+        active = {
+            key: value for key, value in filters.items() if value and key != "limit"
+        }
+        if filters["limit"] != DEFAULT_SEARCH_LIMIT:
+            active["limit"] = filters["limit"]
+        return active
+
+    def _invalid_filter_response(self, *, field, value, allowed):
+        return Response(
+            build_error_envelope(
+                code="PATTERN_FILTER_INVALID",
+                message=f"Invalid pattern search filter '{field}'.",
                 detail={
                     "field": field,
                     "value": value,
