@@ -28,6 +28,7 @@ from shona_api.editorial.models import ReviewState
 from shona_api.extraction.models import ExtractionUnit
 from shona_api.lexicon.models import Form, Lemma
 from shona_api.morphology.plurals import PluralDerivationError, derive_plural
+from shona_api.parsers.dictionary_text import read_plural_index, unambiguous_plural
 from shona_api.parsers.hannan import read_attested_plural_forms
 
 
@@ -68,6 +69,12 @@ class Command(BaseCommand):
             )
         )
 
+        # Where an extraction unit misread the page, the dictionary text is the
+        # better reading -- but only where it reports one plural for the
+        # headword, since it has no entry locators to separate homographs.
+        text_index = read_plural_index()
+        self.stdout.write(f"dictionary text reports plurals for {len(text_index):,} headwords")
+
         published: Counter[str] = Counter()
         skipped: Counter[str] = Counter()
         bases: Counter[str] = Counter()
@@ -106,8 +113,21 @@ class Command(BaseCommand):
                     lemma.headword, recorded, noun_class=noun_class
                 )
             except PluralDerivationError as exc:
-                skipped[exc.code] += 1
-                continue
+                # The unit's reading did not derive; before giving up, try the
+                # dictionary text's reading for this headword.
+                from_text = unambiguous_plural(text_index, lemma.headword)
+                if from_text is None:
+                    skipped[exc.code] += 1
+                    continue
+                try:
+                    derivation = derive_plural(
+                        lemma.headword, [from_text], noun_class=noun_class
+                    )
+                except PluralDerivationError:
+                    skipped[f"{exc.code} (text reading also refused)"] += 1
+                    continue
+                skipped[f"read from the dictionary text, not the unit ({exc.code})"] += 0
+                bases["corrected_from_dictionary_text"] += 1
 
             if already.get(lemma.id):
                 skipped["plural already published"] += 1

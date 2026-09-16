@@ -221,3 +221,40 @@ def test_a_shared_vowel_at_the_junction_is_written_once():
     """`mau-` overlaps the `u` that `urizheve` begins with, so the plural is
     `maurizheve`, not the doubled `mauurizheve`."""
     assert derive_plural("urizheve", ["mau-"], noun_class="5").surface == "maurizheve"
+
+
+# --- the dictionary text as a second reading -------------------------------
+
+
+def test_homoglyphs_are_normalised_before_a_reading_is_used():
+    """The extraction carries Cyrillic lookalikes; publishing them would put
+    non-Latin characters in a Shona surface form."""
+    from shona_api.parsers.dictionary_text import normalise_homoglyphs
+
+    assert normalise_homoglyphs("m\u0430p-") == "map-"
+    assert normalise_homoglyphs("\u0442\u0430p-") == "tap-"
+
+
+def test_a_headword_the_text_reports_once_can_correct_a_unit(tmp_path):
+    from shona_api.parsers.dictionary_text import read_plural_index, unambiguous_plural
+
+    source = tmp_path / "text.txt"
+    source.write_text(
+        "dikanwa [HHH]KZ n 5, pl: mad-, Necessary, desirable.\n"
+        "gwama [HH] MZn 5, pl: magw-, Fruit.\n"
+        "gwama [HH K]KMZ n 5, pl: makw-, Leather bag.\n",
+        encoding="utf-8",
+    )
+    index = read_plural_index(source)
+
+    assert unambiguous_plural(index, "dikanwa") == "mad-"
+    # Two entries, two plurals, no entry locators: ambiguous, so nothing to use.
+    assert unambiguous_plural(index, "gwama") is None
+    assert unambiguous_plural(index, "absent") is None
+
+
+def test_an_absent_text_file_yields_nothing_rather_than_failing(tmp_path):
+    """The cache is gitignored, so a checkout without it must still run."""
+    from shona_api.parsers.dictionary_text import read_plural_index
+
+    assert read_plural_index(tmp_path / "missing.txt") == {}
