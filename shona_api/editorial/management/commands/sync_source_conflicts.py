@@ -107,7 +107,10 @@ class Command(BaseCommand):
                 if str(lemma.pk) in seen:
                     continue
                 seen.add(str(lemma.pk))
-                if not dry_run and ReviewNote.objects.filter(
+                # Checked even on a dry run: reporting rows that already exist
+                # as "would create" makes --dry-run predict a write that will
+                # not happen.
+                if ReviewNote.objects.filter(
                     target_content_type=lemma_type,
                     target_object_id=str(lemma.pk),
                     body__contains=f"'{conflict_id}'",
