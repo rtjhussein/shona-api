@@ -47,6 +47,10 @@ def gemini_jsonl_record(locator="hannan:page_005:entry_001:bamba"):
             "dialects": [],
             "comparative_bantu_marker": False,
             "tone_pattern": "HH",
+            # The raw line ("bamba [HH] n 5. Effort.") carries class 5. Parsers
+            # emit the class as a JSON number, which is the shape that a
+            # string-only resolver used to drop.
+            "noun": {"classes": [5]},
             "senses": [
                 {
                     "number": 1,

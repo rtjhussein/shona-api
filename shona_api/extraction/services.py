@@ -21,6 +21,7 @@ from shona_api.lexicon.examples import (
     normalize_example_pairs,
 )
 from shona_api.lexicon.models import Form, Lemma, NounClass, Sense, ToneRecord
+from shona_api.lexicon.part_of_speech import canonical_pos_code
 
 from .gpt_jsonl import build_tone_record_payloads, validate_publishable_parser_output
 from .models import ExtractionUnit
@@ -322,8 +323,10 @@ def _parser_pos_code(parser_output: dict[str, object]) -> str:
     part_of_speech = _parser_part_of_speech(parser_output)
     if part_of_speech:
         code = part_of_speech.get("code")
-        if isinstance(code, str):
-            return code
+        if isinstance(code, str) and code.strip():
+            # Parsers spell the same category several ways ("vt" / "v t");
+            # canonicalise so part_of_speech_code is usable as a filter key.
+            return canonical_pos_code(code)
     return ""
 
 
@@ -346,6 +349,14 @@ def _parser_entry_grammar(parser_output: dict[str, object]) -> list[str]:
 
 
 def _parser_noun_class(parser_output: dict[str, object]) -> NounClass | None:
+    """Resolve the reviewed NounClass record for a parsed noun entry.
+
+    Parsers emit the Hannan class number either as a string or as a JSON
+    number (``"5"`` or ``5``); both must resolve. An unmapped value -- Hannan
+    sub-classes such as ``2b`` that have no ``NounClass`` row -- is skipped
+    rather than ending the search, so a later mapped value on the same entry
+    still wins.
+    """
     if _map_headword_kind(parser_output.get("headword_kind")) != Lemma.HeadwordKind.NOUN:
         return None
     noun_payload = parser_output.get("noun")
@@ -355,8 +366,19 @@ def _parser_noun_class(parser_output: dict[str, object]) -> NounClass | None:
     if not isinstance(classes, list):
         return None
     for class_number in classes:
-        if isinstance(class_number, str) and class_number.strip():
-            return NounClass.objects.filter(class_number=class_number.strip()).first()
+        # bool is an int subclass; a boolean is never a class number.
+        if isinstance(class_number, bool):
+            continue
+        if isinstance(class_number, int):
+            class_number = str(class_number)
+        if not isinstance(class_number, str):
+            continue
+        candidate = class_number.strip()
+        if not candidate:
+            continue
+        noun_class = NounClass.objects.filter(class_number=candidate).first()
+        if noun_class is not None:
+            return noun_class
     return None
 
 
