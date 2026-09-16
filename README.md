@@ -319,7 +319,34 @@ python manage.py generate_openapi_spec
 
 ## 🧪 Running Tests
 
-A highly comprehensive suite of **534 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), and the lexical QA harness (`evaluation/lexical_qa/v1`).
+**Use the verification gate.** Continuous integration is not running for this
+project, so the safety net lives in the repository and is one command:
+
+```powershell
+python tools/verify.py            # every gate, exits non-zero if any fails
+python tools/verify.py --list     # name the stages
+python tools/verify.py --only tests
+```
+
+| Stage | Gate |
+|:---|:---|
+| `readiness` | the current release's rule-set version and the stored phonology inventory match this checkout |
+| `lexical-qa` | the published lexicon against the Hannan lines it came from, compared with the frozen baseline (`evaluation/lexical_qa/v1/baseline.json`) |
+| `morphology-corpus` | the rule engine against the frozen source-backed corpus |
+| `tests` | the pytest suite |
+
+Stages run **sequentially**: two of them open the same SQLite database, and
+concurrent access has already produced a `database is locked` failure here. Each
+stage writes its artefacts to a temporary directory, so verifying never dirties
+the working tree.
+
+The lexical QA stage fails if a measure regresses below the frozen baseline, if
+a denominator moves, or if the baseline was written for a different corpus — so
+a future import that quietly drops noun-class coverage fails the gate instead of
+degrading the lexicon unnoticed. Raise a baseline deliberately, with
+`python tools/evaluate_lexical_qa.py ... --write-baseline`.
+
+A highly comprehensive suite of **545 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 

@@ -298,11 +298,72 @@ def write_report(
     return path
 
 
+def baseline_regressions(
+    *,
+    metrics: dict[str, Any],
+    coverage: dict[str, int],
+    baseline: dict[str, Any],
+    corpus_hash: str,
+) -> list[str]:
+    """Return the ways this run falls short of a frozen baseline.
+
+    The corpus is a sample, so absolute counts only mean something against the
+    sample they were measured on: the baseline records the corpus hash it was
+    written for and is rejected if that no longer matches. Denominators must be
+    identical (a changed denominator means the measure itself moved), while
+    `passed` may only rise -- a fix improves the number, a regression fails.
+    """
+    problems: list[str] = []
+    if baseline.get("corpus_hash") != corpus_hash:
+        return [
+            "baseline was written for corpus "
+            f"{baseline.get('corpus_hash')!r}, current corpus is {corpus_hash!r}"
+        ]
+
+    for check in CHECKS:
+        expected = baseline.get("metrics", {}).get(check)
+        if expected is None:
+            problems.append(f"{check}: baseline records no expectation")
+            continue
+        actual = metrics[check]
+        if actual["denominator"] != expected["denominator"]:
+            problems.append(
+                f"{check}: denominator moved from {expected['denominator']} "
+                f"to {actual['denominator']}"
+            )
+            continue
+        if actual["passed"] < expected["passed"]:
+            problems.append(
+                f"{check}: {actual['passed']}/{actual['denominator']} correct, "
+                f"baseline is {expected['passed']}/{expected['denominator']}"
+            )
+
+    expected_coverage = baseline.get("coverage", {})
+    for key, value in coverage.items():
+        if key not in expected_coverage:
+            continue
+        if value < expected_coverage[key]:
+            problems.append(
+                f"coverage {key}: {value}, baseline is {expected_coverage[key]}"
+            )
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--corpus", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
+    parser.add_argument(
+        "--baseline",
+        type=Path,
+        help="Fail with a non-zero exit if this run falls short of the baseline.",
+    )
+    parser.add_argument(
+        "--write-baseline",
+        type=Path,
+        help="Record this run's metrics as the baseline for the frozen corpus.",
+    )
     args = parser.parse_args()
 
     corpus = json.loads(args.corpus.read_text(encoding="utf-8"))
@@ -338,10 +399,46 @@ def main() -> int:
         encoding="utf-8",
     )
 
+    if args.write_baseline:
+        args.write_baseline.write_text(
+            json.dumps(
+                {
+                    "corpus_hash": corpus["hash"],
+                    "metrics": {
+                        check: {
+                            "passed": metrics[check]["passed"],
+                            "denominator": metrics[check]["denominator"],
+                        }
+                        for check in CHECKS
+                    },
+                    "coverage": coverage,
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        print(f"wrote baseline {args.write_baseline}")
+
     summary = " ".join(
         f"{check}={metrics[check]['passed']}/{metrics[check]['denominator']}" for check in CHECKS
     )
     print(f"cases={len(cases)} {summary} report={report_path}")
+
+    if args.baseline:
+        baseline = json.loads(args.baseline.read_text(encoding="utf-8"))
+        problems = baseline_regressions(
+            metrics=metrics,
+            coverage=coverage,
+            baseline=baseline,
+            corpus_hash=corpus["hash"],
+        )
+        if problems:
+            print(f"BASELINE FAILED ({len(problems)} regression(s)):", file=sys.stderr)
+            for problem in problems:
+                print(f"  - {problem}", file=sys.stderr)
+            return 1
+        print(f"baseline ok ({args.baseline})")
     return 0
 
 

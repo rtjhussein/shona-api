@@ -1,0 +1,29 @@
+{
+  "corpus_hash": "sha256:a533ea565ec65b085defd158745d414c64a346440fe1a8a5c23ce1f935f66535",
+  "metrics": {
+    "headword": {
+      "passed": 322,
+      "denominator": 324
+    },
+    "word_class": {
+      "passed": 324,
+      "denominator": 324
+    },
+    "noun_class": {
+      "passed": 112,
+      "denominator": 112
+    },
+    "tone": {
+      "passed": 324,
+      "denominator": 324
+    },
+    "part_of_speech_label": {
+      "passed": 323,
+      "denominator": 324
+    }
+  },
+  "coverage": {
+    "nouns_with_source_plural": 42,
+    "with_a_published_form": 0
+  }
+}
