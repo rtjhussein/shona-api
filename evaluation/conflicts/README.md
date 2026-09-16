@@ -61,3 +61,28 @@ this command — closing a conflict is an editorial act, performed on the note.
   question stands (e.g. a normaliser that strips the defect on read).
 - **resolved** — settled, with the ruling recorded in the entry rather than
   deleted, because the next person will wonder why the corpus reads as it does.
+
+## Policy: publish what is attested, flag the classification
+
+When two sources disagree, the corpus publishes what the primary source for
+**that kind of fact** states, and records the disagreement rather than resolving
+it. The product requirements assign source authority by fact type, so the
+division is already determined:
+
+| fact | authority |
+| --- | --- |
+| lemmas, senses, dialect labels, examples, tone, cross-references, orthographic variants, noun class data | Hannan (lexical) |
+| morphology, noun class concord tables, extension rules, morphophonemics | Fortune (grammatical) |
+
+Applied to `class-9-takes-class-6-plural`: the per-entry plural is a lexical fact
+Hannan states and the scan confirms, so the attested surface publishes; which
+class that plural belongs to is a concord question on which Fortune's list
+disagrees, so the classification stays flagged here. Withholding an attested
+surface would lose data the source states plainly; treating Fortune's rule as
+overriding Hannan's data would silently pick a winner, which the conflict policy
+forbids.
+
+The general form, for the next disagreement: **publish the attested surface,
+carry the uncertainty in provenance, and keep the note open.** A conflict that
+cannot be expressed that way — where the disputed thing *is* the surface — stays
+refused.

@@ -22,12 +22,12 @@
       "denominator": 324
     },
     "plural_form": {
-      "passed": 35,
+      "passed": 36,
       "denominator": 42
     }
   },
   "coverage": {
     "nouns_with_source_plural": 42,
-    "with_a_published_form": 35
+    "with_a_published_form": 36
   }
 }

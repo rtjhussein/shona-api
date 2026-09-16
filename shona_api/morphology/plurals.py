@@ -91,7 +91,15 @@ PLURAL_CLASS_RULES: dict[str, PluralClassRule] = {
         "corresponding to '/chi-/' and '/cha-/'",
     ),
     "9": PluralClassRule(
-        "10", ("dzi",), (), "standard",
+        # Fortune 3.3.9 lists class 6's correlating singulars as 5, 11, 21, 1a, 1
+        # and 14 -- class 9 is absent -- but Hannan records class 9 nouns with a
+        # class 6 plural on the page (`budiriro [HHHL]KMZn 9, pl: mab-`, verified
+        # against the scan). The product requirements assign Hannan authority for
+        # noun class data and Fortune authority for concord rules, so the
+        # attested surface publishes and the disputed classification stays
+        # flagged in evaluation/conflicts/open.json rather than being resolved
+        # here. See the register README for the policy.
+        "10", ("dzi", "ma"), (), "standard",
         "3.3.13 Noun class 10, printed p.65: '/dzi-/', allomorph '/\u00d8-/'",
     ),
     "11": PluralClassRule(

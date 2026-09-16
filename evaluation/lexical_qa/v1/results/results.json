@@ -32,8 +32,8 @@
       "denominator": 324
     },
     "plural_form": {
-      "passed": 35,
-      "failed": 7,
+      "passed": 36,
+      "failed": 6,
       "not_applicable": 282,
       "denominator": 42
     },
@@ -41,7 +41,7 @@
   },
   "coverage": {
     "nouns_with_source_plural": 42,
-    "with_a_published_form": 35
+    "with_a_published_form": 36
   },
   "results": [
     {
@@ -8680,11 +8680,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "manho"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "manhonje"
+          ]
         }
       },
       "unresolved": false
