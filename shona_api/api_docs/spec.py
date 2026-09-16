@@ -56,9 +56,16 @@ def build_openapi_spec():
                     "tags": ["Lexicon"],
                     "summary": "Search reviewed lemmas and forms.",
                     "description": (
-                        "Search exact reviewed lemmas/forms and attach morphology "
-                        "enrichment for supported forms such as ndinobuda or kubuda. "
-                        "Unsupported shapes can include future-lane rule-card hints."
+                        "Resolution runs in tiers, and a later tier is only "
+                        "consulted when the earlier ones matched nothing: exact "
+                        "lemma, exact form, then morphological analysis (an "
+                        "inflected form such as ndinobuda is returned as the "
+                        "lemma it resolves to, with match_type "
+                        "'morphology_lemma'), then fuzzy similarity. Every "
+                        "result carries its tier in match_type. The response "
+                        "also attaches the full morphology analysis for "
+                        "supported forms; unsupported shapes can include "
+                        "future-lane rule-card hints instead."
                     ),
                     "operationId": "searchLexicon",
                     "parameters": [
@@ -572,7 +579,24 @@ def schemas():
             "type": "object",
             "properties": {
                 "result_type": {"type": "string", "enum": ["lemma", "form"]},
-                "match_type": {"type": "string", "example": "exact_lemma"},
+                "match_type": {
+                    "type": "string",
+                    "enum": [
+                        "exact_lemma",
+                        "exact_form",
+                        "morphology_lemma",
+                        "fuzzy_lemma",
+                        "fuzzy_form",
+                    ],
+                    "description": (
+                        "Which search tier produced this result. "
+                        "`morphology_lemma` means the query was an inflected form "
+                        "that the morphology engine resolved to this lemma; "
+                        "`fuzzy_*` results are similarity matches and are only "
+                        "returned when no exact or morphological tier matched."
+                    ),
+                    "example": "exact_lemma",
+                },
                 "lemma": {"$ref": "#/components/schemas/LemmaCore"},
                 "form": {"$ref": "#/components/schemas/Form"},
             },

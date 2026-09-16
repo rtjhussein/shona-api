@@ -3,6 +3,7 @@ import pytest
 from shona_api.parsers.hannan import (
     HannanParseError,
     parse_hannan_entry,
+    read_attested_headword_kind,
     read_attested_noun_classes,
 )
 from tests.fixtures.hannan import iter_hannan_fixture_entries
@@ -111,3 +112,38 @@ def test_hannan_parser_does_not_swallow_a_short_definition_as_a_plural():
 
     assert parsed["noun"]["plural_prefixes"] == ["mab-"]
     assert parsed["senses"][0]["definition"].startswith("Huddle")
+
+
+@pytest.mark.parametrize(
+    "line, expected",
+    [
+        ("†-ti [L]KKoMZ defective v Say. Think. Do.", "verb_stem"),
+        ("-nga- [L]KMZ defective v Be.", "verb_stem"),
+        ("-pfutura [L]Z v t, see -pfutunura Z.", "verb_stem"),
+        ("-buda [H] vi Come out.", "verb_stem"),
+        ("piku [LL]KMZ ideo of Taking up.", "ideophone"),
+        ("Chikumi [LHH]KMZ n 1a June.", "noun"),
+        ("munhondo churu [LLL HH]Z n 3 sp Medium-sized tree.", "noun"),
+        # A prefix match on "n" would read this ideophone headword as a noun.
+        ("n'a n'a n'a [H H H]KMZ ideo of Biting fleas.", "ideophone"),
+        ("nde [HL]M inter In that way.", None),
+        ("zanhi [HL]M adj Cold.", None),
+        ("-mwe [H]Z poss st Other.", None),
+        ("a- KoZ basic sc [sp] 1 & 1a.", None),
+    ],
+)
+def test_attested_headword_kind_reads_the_source_line(line, expected):
+    """The line's part of speech decides the kind, and only where we model one."""
+    assert read_attested_headword_kind(line) == expected
+
+
+def test_attested_noun_classes_reads_a_multi_word_headword():
+    """The tone bracket, not the first space, ends the headword.
+
+    Regression: the headword was read as a single token, so the remainder of a
+    multi-word headword was parsed as if it were the part of speech -- noun
+    classes were missed for entries like `munhondo churu`.
+    """
+    assert read_attested_noun_classes(
+        "munhondo churu [LLL HH]Z n 3 sp Medium-sized tree: Schotia brachypetala."
+    ) == ["3"]

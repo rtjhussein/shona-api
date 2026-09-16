@@ -22,7 +22,10 @@ from shona_api.lexicon.examples import (
 )
 from shona_api.lexicon.models import Form, Lemma, NounClass, Sense, ToneRecord
 from shona_api.lexicon.part_of_speech import canonical_pos_code
-from shona_api.parsers.hannan import read_attested_noun_classes
+from shona_api.parsers.hannan import (
+    read_attested_headword_kind,
+    read_attested_noun_classes,
+)
 
 from .gpt_jsonl import build_tone_record_payloads, validate_publishable_parser_output
 from .models import ExtractionUnit
@@ -100,10 +103,13 @@ def publish_reviewed_extraction_unit(
         noun_class, noun_class_provenance = _resolve_noun_class(
             extraction_unit, parser_output
         )
+        headword_kind, headword_kind_provenance = _resolve_headword_kind(
+            extraction_unit, parser_output
+        )
 
         lemma = Lemma.objects.create(
             headword=parser_output.get("headword") or extraction_unit.raw_text.strip(),
-            headword_kind=_map_headword_kind(parser_output.get("headword_kind")),
+            headword_kind=headword_kind,
             part_of_speech_code=_parser_pos_code(parser_output),
             part_of_speech_label=_parser_pos_label(parser_output),
             noun_class=noun_class,
@@ -118,6 +124,7 @@ def publish_reviewed_extraction_unit(
                 headword_kind=parser_output.get("headword_kind", "unknown"),
                 part_of_speech=_parser_part_of_speech(parser_output),
                 **noun_class_provenance,
+                **headword_kind_provenance,
             ),
             review_state=ReviewState.PUBLISHED,
         )
@@ -317,6 +324,27 @@ def _record_provenance(
         "record_type": record_type,
         **extra,
     }
+
+
+def _resolve_headword_kind(
+    extraction_unit: ExtractionUnit, parser_output: dict[str, object]
+) -> tuple[str, dict[str, object]]:
+    """Resolve the word class a new record should carry.
+
+    The source line is the authority, as it is for the noun class: parsers
+    published entries the line marks as a verb, noun, or ideophone under the
+    generic ``word`` kind, and the morphology engine resolves verb stems by
+    ``headword_kind``, so a misclassified stem is unreachable rather than merely
+    mislabelled.
+    """
+    attested = read_attested_headword_kind(extraction_unit.raw_text)
+    parsed_kind = _map_headword_kind(parser_output.get("headword_kind"))
+    if attested is None:
+        return parsed_kind, {}
+    provenance: dict[str, object] = {"attested_headword_kind": attested}
+    if attested != parsed_kind:
+        provenance["parser_headword_kind"] = parsed_kind
+    return attested, provenance
 
 
 def _resolve_noun_class(

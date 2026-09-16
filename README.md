@@ -227,7 +227,7 @@ Successful responses are returned in a standard envelope:
 |:---|:---|:---|:---|
 | **GET** | `/health` | Unprotected system health check. | None |
 | **GET** | `/openapi.json` | Serves the OpenAPI 3.1 Spec. | None |
-| **GET** | `/v1/search` | Search canonical lemmas & forms with orthographic normalization. Exposes rule-based morphology enrichment. | `q` (search query, e.g., `?q=buda`) |
+| **GET** | `/v1/search` | Search canonical lemmas & forms with orthographic normalization. Resolves inflected forms to their lemma (`match_type: morphology_lemma`) and exposes the rule-based morphology analysis. | `q` (search query, e.g., `?q=buda`) |
 | **GET** | `/v1/lemmas/{public_id}` | Retrieve a full canonical lemma, including senses, tones, and exposed forms. | `public_id` (e.g., `lemma_abc123`) |
 | **GET** | `/v1/figurative-expressions/tsumo` | List active reviewed proverbs. | None |
 | **GET** | `/v1/figurative-expressions/tsumo/{public_id}` | Retrieve details of a specific proverb. | `public_id` (e.g., `expr_xyz789`) |
@@ -277,6 +277,10 @@ python manage.py rederive_noun_classes
 # Correct noun classes that disagree with the attested source line
 python manage.py repair_noun_classes --dry-run
 python manage.py repair_noun_classes
+
+# Correct word classes that disagree with the attested source line
+python manage.py repair_headword_kinds --dry-run
+python manage.py repair_headword_kinds
 ```
 
 `recompute_phonology`, `normalize_part_of_speech`, `rederive_noun_classes`, and
@@ -284,9 +288,9 @@ python manage.py repair_noun_classes
 `post_save` receiver that runs curriculum tagging for published records, and a
 repair must not rewrite pedagogical metadata as a side effect.
 
-`rederive_noun_classes` reads the *parser output*; `repair_noun_classes` reads
-the *source line*, which is the authority when the two disagree. Both are
-read-only until invoked without `--dry-run`.
+`rederive_noun_classes` reads the *parser output*; `repair_noun_classes` and
+`repair_headword_kinds` read the *source line*, which is the authority when the
+two disagree. All are read-only until invoked without `--dry-run`.
 
 ### Lexical QA — published lexicon against its source lines
 
@@ -315,7 +319,7 @@ python manage.py generate_openapi_spec
 
 ## 🧪 Running Tests
 
-A highly comprehensive suite of **515 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), and the lexical QA harness (`evaluation/lexical_qa/v1`).
+A highly comprehensive suite of **534 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), and the lexical QA harness (`evaluation/lexical_qa/v1`).
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 

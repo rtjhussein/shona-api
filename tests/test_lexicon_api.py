@@ -657,8 +657,14 @@ def test_search_endpoint_returns_morphology_analysis_on_verb_forms(
 
     assert response.status_code == 200
     body = response.json()
-    assert body["data"]["count"] == 0
+    # Tier 3: the inflected form resolves to its lemma as a result, and the
+    # analysis that resolved it is still attached for inspection.
+    assert body["data"]["count"] == 1
     assert "zero_result" not in body["data"]
+    result = body["data"]["results"][0]
+    assert result["match_type"] == "morphology_lemma"
+    assert result["result_type"] == "lemma"
+    assert result["lemma"]["public_id"] == lemma.public_id
     assert body["data"]["morphology_enrichment"] == {
         "status": "matched",
         "count": 1,
@@ -690,8 +696,10 @@ def test_search_endpoint_returns_morphology_analysis_on_ku_infinitives(
 
     assert response.status_code == 200
     body = response.json()
-    assert body["data"]["count"] == 0
+    assert body["data"]["count"] == 1
     assert "zero_result" not in body["data"]
+    assert body["data"]["results"][0]["match_type"] == "morphology_lemma"
+    assert body["data"]["results"][0]["lemma"]["public_id"] == lemma.public_id
     assert body["data"]["morphology_enrichment"] == {
         "status": "matched",
         "count": 1,
