@@ -280,6 +280,23 @@ write with `bulk_update` on purpose: `Lemma` has a `post_save` receiver that
 runs curriculum tagging for published records, and a repair must not rewrite
 pedagogical metadata as a side effect.
 
+### Lexical QA — published lexicon against its source lines
+
+`evaluation/lexical_qa/` scores the published lexicon against the verbatim
+Hannan lines it came from. Expectations come from `tools/lexical_qa.py`, a
+reader written from the documented line format that imports nothing from
+`shona_api`, so a disagreement with the LLM-produced corpus is meaningful.
+See `evaluation/lexical_qa/v1/README.md` for the current baseline and the
+defects it reports.
+
+```powershell
+python tools/build_lexical_qa_corpus.py --check-only
+python tools/evaluate_lexical_qa.py --corpus evaluation/lexical_qa/v1/corpus.json --out evaluation/lexical_qa/v1/results
+pytest tests/test_lexical_qa_evaluation.py -q
+```
+
+The evaluator opens `db/shona.sqlite3` read-only; it cannot write to it.
+
 ### OpenAPI Spec Generation
 Re-generate and commit changes to the OpenAPI specification using:
 ```powershell
@@ -290,7 +307,7 @@ python manage.py generate_openapi_spec
 
 ## 🧪 Running Tests
 
-A highly comprehensive suite of **468 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, and the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`).
+A highly comprehensive suite of **499 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), and the lexical QA harness (`evaluation/lexical_qa/v1`).
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 
