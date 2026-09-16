@@ -121,12 +121,26 @@ def screen_headwords(cursor, buckets) -> tuple[int, int, list[tuple[str, str]]]:
     checked = 0
     onepair = 0
     candidates = []
+    published = set()
+    heads = []
     for (headword,) in cursor.execute(
         "select headword from lexicon_lemma where review_state='published'"
     ):
         head = (headword or "").strip()
+        published.add(head.lstrip("-").casefold())
         if len(head) < 4 or " " in head:
             continue
+        heads.append(head)
+
+    # A candidate whose text spelling is ALREADY a published headword is not a
+    # misread -- the correct spelling is in the corpus beside it, so the record is
+    # a duplicate and renaming it would collide. Every headword defect found so
+    # far by reading the page sorted this way: `n'a n'a`, `dzimbahwe` and `nzwa`
+    # each had their corrected spelling already published, while `bve bve`,
+    # `shwa shwaba shwaba` and `shakahuni` did not and were renames. The two
+    # classes need different work, so the screen separates them rather than
+    # sending a reviewer to the page to discover which one it is.
+    for head in heads:
         checked += 1
         key_word = head.lstrip("-").casefold()
         near = buckets.get((len(key_word), key_word[:2]))
@@ -139,7 +153,7 @@ def screen_headwords(cursor, buckets) -> tuple[int, int, list[tuple[str, str]]]:
                 if len(candidates) < 40:
                     candidates.append((head, candidate))
                 break
-    return checked, onepair, candidates
+    return checked, onepair, candidates, published, heads
 
 
 def main() -> int:
@@ -153,12 +167,27 @@ def main() -> int:
         print(f"    {headword!r} ({words} words) -> pattern {pattern!r}")
 
     buckets = text_headwords()
-    checked, onepair, samples = screen_headwords(cursor, buckets)
+    checked, onepair, samples, published, heads = screen_headwords(cursor, buckets)
     print()
     print(f"published headwords screened against the text: {checked:,}")
     print(f"  one confusable character from the text's spelling: {onepair:,}")
-    for published, text_form in samples[:10]:
-        print(f"    published {published!r}  text {text_form!r}")
+
+    duplicates = 0
+    misreads = 0
+    for head in heads:
+        key_word = head.lstrip("-").casefold()
+        near = buckets.get((len(key_word), key_word[:2]))
+        for candidate in near or ():
+            if one_confusable_difference(key_word, candidate):
+                if candidate in published:
+                    duplicates += 1
+                else:
+                    misreads += 1
+                break
+    print(f"    whose text spelling is already published (duplicate class): {duplicates:,}")
+    print(f"    whose text spelling is absent (misread class):              {misreads:,}")
+    for published_head, text_form in samples[:10]:
+        print(f"    published {published_head!r}  text {text_form!r}")
     connection.close()
     return 0
 
