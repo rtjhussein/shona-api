@@ -47,15 +47,28 @@ def render_entry(
     if not hits:
         return None
 
-    box = hits[0]
+    # `search_for` returns substring hits in reading order, and a headword also
+    # occurs in cross-references ("cp -dimba") and in running heads. The entry is
+    # the hit whose line continues into a tone bracket, so prefer that; falling
+    # back to the first hit frames a cross-reference and reads the wrong column.
+    box = next((hit for hit in hits if _followed_by_bracket(page, hit)), hits[0])
+    # Keep the crop to this entry's column: extending far to the right pulls in
+    # the facing column, and a question about the crop can then be answered from
+    # a neighbouring entry.
     clip = fitz.Rect(
-        max(box.x0 - 180, 0),
-        max(box.y0 - 40, 0),
-        min(box.x0 + 420, page.rect.x1),
-        min(box.y0 + 130, page.rect.y1),
+        max(box.x0 - 24, 0),
+        max(box.y0 - 26, 0),
+        min(box.x0 + 330, page.rect.x1),
+        min(box.y0 + 120, page.rect.y1),
     )
     page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=clip).save(out_path)
     return out_path
+
+
+def _followed_by_bracket(page, hit) -> bool:
+    """True when the text after this hit continues into a Hannan tone bracket."""
+    tail = page.get_textbox(fitz.Rect(hit.x1, hit.y0, page.rect.x1, hit.y1))
+    return tail.lstrip().startswith("[")
 
 
 def main() -> int:
