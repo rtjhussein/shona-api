@@ -1,5 +1,7 @@
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from django.core.management import call_command
+from io import StringIO
 
 from shona_api.editorial.models import ReviewState
 from shona_api.extraction.models import ExtractionUnit
@@ -951,3 +953,56 @@ def test_publish_keeps_the_parser_kind_when_the_line_names_no_modelled_class(
 
     assert bundle.lemma.headword_kind == "word"
     assert "attested_headword_kind" not in bundle.lemma.provenance
+
+
+@pytest.mark.django_db
+def test_publish_noun_plurals_creates_a_form_from_the_source_line(hannan_source):
+    """Regression: parsers dropped `plural_forms` on entries whose line has one.
+
+    `bino [LL]KM n 5, pl: map-, Big nose.` reached the database with no recorded
+    plural, so the derivation had nothing to work from. The source line is the
+    authority, as it is for the noun class.
+    """
+    NounClass.objects.create(class_number="5", display_order=5, label="Class 5")
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_080:entry_001:bino",
+        raw_text="bino [LL]KM n 5, pl: map-, Big nose. cp buno Z.",
+        parser_output={
+            "headword": "bino",
+            "headword_kind": "noun",
+            "part_of_speech": {"code": "n", "label": "noun"},
+            "dialects": ["K", "M"],
+            "noun": {"classes": ["5"]},
+            "senses": [
+                {
+                    "number": 1,
+                    "definition": "Big nose.",
+                    "dialects": [],
+                    "grammar": [],
+                    "examples": [],
+                    "cross_references": [],
+                }
+            ],
+            "derived_forms": [],
+            "raw_entry_text": "bino [LL]KM n 5, pl: map-, Big nose. cp buno Z.",
+        },
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+    lemma = publish_reviewed_extraction_unit(unit).lemma
+
+    call_command("publish_noun_plurals", stdout=StringIO())
+
+    form = Form.objects.get(lemma=lemma, form_kind=Form.FormKind.PLURAL)
+    assert form.form_text == "mapino"
+    assert form.review_state == ReviewState.PUBLISHED
+    assert form.provenance["derivation"]["basis"] == "consonant_final_prefix"
+    assert form.provenance["derivation"]["allomorph"]["underlying"] == "p"
+    # The form carries its own phonology, so a game filtering by length sees it.
+    assert form.normalized_form == "mapino"
+    assert form.syllables == ["ma", "pi", "no"]
+
+    # Idempotent: a plural already published for a lemma is left alone.
+    call_command("publish_noun_plurals", stdout=StringIO())
+    assert Form.objects.filter(lemma=lemma, form_kind=Form.FormKind.PLURAL).count() == 1
