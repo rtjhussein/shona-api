@@ -31,11 +31,17 @@
       "not_applicable": 0,
       "denominator": 324
     },
+    "plural_form": {
+      "passed": 18,
+      "failed": 24,
+      "not_applicable": 282,
+      "denominator": 42
+    },
     "unresolved_records": 0
   },
   "coverage": {
     "nouns_with_source_plural": 42,
-    "with_a_published_form": 0
+    "with_a_published_form": 18
   },
   "results": [
     {
@@ -70,6 +76,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -106,6 +115,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -140,6 +152,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -176,6 +191,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "map"
+          ],
+          "actual_forms": [
+            "mapandadza"
+          ]
         }
       },
       "unresolved": false
@@ -212,6 +236,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mab"
+          ],
+          "actual_forms": [
+            "mabanzurwa"
+          ]
         }
       },
       "unresolved": false
@@ -246,6 +279,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -282,6 +318,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -318,6 +357,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -352,6 +394,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -388,6 +433,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vabh"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -424,6 +476,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "mabh"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -458,6 +517,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -494,6 +556,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "map"
+          ],
+          "actual_forms": [
+            "mapino"
+          ]
         }
       },
       "unresolved": false
@@ -528,6 +599,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -564,6 +638,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "map"
+          ],
+          "actual_forms": [
+            "maponzeka"
+          ]
         }
       },
       "unresolved": false
@@ -598,6 +681,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -634,6 +720,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mab"
+          ],
+          "actual_forms": [
+            "maburi"
+          ]
         }
       },
       "unresolved": false
@@ -670,6 +765,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mab"
+          ],
+          "actual_forms": [
+            "mabuzinyika"
+          ]
         }
       },
       "unresolved": false
@@ -704,6 +808,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -738,6 +845,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -772,6 +882,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -806,6 +919,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -840,6 +956,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -874,6 +993,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -908,6 +1030,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -944,6 +1069,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -978,6 +1106,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1014,6 +1145,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1048,6 +1182,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1084,6 +1221,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1118,6 +1258,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1154,6 +1297,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1190,6 +1336,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1226,6 +1375,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "sero 10 k & tsero 10 mz"
+          ],
+          "actual_forms": [
+            "sera"
+          ]
         }
       },
       "unresolved": false
@@ -1262,6 +1420,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "nzwanza 10"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -1296,6 +1461,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1332,6 +1500,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "nzwodzi"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -1368,6 +1543,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1404,6 +1582,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1440,6 +1621,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1474,6 +1658,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1510,6 +1697,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1546,6 +1736,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1582,6 +1775,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1618,6 +1814,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1654,6 +1853,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1690,6 +1892,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1724,6 +1929,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1760,6 +1968,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1796,6 +2007,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1832,6 +2046,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1866,6 +2083,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1900,6 +2120,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -1936,6 +2159,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "makw"
+          ],
+          "actual_forms": [
+            "makwenyakwenya"
+          ]
         }
       },
       "unresolved": false
@@ -1970,6 +2202,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2004,6 +2239,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2038,6 +2276,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2072,6 +2313,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2108,6 +2352,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2142,6 +2389,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2176,6 +2426,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2210,6 +2463,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2244,6 +2500,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2278,6 +2537,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2314,6 +2576,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mad"
+          ],
+          "actual_forms": [
+            "madandaburwa"
+          ]
         }
       },
       "unresolved": false
@@ -2350,6 +2621,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mat"
+          ],
+          "actual_forms": [
+            "matandadziva"
+          ]
         }
       },
       "unresolved": false
@@ -2384,6 +2664,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2418,6 +2701,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2452,6 +2738,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2486,6 +2775,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2520,6 +2812,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2556,6 +2851,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2590,6 +2888,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2626,6 +2927,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2660,6 +2964,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2694,6 +3001,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2728,6 +3038,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2762,6 +3075,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2796,6 +3112,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2832,6 +3151,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "madh"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -2866,6 +3192,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2902,6 +3231,14 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vanadh",
+            "madh"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -2936,6 +3273,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -2970,6 +3310,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3004,6 +3347,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3038,6 +3384,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3072,6 +3421,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3106,6 +3458,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3140,6 +3495,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3176,6 +3534,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3210,6 +3571,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3244,6 +3608,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3280,6 +3647,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "matsv"
+          ],
+          "actual_forms": [
+            "matsvoti"
+          ]
         }
       },
       "unresolved": false
@@ -3314,6 +3690,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3348,6 +3727,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3382,6 +3764,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3416,6 +3801,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3452,6 +3840,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3486,6 +3877,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3520,6 +3914,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3554,6 +3951,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3588,6 +3988,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3622,6 +4025,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3656,6 +4062,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3690,6 +4099,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3726,6 +4138,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3760,6 +4175,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3794,6 +4212,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3828,6 +4249,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3864,6 +4288,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mak"
+          ],
+          "actual_forms": [
+            "makambamukoyokoyo"
+          ]
         }
       },
       "unresolved": false
@@ -3900,6 +4333,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -3936,6 +4372,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mak"
+          ],
+          "actual_forms": [
+            "makara"
+          ]
         }
       },
       "unresolved": false
@@ -3972,6 +4417,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mak"
+          ],
+          "actual_forms": [
+            "makate"
+          ]
         }
       },
       "unresolved": false
@@ -4008,6 +4462,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "mag"
+          ],
+          "actual_forms": [
+            "magidhi"
+          ]
         }
       },
       "unresolved": false
@@ -4042,6 +4505,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4078,6 +4544,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4114,6 +4583,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vag- & mag"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -4148,6 +4624,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4184,6 +4663,14 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vana",
+            "mag"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -4220,6 +4707,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4254,6 +4744,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4290,6 +4783,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4326,6 +4822,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4360,6 +4859,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4394,6 +4896,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4428,6 +4933,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4462,6 +4970,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4496,6 +5007,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4530,6 +5044,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4566,6 +5083,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "magw"
+          ],
+          "actual_forms": [
+            "magwarikwari"
+          ]
         }
       },
       "unresolved": false
@@ -4602,6 +5128,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4636,6 +5165,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4672,6 +5204,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "magw"
+          ],
+          "actual_forms": [
+            "magwenjere"
+          ]
         }
       },
       "unresolved": false
@@ -4706,6 +5247,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4740,6 +5284,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4776,6 +5323,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4810,6 +5360,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4844,6 +5397,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4878,6 +5434,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4912,6 +5471,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4946,6 +5508,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -4980,6 +5545,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5014,6 +5582,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5048,6 +5619,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5084,6 +5658,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5120,6 +5697,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5156,6 +5736,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5192,6 +5775,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5228,6 +5814,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5262,6 +5851,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5298,6 +5890,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5332,6 +5927,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5366,6 +5964,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5400,6 +6001,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5434,6 +6038,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5470,6 +6077,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "maj"
+          ],
+          "actual_forms": [
+            "majombo"
+          ]
         }
       },
       "unresolved": false
@@ -5504,6 +6120,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5540,6 +6159,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5574,6 +6196,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5608,6 +6233,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5642,6 +6270,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5676,6 +6307,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5710,6 +6344,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5744,6 +6381,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5780,6 +6420,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5814,6 +6457,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5850,6 +6496,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5884,6 +6533,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5918,6 +6570,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5952,6 +6607,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -5986,6 +6644,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6022,6 +6683,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vak"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -6056,6 +6724,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6090,6 +6761,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6124,6 +6798,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6158,6 +6835,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6192,6 +6872,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6226,6 +6909,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6262,6 +6948,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6296,6 +6985,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6330,6 +7022,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6366,6 +7061,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6402,6 +7100,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6438,6 +7139,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6474,6 +7178,14 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vadzimai",
+            "madzimai"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -6510,6 +7222,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6546,6 +7261,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6580,6 +7298,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6614,6 +7335,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6650,6 +7374,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6686,6 +7413,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6722,6 +7452,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6756,6 +7489,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6790,6 +7526,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6826,6 +7565,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6860,6 +7602,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6896,6 +7641,13 @@
         "part_of_speech_label": {
           "status": "fail",
           "actual": "o n 3, pl: moyo, Heart (physical organ)."
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "moyo"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -6932,6 +7684,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -6968,6 +7723,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7004,6 +7762,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vamuk"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -7038,6 +7803,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7074,6 +7842,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7110,6 +7881,14 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vamu",
+            "vanamu"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -7146,6 +7925,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "mat",
+            "vamut",
+            "vanamut"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -7182,6 +7970,14 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "vamuu",
+            "vanamuu"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -7216,6 +8012,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7250,6 +8049,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7286,6 +8088,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7320,6 +8125,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7354,6 +8162,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7388,6 +8199,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7422,6 +8236,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7458,6 +8275,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7492,6 +8312,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7526,6 +8349,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive & intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7562,6 +8388,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7596,6 +8425,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive & intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7630,6 +8462,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "deficient verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7664,6 +8499,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective v"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7698,6 +8536,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective v"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7732,6 +8573,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7766,6 +8610,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective v"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7802,6 +8649,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "manho"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -7838,6 +8692,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7874,6 +8731,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7908,6 +8768,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7942,6 +8805,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -7978,6 +8844,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8012,6 +8881,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8048,6 +8920,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8082,6 +8957,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8118,6 +8996,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8154,6 +9035,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8188,6 +9072,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8222,6 +9109,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8256,6 +9146,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8290,6 +9183,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8324,6 +9220,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8358,6 +9257,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8392,6 +9294,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8426,6 +9331,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8460,6 +9368,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8496,6 +9407,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8530,6 +9444,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8564,6 +9481,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8598,6 +9518,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8632,6 +9555,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8666,6 +9592,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8700,6 +9629,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8734,6 +9666,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8768,6 +9703,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8802,6 +9740,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8838,6 +9779,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8872,6 +9816,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8906,6 +9853,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8940,6 +9890,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -8974,6 +9927,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9008,6 +9964,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9042,6 +10001,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9076,6 +10038,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9110,6 +10075,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "deficient verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9146,6 +10114,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9180,6 +10151,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9214,6 +10188,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9250,6 +10227,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "mab"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -9286,6 +10270,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "tuk"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -9322,6 +10313,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9358,6 +10352,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "ndwara 10"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -9394,6 +10395,14 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "ma",
+            "u"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -9428,6 +10437,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9462,6 +10474,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9496,6 +10511,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9532,6 +10550,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9566,6 +10587,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9602,6 +10626,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9636,6 +10663,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9670,6 +10700,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9704,6 +10737,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9738,6 +10774,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9772,6 +10811,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9806,6 +10848,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9842,6 +10887,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9876,6 +10924,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9910,6 +10961,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9944,6 +10998,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -9978,6 +11035,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10012,6 +11072,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10046,6 +11109,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10080,6 +11146,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10114,6 +11183,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10148,6 +11220,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10182,6 +11257,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10216,6 +11294,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10250,6 +11331,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10284,6 +11368,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10318,6 +11405,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10352,6 +11442,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10388,6 +11481,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10422,6 +11518,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10456,6 +11555,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10490,6 +11592,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10524,6 +11629,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10560,6 +11668,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10596,6 +11707,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "maune"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -10632,6 +11750,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "mau"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -10666,6 +11791,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10700,6 +11828,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10734,6 +11865,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10770,6 +11904,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10804,6 +11941,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10838,6 +11978,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive and intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10872,6 +12015,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "transitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10906,6 +12052,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10940,6 +12089,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -10976,6 +12128,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -11010,6 +12165,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -11044,6 +12202,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -11080,6 +12241,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -11114,6 +12278,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "defective verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -11148,6 +12315,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "intransitive verb"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -11184,6 +12354,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false
@@ -11220,6 +12393,15 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "pass",
+          "expected_prefixes": [
+            "map"
+          ],
+          "actual_forms": [
+            "mapadzu"
+          ]
         }
       },
       "unresolved": false
@@ -11256,6 +12438,13 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "noun"
+        },
+        "plural_form": {
+          "status": "fail",
+          "expected_prefixes": [
+            "mabh"
+          ],
+          "actual_forms": []
         }
       },
       "unresolved": false
@@ -11290,6 +12479,9 @@
         "part_of_speech_label": {
           "status": "pass",
           "actual": "ideophone"
+        },
+        "plural_form": {
+          "status": "not_applicable"
         }
       },
       "unresolved": false

@@ -281,6 +281,10 @@ python manage.py repair_noun_classes
 # Correct word classes that disagree with the attested source line
 python manage.py repair_headword_kinds --dry-run
 python manage.py repair_headword_kinds
+
+# Publish derived noun plurals as Form records
+python manage.py publish_noun_plurals --dry-run
+python manage.py publish_noun_plurals
 ```
 
 `recompute_phonology`, `normalize_part_of_speech`, `rederive_noun_classes`, and
@@ -288,9 +292,15 @@ python manage.py repair_headword_kinds
 `post_save` receiver that runs curriculum tagging for published records, and a
 repair must not rewrite pedagogical metadata as a side effect.
 
-`rederive_noun_classes` reads the *parser output*; `repair_noun_classes` and
-`repair_headword_kinds` read the *source line*, which is the authority when the
-two disagree. All are read-only until invoked without `--dry-run`.
+`rederive_noun_classes` reads the *parser output*; `repair_noun_classes`,
+`repair_headword_kinds`, and `publish_noun_plurals` read the *source line*,
+which is the authority when the two disagree. All are read-only until invoked
+without `--dry-run`.
+
+`publish_noun_plurals` derives a plural only where the sources establish the
+rule (Fortune Vol 1 3.3.8/3.3.9, class 5 to class 6) and only from a plural the
+line records; anything else is refused with a stable code. See
+`docs/morphology/noun-plural-plan-2026-09-16.md`.
 
 ### Lexical QA — published lexicon against its source lines
 
@@ -346,7 +356,7 @@ a future import that quietly drops noun-class coverage fails the gate instead of
 degrading the lexicon unnoticed. Raise a baseline deliberately, with
 `python tools/evaluate_lexical_qa.py ... --write-baseline`.
 
-A highly comprehensive suite of **545 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
+A highly comprehensive suite of **580 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 

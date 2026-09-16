@@ -162,7 +162,9 @@ def _record(**overrides):
         "part_of_speech_label": "noun",
         "noun_class": "5",
         "tone_patterns": ["LL"],
-        "forms": [],
+        # The case's source line records `pl: map-`, so a published plural must
+        # carry it for the record to be complete.
+        "forms": ["mapimha"],
     }
     record.update(overrides)
     return record
@@ -182,6 +184,7 @@ def test_evaluator_passes_a_record_that_matches_its_source_line():
         ("tone", {"tone_patterns": []}),
         ("part_of_speech_label", {"part_of_speech_label": "o n 3, pl: moyo, Heart."}),
         ("headword", {"normalized_headword": "bimh"}),
+        ("plural_form", {"forms": []}),
     ],
 )
 def test_evaluator_fails_each_check_when_the_published_record_is_wrong(check, overrides):

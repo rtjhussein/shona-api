@@ -38,7 +38,14 @@ DEFAULT_DB_PATH = Path("db/shona.sqlite3")
 LABEL_RESIDUE_RE = re.compile(r"[\[\]]|\bcp\b|\bsee\b|\.\s*$")
 MAX_LABEL_LENGTH = 60
 
-CHECKS = ("headword", "word_class", "noun_class", "tone", "part_of_speech_label")
+CHECKS = (
+    "headword",
+    "word_class",
+    "noun_class",
+    "tone",
+    "part_of_speech_label",
+    "plural_form",
+)
 
 
 def normalise(value: str) -> str:
@@ -124,6 +131,7 @@ def evaluate_case(case: dict[str, Any], record: dict[str, Any] | None) -> dict[s
             checks[check] = {"status": "fail", "detail": "no published record for locator"}
         return {"case_id": case["case_id"], "checks": checks, "unresolved": True}
 
+
     checks["headword"] = {
         "status": "pass"
         if record["normalized_headword"] == normalise(source["headword"])
@@ -168,6 +176,26 @@ def evaluate_case(case: dict[str, Any], record: dict[str, Any] | None) -> dict[s
         "status": "fail" if residue else "pass",
         "actual": label,
     }
+
+    # The source line records the plural as a prefix; the contract is that some
+    # published form carries it. Read from the line alone, so this stays an
+    # independent check on the derivation rather than a restatement of it.
+    prefixes = source.get("plural_forms") or []
+    if not prefixes:
+        checks["plural_form"] = {"status": "not_applicable"}
+    else:
+        stems = [
+            prefix.split("(")[0].strip().rstrip("-").casefold() for prefix in prefixes
+        ]
+        forms = [normalise(form) for form in record.get("forms", [])]
+        matched = [
+            stem for stem in stems if stem and any(form.startswith(stem) for form in forms)
+        ]
+        checks["plural_form"] = {
+            "status": "pass" if matched else "fail",
+            "expected_prefixes": stems,
+            "actual_forms": forms[:6],
+        }
 
     return {"case_id": case["case_id"], "checks": checks, "unresolved": False}
 

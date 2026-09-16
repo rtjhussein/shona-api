@@ -328,6 +328,27 @@ def read_attested_noun_classes(raw_entry_text: str) -> list[str]:
     return classes
 
 
+def read_attested_plural_forms(raw_entry_text: str) -> list[str]:
+    """Plural forms the source line records, in the order Hannan writes them.
+
+    Parsers dropped this field on entries whose line clearly carries it
+    (``bino [LL]KM n 5, pl: map-, Big nose.``), so the line is read directly --
+    the same reason noun classes are read from it. An empty list means the line
+    records no plural; it is not evidence that the noun has none.
+    """
+    split = _split_headword_and_body(raw_entry_text)
+    if split is None:
+        return []
+    _, body = split
+    _, body = _consume_entry_dialects(body)
+    pos_code, body = _consume_pos(body)
+    if pos_code != "n":
+        return []
+    _, rest = _read_noun_classes(body)
+    prefixes, _ = _read_plural_prefixes(rest)
+    return prefixes
+
+
 def read_attested_headword_kind(raw_entry_text: str) -> str | None:
     """Headword kind the source line attests, or ``None`` when it names none we model.
 

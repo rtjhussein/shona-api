@@ -20,10 +20,14 @@
     "part_of_speech_label": {
       "passed": 323,
       "denominator": 324
+    },
+    "plural_form": {
+      "passed": 18,
+      "denominator": 42
     }
   },
   "coverage": {
     "nouns_with_source_plural": 42,
-    "with_a_published_form": 0
+    "with_a_published_form": 18
   }
 }
