@@ -178,8 +178,8 @@
         "Not a missing capability: the engine already stores a multi-word bracket correctly elsewhere (`munhondo churu` -> LLL HH), so the loss is in the ideophone path.",
         "Measured after the audit: 1,174 of the 6,272 ideophone lemmas have a multi-word headword, and the published shapes differ between them -- some keep one group per word, some keep only the first, some join the groups without a space (`bambai bambai` -> `LLHLLH`)."
       ],
-      "resolution_needed": "Size it before repairing it: for the 1,174 multi-word ideophones, compare the stored pattern with the scan's bracket. A repair needs to know whether it is correcting four records or four hundred, and the same audit will show whether the joined spelling (`LLHLLH`) is a different defect or the same pattern written without a space. The non-ideophone records already answer the modelling question -- `munhondo churu` stores `LLL HH` -- so the target shape is one pattern with the groups separated.",
-      "impact": "4 of 40 entries on one ideophone-heavy page; 1,174 multi-word ideophones carry the shape, and the published forms differ among them"
+      "resolution_needed": "26 of the 1,205 multi-word ideophones hold a pattern that cannot cover every word -- a bounded repair, not a project. Read those 26 brackets against the scan first, because some ideophones may legitimately carry one group for the whole expression (`kwa kwa kwa` with `L`), then fix the ideophone path to keep the whole bracket. The non-ideophone records already answer the modelling question: `munhondo churu` stores `LLL HH`.",
+      "impact": "26 of 1,205 multi-word ideophones, sized by tools/size_audit_candidates.py"
     }
   ]
 }
