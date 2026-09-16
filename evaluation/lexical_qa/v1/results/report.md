@@ -1,7 +1,7 @@
 # Lexical QA report (lexical-qa-v1)
 Corpus: lexical-qa-v1 sha256:a533ea565ec65b085defd158745d414c64a346440fe1a8a5c23ce1f935f66535
 Database: db\shona.sqlite3 (read-only)
-Generated: 2026-09-16T16:00:03+00:00
+Generated: 2026-09-16T16:16:31+00:00
 Cases: 324 sampled from 40519 published units (314 lines carry no scoreable word class)
 
 ## Metrics (raw numerators/denominators; measures are not blended)
