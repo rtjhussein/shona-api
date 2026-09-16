@@ -27,42 +27,55 @@ from shona_api.morphology.plurals import (
 )
 
 
+# `allomorph` records the pair only when the prefix's consonant differs from
+# the one the singular shows -- that is the depressor change. Where they agree,
+# the match is literal and there is no allomorph to report.
 @pytest.mark.parametrize(
-    "headword, recorded, expected, underlying, surface_initial",
+    "headword, recorded, expected, underlying, surface_initial, allomorphic",
     [
         # Fortune 3.3.8(2): "voiced implosive" before /p, t/.
-        ("banga", "map-", "mapanga", "p", "b"),
-        ("dabwa", "mat-", "matabwa", "t", "d"),
+        ("banga", "map-", "mapanga", "p", "b", True),
+        ("dabwa", "mat-", "matabwa", "t", "d", True),
         # Fortune 3.3.8(3): "voiced depressor" before /k, pf, ch, tsv/.
-        ("gadzi", "mak-", "makadzi", "k", "g"),
-        ("bveni", "mapf-", "mapfeni", "pf", "bv"),
+        ("gadzi", "mak-", "makadzi", "k", "g", True),
+        ("bveni", "mapf-", "mapfeni", "pf", "bv", True),
         # shona-core-v3 reads bh and dh as one grapheme each, so their prefixes
         # are readable; Fortune lists both in the phoneme inventory (1.6).
-        ("bhachi", "mabh-", "mabhachi", "bh", "bh"),
-        ("dhani", "madh-", "madhani", "dh", "dh"),
-        ("jacha", "mach-", "machacha", "ch", "j"),
+        ("bhachi", "mabh-", "mabhachi", "bh", "bh", False),
+        ("dhani", "madh-", "madhani", "dh", "dh", False),
+        # A vowel-final prefix carries a syllable of the stem, so the plural is
+        # the prefix plus what is left: `madhi-` + `dhibha` -> `madhibha`,
+        # `mati-` + `dikisa` -> `matikisa`.
+        ("dhibha", "madhi-", "madhibha", "dh", "dh", False),
+        ("dikisa", "mati-", "matikisa", "t", "d", True),
+        ("nyimbiri", "manyi-", "manyimbiri", "ny", "ny", False),
+        ("jacha", "mach-", "machacha", "ch", "j", True),
         # Fortune 3.3.8(4): "voiced affricate depressor" before /ts, f, s, sv, sh/.
-        ("dzanza", "mats-", "matsanza", "ts", "dz"),
+        ("dzanza", "mats-", "matsanza", "ts", "dz", True),
         # k -> g with the labialisation preserved.
-        ("gwai", "makw-", "makwai", "kw", "gw"),
+        ("gwai", "makw-", "makwai", "kw", "gw", True),
         # Already voiced: the stated change is voiceless -> voiced, so nothing happens.
-        ("biku", "mab-", "mabiku", "b", "b"),
-        ("derere", "mad-", "maderere", "d", "d"),
-        ("gumbezi", "mag-", "magumbezi", "g", "g"),
-        ("jabwanira", "maj-", "majabwanira", "j", "j"),
-        ("dzadza", "madz-", "madzadza", "dz", "dz"),
+        ("biku", "mab-", "mabiku", "b", "b", False),
+        ("derere", "mad-", "maderere", "d", "d", False),
+        ("gumbezi", "mag-", "magumbezi", "g", "g", False),
+        ("jabwanira", "maj-", "majabwanira", "j", "j", False),
+        ("dzadza", "madz-", "madzadza", "dz", "dz", False),
     ],
 )
 def test_derives_the_source_attested_plural(
-    headword, recorded, expected, underlying, surface_initial
+    headword, recorded, expected, underlying, surface_initial, allomorphic
 ):
     derivation = derive_plural(headword, [recorded], noun_class="5")
 
     assert derivation.surface == expected
-    assert derivation.basis == "consonant_final_prefix"
-    # The singular's initial is a grapheme, not a character: `bveni` begins `bv`.
-    assert derivation.allomorph == (underlying, surface_initial)
     assert derivation.recorded == recorded
+    if allomorphic:
+        assert derivation.basis == "allomorph_prefix"
+        # The singular's initial is a grapheme, not a character: `bveni` is `bv`.
+        assert derivation.allomorph == (underlying, surface_initial)
+    else:
+        assert derivation.basis == "literal_prefix"
+        assert derivation.allomorph is None
 
 
 def test_plural_uses_the_underlying_consonant_not_the_singulars():
@@ -117,12 +130,11 @@ def test_the_first_recorded_form_wins_and_the_rest_are_alternatives():
         # `gwa` records `mag-`, whose final `g` implies a surface `g`, but the
         # headword begins `gw` -- a labialisation the source does not describe.
         ("gwa", ["mag-"], "5", PLURAL_ALLOMORPH_UNVERIFIED),
-        # A vowel-final prefix carries a syllable of the stem (madhi- + dhibha
-        # -> madhibha); no verified source states that shape.
-        ("dhibha", ["madhi-"], "5", PLURAL_PREFIX_FORM_UNVERIFIED),
-        ("dikisa", ["mati-"], "5", PLURAL_PREFIX_FORM_UNVERIFIED),
+        # A consonant-final prefix exists to carry the stem's initial, so a
+        # prefix sharing nothing with it implies an allomorph the source does
+        # not state: `map-` with `bhamadza` would need `p -> bh`.
+        ("bhamadza", ["map-"], "5", PLURAL_ALLOMORPH_UNVERIFIED),
         # Only the class whose plural rule is established is derived.
-        ("gufu", ["vana-"], "1a", PLURAL_CLASS_UNVERIFIED),
         ("kota", ["vak-"], "1", PLURAL_CLASS_UNVERIFIED),
         ("rusero", ["sero 10 k"], "11", PLURAL_CLASS_UNVERIFIED),
         ("biku", [], "5", NO_RECORDED_PLURAL),
@@ -153,10 +165,48 @@ def test_refuses_an_empty_headword():
 
 
 def test_the_payload_states_the_evidence_behind_the_form():
-    """A consumer must be able to tell a cited allomorph from an inferred one."""
-    attested = derive_plural("banga", ["map-"], noun_class="5").as_payload()
-    inferred = derive_plural("biku", ["mab-"], noun_class="5").as_payload()
+    """A consumer must be able to tell a cited allomorph from an inferred one.
 
-    assert attested["basis"] == "consonant_final_prefix"
-    assert attested["allomorph"]["evidence"] == "source_attested"
+    `map-` with `banga` is Fortune 3.3.8(2), cited; `makw-` with `gwai` is
+    `k -> g` with the labialisation preserved, which follows from the change the
+    source states rather than appearing in its list.
+    """
+    cited = derive_plural("banga", ["map-"], noun_class="5").as_payload()
+    inferred = derive_plural("gwai", ["makw-"], noun_class="5").as_payload()
+
+    assert cited["basis"] == "allomorph_prefix"
+    assert cited["allomorph"]["evidence"] == "source_attested"
     assert inferred["allomorph"]["evidence"] == "rule_supported"
+
+
+def test_a_class_1a_plural_is_marked_honorific():
+    """Fortune 3.3.3 calls the 2a plural of a class 1a noun honorific.
+
+    Without the marker a consumer cannot tell the plural it can count with from
+    the one that is honorific, and publishing an honorific plural as the
+    ordinary plural misrepresents it.
+    """
+    honorific = derive_plural("gufu", ["vana-"], noun_class="1a")
+    standard = derive_plural("biku", ["mab-"], noun_class="5")
+
+    assert honorific.surface == "vanagufu"
+    assert honorific.plural_kind == "honorific"
+    assert standard.plural_kind == "standard"
+
+
+def test_the_honorific_marker_is_labelled_as_rule_supported():
+    """Fortune's wording is "almost always honorific", so the kind is inferred
+    from a general statement rather than attested for each entry."""
+    payload = derive_plural("gufu", ["vana-"], noun_class="1a").as_payload()
+
+    assert payload["plural_kind"] == "honorific"
+    assert payload["plural_kind_evidence"] == "rule_supported"
+    assert derive_plural("biku", ["mab-"], noun_class="5").as_payload()[
+        "plural_kind_evidence"
+    ] == "source_attested"
+
+
+def test_a_shared_vowel_at_the_junction_is_written_once():
+    """`mau-` overlaps the `u` that `urizheve` begins with, so the plural is
+    `maurizheve`, not the doubled `mauurizheve`."""
+    assert derive_plural("urizheve", ["mau-"], noun_class="5").surface == "maurizheve"

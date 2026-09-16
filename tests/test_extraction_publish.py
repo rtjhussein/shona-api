@@ -997,7 +997,8 @@ def test_publish_noun_plurals_creates_a_form_from_the_source_line(hannan_source)
     form = Form.objects.get(lemma=lemma, form_kind=Form.FormKind.PLURAL)
     assert form.form_text == "mapino"
     assert form.review_state == ReviewState.PUBLISHED
-    assert form.provenance["derivation"]["basis"] == "consonant_final_prefix"
+    assert form.provenance["derivation"]["basis"] == "allomorph_prefix"
+    assert form.plural_kind == "standard"
     assert form.provenance["derivation"]["allomorph"]["underlying"] == "p"
     # The form carries its own phonology, so a game filtering by length sees it.
     assert form.normalized_form == "mapino"

@@ -32,8 +32,8 @@
       "denominator": 324
     },
     "plural_form": {
-      "passed": 21,
-      "failed": 21,
+      "passed": 27,
+      "failed": 15,
       "not_applicable": 282,
       "denominator": 42
     },
@@ -41,7 +41,7 @@
   },
   "coverage": {
     "nouns_with_source_plural": 42,
-    "with_a_published_form": 21
+    "with_a_published_form": 27
   },
   "results": [
     {
@@ -435,11 +435,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "vabh"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vabhemhe"
+          ]
         }
       },
       "unresolved": false
@@ -3237,12 +3239,14 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "vanadh",
             "madh"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vanadhiraivha"
+          ]
         }
       },
       "unresolved": false
@@ -4593,7 +4597,9 @@
           "expected_prefixes": [
             "vag- & mag"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vagotwe"
+          ]
         }
       },
       "unresolved": false
@@ -4669,12 +4675,14 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "vana",
             "mag"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vanagufu"
+          ]
         }
       },
       "unresolved": false
@@ -6689,11 +6697,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "vak"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vakovo"
+          ]
         }
       },
       "unresolved": false
@@ -7184,12 +7194,14 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "vadzimai",
             "madzimai"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vadzimai"
+          ]
         }
       },
       "unresolved": false
@@ -11756,11 +11768,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "mau"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "maurizheve"
+          ]
         }
       },
       "unresolved": false

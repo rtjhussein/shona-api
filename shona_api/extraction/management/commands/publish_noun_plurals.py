@@ -71,6 +71,7 @@ class Command(BaseCommand):
         published: Counter[str] = Counter()
         skipped: Counter[str] = Counter()
         bases: Counter[str] = Counter()
+        kinds: Counter[str] = Counter()
         samples: list[str] = []
         created = 0
 
@@ -117,6 +118,7 @@ class Command(BaseCommand):
 
             published[derivation.surface] += 1
             bases[derivation.basis] += 1
+            kinds[derivation.plural_kind] += 1
             if len(samples) < 8:
                 samples.append(
                     f"{lemma.headword} ({noun_class}) {derivation.recorded} "
@@ -127,6 +129,7 @@ class Command(BaseCommand):
                     lemma=lemma,
                     form_text=derivation.surface,
                     form_kind=Form.FormKind.PLURAL,
+                    plural_kind=derivation.plural_kind,
                     review_state=ReviewState.PUBLISHED,
                     dialects=list(parser_output.get("dialects") or []),
                     grammar=[f"class {noun_class} plural"],
@@ -141,6 +144,8 @@ class Command(BaseCommand):
         verb = "would be published" if dry_run else "published"
         for label, count in bases.most_common():
             self.stdout.write(f"  {count:>5}  {label} {verb}")
+        for label, count in kinds.most_common():
+            self.stdout.write(f"  {count:>5}  plural_kind={label}")
         self.stdout.write(
             self.style.SUCCESS(f"{created:,} plural form(s) {verb}")
         )
