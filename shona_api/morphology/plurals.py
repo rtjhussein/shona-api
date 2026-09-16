@@ -43,7 +43,7 @@ PLURAL_PREFIX_FORM_UNVERIFIED = "PLURAL_PREFIX_FORM_UNVERIFIED"
 # each needs its own source work before a surface can be published as fact.
 #
 # 1,956 of the 2,060 published nouns carrying a plural prefix are class 5.
-SOURCE_VERIFIED_PLURAL_CLASSES = frozenset({"5"})
+SOURCE_VERIFIED_PLURAL_CLASSES = frozenset({"5", "1a"})
 
 # Underlying consonant -> the initial the singular shows, from Fortune 3.3.8:
 # (2) "voiced implosive" before /p, t/; (3) "voiced depressor" before
@@ -94,6 +94,19 @@ PLURAL_ALLOMORPHS = SOURCE_ATTESTED_ALLOMORPHS | RULE_SUPPORTED_ALLOMORPHS
 
 VOWELS = frozenset({"a", "e", "i", "o", "u"})
 
+# The depressor change is a class 5 phenomenon: the class 5 prefix voices the
+# stem's initial, so only there does a recorded plural prefix carry a consonant
+# other than the one the singular shows. Everywhere else the prefix repeats the
+# stem's own initial (`vak-` with `kota`), which the literal match below finds.
+DEPRESSOR_CLASSES = frozenset({"5"})
+
+# Fortune 3.3.3: "A few class 1a nouns have three plurals, one in class 2a and
+# the others with prefixes of 2a and 10, 6 and 10 respectively. Plurals in 2a
+# are almost always honorific, the others almost always numerical." The hedge
+# is the source's, so the kind is recorded as rule-supported rather than
+# attested per entry.
+HONORIFIC_PLURAL_CLASSES = frozenset({"1a"})
+
 
 class PluralDerivationError(ValueError):
     """A plural cannot be derived from what the source line records."""
@@ -110,6 +123,7 @@ class PluralDerivation:
     surface: str
     recorded: str
     basis: str
+    plural_kind: str = "standard"
     allomorph: tuple[str, str] | None = None
 
     def as_payload(self) -> dict[str, object]:
@@ -117,6 +131,10 @@ class PluralDerivation:
             "surface": self.surface,
             "recorded": self.recorded,
             "basis": self.basis,
+            "plural_kind": self.plural_kind,
+            "plural_kind_evidence": (
+                "rule_supported" if self.plural_kind == "honorific" else "source_attested"
+            ),
         }
         if self.allomorph is not None:
             payload["allomorph"] = {
@@ -203,46 +221,65 @@ def derive_plural(
         )
 
     prefix_graphemes = segment_graphemes(prefix)
-    final = prefix_graphemes[-1]
-    if final in VOWELS:
-        # A vowel-final prefix carries a syllable of the stem, not just a
-        # consonant: `madhi-` with `dhibha` gives `madhibha`, and `mati-` with
-        # `dikisa` gives `matikisa`, so the plural is neither the stem intact
-        # (`madhidhibha`) nor the stem minus one grapheme. Fortune 3.3.9
-        # describes `ma-` plus the class 5 stem, not this syllable-plus-remainder
-        # shape, so it is refused rather than guessed.
-        raise PluralDerivationError(
-            PLURAL_PREFIX_FORM_UNVERIFIED,
-            "The recorded plural prefix ends with a vowel and carries part of "
-            "the stem; the sources verified so far state no rule for that shape.",
-            detail={"recorded": recorded, "prefix": prefix, "headword": headword},
-        )
+    size, basis = _shared_span(prefix_graphemes, stem_graphemes, noun_class)
+    surface = prefix + "".join(stem_graphemes[size:])
 
-    expected_initial = PLURAL_ALLOMORPHS.get(final)
-    if expected_initial is None:
+    # A consonant-final prefix exists to carry the stem's initial, so a prefix
+    # that shares nothing with the stem means the pair is one the table does not
+    # have: `map-` with `bhamadza` implies `p -> bh`, which the source's
+    # allomorph list does not state. Appending the whole stem here would publish
+    # `mapbhamadza`.
+    if size == 0 and prefix_graphemes[-1] not in VOWELS:
         raise PluralDerivationError(
             PLURAL_ALLOMORPH_UNVERIFIED,
-            f"The source states no class 5 allomorph for the consonant {final!r}, "
-            "so the plural prefix cannot be applied to this stem.",
-            detail={"recorded": recorded, "underlying": final},
-        )
-    if stem_graphemes[0] != expected_initial:
-        raise PluralDerivationError(
-            PLURAL_ALLOMORPH_UNVERIFIED,
-            f"The recorded prefix implies the underlying consonant {final!r}, "
-            f"whose attested form here is {expected_initial!r}, but the headword "
-            f"begins with {stem_graphemes[0]!r}.",
+            "The recorded prefix ends with a consonant but shares no span with "
+            "the headword, so the allomorph it implies is not one the sources "
+            "state.",
             detail={
                 "recorded": recorded,
-                "underlying": final,
-                "expected_initial": expected_initial,
+                "prefix_final": prefix_graphemes[-1],
                 "headword_initial": stem_graphemes[0],
             },
         )
 
+    allomorph = None
+    if size and basis == "allomorph":
+        allomorph = (prefix_graphemes[-size], stem_graphemes[0])
+
     return PluralDerivation(
-        surface=prefix + "".join(stem_graphemes[1:]),
+        surface=surface,
         recorded=recorded,
-        basis="consonant_final_prefix",
-        allomorph=(final, stem_graphemes[0]),
+        basis=f"{basis}_prefix" if size else "prefix_plus_stem",
+        plural_kind="honorific" if noun_class in HONORIFIC_PLURAL_CLASSES else "standard",
+        allomorph=allomorph,
     )
+
+
+def _shared_span(
+    prefix_graphemes: list[str],
+    stem_graphemes: list[str],
+    noun_class: str | None,
+) -> tuple[int, str | None]:
+    """Longest suffix of the prefix that introduces the stem, and how.
+
+    The prefix carries as much of the stem's beginning as it repeats, so the
+    plural is the prefix plus the *remainder* of the stem:
+
+    - `mab-` + `biku` -> `mabiku` (the `b` is shared literally)
+    - `madhi-` + `dhibha` -> `madhibha` (the whole `dhi` is shared)
+    - `mab-` + `ovu`-style stems share nothing, so the stem follows intact
+    - `map-` + `banga` -> `mapanga`: `p` is not the stem's `b`, but under the
+      class 5 depressor change `p` is the underlying consonant whose surface
+      form is `b`, so the pair matches through the allomorph table.
+    """
+    limit = min(len(prefix_graphemes), len(stem_graphemes))
+    for size in range(limit, 0, -1):
+        tail = prefix_graphemes[-size:]
+        head = stem_graphemes[:size]
+        if tail == head:
+            return size, "literal"
+        if noun_class in DEPRESSOR_CLASSES:
+            surface_initial = PLURAL_ALLOMORPHS.get(tail[0])
+            if surface_initial == head[0] and len(tail) == len(head) and [surface_initial] + tail[1:] == head:
+                return size, "allomorph"
+    return 0, None

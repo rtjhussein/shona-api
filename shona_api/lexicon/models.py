@@ -374,6 +374,33 @@ class Form(PhonologyFieldsMixin, CanonicalRecord):
         default=FormKind.OTHER,
         db_index=True,
     )
+
+    class PluralKind(models.TextChoices):
+        """Which plural a plural form is, where a noun has more than one.
+
+        Fortune Vol 1 3.3.3: a few class 1a nouns have three plurals, "one in
+        class 2a and the others with prefixes of 2a and 10, 6 and 10
+        respectively. Plurals in 2a are almost always honorific, the others
+        almost always numerical." Without this a consumer cannot tell the
+        plural it can count with from the one that is honorific, and publishing
+        an honorific plural as the ordinary plural misrepresents it.
+        """
+
+        STANDARD = "standard", "Standard"
+        HONORIFIC = "honorific", "Honorific"
+        NUMERICAL = "numerical", "Numerical"
+
+    plural_kind = models.CharField(
+        max_length=16,
+        choices=PluralKind.choices,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text=(
+            "For form_kind=plural: which plural this is. Blank when the source "
+            "records only one, or for non-plural forms."
+        ),
+    )
     dialects = models.JSONField(default=list, blank=True)
     grammar = models.JSONField(default=list, blank=True)
     review_state = models.CharField(

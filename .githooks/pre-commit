@@ -1,0 +1,20 @@
+#!/bin/sh
+# Refuse commits made directly on a protected branch.
+#
+# Continuous integration is not running for this project, so every change lands
+# through a branch and a pull request: the PR body is the review record and the
+# squash commit is the history. Committing straight to main skips both, and it
+# has happened twice by accident. This makes the rule mechanical.
+#
+# Bypass deliberately with: git commit --no-verify
+protected="main master"
+current=$(git symbolic-ref --quiet --short HEAD 2>/dev/null)
+for branch in $protected; do
+    if [ "$current" = "$branch" ]; then
+        echo "pre-commit: refusing to commit on '$current'." >&2
+        echo "pre-commit: create a branch first, e.g. git checkout -b codex/<topic>" >&2
+        echo "pre-commit: (override with --no-verify if this is deliberate)" >&2
+        exit 1
+    fi
+done
+exit 0

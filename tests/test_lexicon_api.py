@@ -195,6 +195,7 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
                 "form_text": "mbudo",
                 "normalized_form": "mbudo",
                 "form_kind": Form.FormKind.DERIVED,
+                "plural_kind": "",
                 "dialects": [],
                 "grammar": ["nominalized"],
                 "sense_public_id": sense.public_id,

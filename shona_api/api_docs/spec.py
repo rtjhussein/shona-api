@@ -756,7 +756,28 @@ def schemas():
                 "public_id": {"type": "string"},
                 "form_text": {"type": "string"},
                 "normalized_form": {"type": "string"},
-                "form_kind": {"type": "string"},
+                "form_kind": {
+                    "type": "string",
+                    "enum": [
+                        "headword",
+                        "plural",
+                        "derived",
+                        "inflected",
+                        "variant",
+                        "other",
+                    ],
+                },
+                "plural_kind": {
+                    "type": "string",
+                    "enum": ["", "standard", "honorific", "numerical"],
+                    "description": (
+                        "For form_kind=plural: which plural this is. "
+                        "Fortune Vol 1 3.3.3 distinguishes the honorific 2a "
+                        "plural of a class 1a noun from the numerical plurals. "
+                        "Blank when the source records only one plural, or for "
+                        "non-plural forms."
+                    ),
+                },
                 "dialects": string_array,
                 "grammar": string_array,
                 "derived_form_evidence": json_object,

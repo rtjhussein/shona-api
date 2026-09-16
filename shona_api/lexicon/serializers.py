@@ -145,6 +145,7 @@ class FormSerializer(serializers.ModelSerializer):
             "form_text",
             "normalized_form",
             "form_kind",
+            "plural_kind",
             "dialects",
             "grammar",
             "sense_public_id",
