@@ -61,7 +61,7 @@ The corpus is regenerated from `db/shona.sqlite3`, which is opened **read-only**
 | --- | --- |
 | headword | 322/324 |
 | word_class | 319/324 |
-| noun_class | 97/112 |
+| noun_class | 112/112 |
 | tone | 324/324 |
 | part_of_speech_label | 323/324 |
 
@@ -71,14 +71,11 @@ in parser output; nothing surfaces them as `Form` records yet.
 
 Confirmed defects behind the failures:
 
-- **Sub-class loss (15 cases, systemic).** Lines written `n 1a` publish as class
-  `1`: `Chikumi [LHH]KMZ n 1a June.`, `godzonga [HH]Z n 1a & 5 Tyrant.`,
-  `gufu [LH]MZ n 1a (M), 5 (Z)`. Hannan's class `1a` is distinct from `1`, so
-  these records carry the wrong concord class.
-- **Generic `word` class (5 cases; 1,866 published records).** Entries the line
-  marks as noun or verb are published with the catch-all `headword_kind="word"`,
-  which the morphology engine does not read: `†-ti [L]KKoMZ defective v Say.`,
-  `-nga- [L]KMZ defective v Be.`, `-pfutura [L]Z v t`.
+- **Generic `word` class (5 cases here; 1,866 published records).** Entries the
+  line marks as noun or verb are published with the catch-all
+  `headword_kind="word"`, which the morphology engine does not read:
+  `†-ti [L]KKoMZ defective v Say.`, `-nga- [L]KMZ defective v Be.`,
+  `-pfutura [L]Z v t`.
 - **Truncated multi-word headwords (2 cases).** `wara wara` and `wushu wushu`
   publish as `wara` and `wushu`.
 - **Part-of-speech residue (1 case here; 51 published records).** `†moyo
@@ -86,10 +83,29 @@ Confirmed defects behind the failures:
   `o n 3, pl: moyo, Heart (physical organ).` — the parser mishandled the leading
   dagger marker. 5 of the 51 trace to dagger-marked lines.
 
-None of these is repaired by this harness: it reports them. The promotion gate
-(`validate_publishable_parser_output`) now refuses new records with residue
-labels, a missing class on a noun, or no part-of-speech code, so the defects
-cannot grow while the existing rows await editorial review.
+## Fixed by the harness
+
+**Sub-class loss.** Lines written `n 1a` published as class `1`
+(`Chikumi [LHH]KMZ n 1a June.`, `godzonga [HH]Z n 1a & 5 Tyrant.`,
+`gufu [LH]MZ n 1a (M), 5 (Z)`), and Hannan's 1a takes a different concord from
+class 1. `noun_class` scored 97/112 when this was first measured.
+
+Both parsers dropped the letter, so the parser output could not be re-read for
+it; the source line is the authority. `shona_api/parsers/hannan.py` now reads
+sub-classes, dialect-qualified alternatives, and classes without a `pl:` list
+and exposes `read_attested_noun_classes`; `manage.py repair_noun_classes`
+corrected 733 published records (465 of which had no class at all, including
+401 nouns the parser had left bare), and promotion prefers the attested class,
+recording the parser's conflicting reading in provenance.
+
+Noun lemmas carrying a class moved from 8,924 (46.8%) to 19,040 (99.8%), and
+this check reads 112/112. `2b` (9 records) and `2m` (1) remain unrepaired:
+no `NounClass` row exists for them, and inventing one would invent a concord.
+
+The remaining failures are **not** repaired by this harness: it reports them.
+The promotion gate (`validate_publishable_parser_output`) now refuses new
+records with residue labels, a missing class on a noun, or no part-of-speech
+code, so the defects cannot grow while the existing rows await editorial review.
 
 ## Limitations, stated plainly
 
@@ -98,6 +114,11 @@ cannot grow while the existing rows await editorial review.
   class and are counted, not scored.
 - Tone comparison normalises away word grouping, so `[H H H]` and `[HHH]` agree.
   Differences of that kind are reported as informational extras.
+- Nine brackets in the corpus use a comma (`[HL, LH]`); a comma there is
+  ambiguous between a second alternative and a trailing annotation
+  (`[HL HL, strong t M]`), so the reader treats a comma as part of the segment
+  and those cases are not distinguished. A handful of such records carry no tone
+  at all rather than a wrong one.
 - Definitions, sense counts, and multi-word phrasing are not scored yet.
 - The corpus is a sample: it bounds the defect rate, it does not enumerate every
   bad record. Population counts quoted above come from direct queries.

@@ -14,8 +14,8 @@
       "denominator": 324
     },
     "noun_class": {
-      "passed": 97,
-      "failed": 15,
+      "passed": 112,
+      "failed": 0,
       "not_applicable": 212,
       "denominator": 112
     },
@@ -1564,9 +1564,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -4060,9 +4060,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -4096,9 +4096,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -4166,9 +4166,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -4202,9 +4202,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -4272,9 +4272,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -4308,9 +4308,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -5280,9 +5280,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -5522,9 +5522,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -6004,9 +6004,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -6808,9 +6808,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "9",
-          "actual": null
+          "actual": "9"
         },
         "tone": {
           "status": "pass",
@@ -6878,9 +6878,9 @@
           "actual": "word"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "3",
-          "actual": null
+          "actual": "3"
         },
         "tone": {
           "status": "pass",
@@ -7960,9 +7960,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -8820,9 +8820,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",
@@ -11062,9 +11062,9 @@
           "actual": "noun"
         },
         "noun_class": {
-          "status": "fail",
+          "status": "pass",
           "expected": "1a",
-          "actual": "1"
+          "actual": "1a"
         },
         "tone": {
           "status": "pass",

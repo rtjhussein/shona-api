@@ -22,6 +22,7 @@ from shona_api.lexicon.examples import (
 )
 from shona_api.lexicon.models import Form, Lemma, NounClass, Sense, ToneRecord
 from shona_api.lexicon.part_of_speech import canonical_pos_code
+from shona_api.parsers.hannan import read_attested_noun_classes
 
 from .gpt_jsonl import build_tone_record_payloads, validate_publishable_parser_output
 from .models import ExtractionUnit
@@ -96,13 +97,16 @@ def publish_reviewed_extraction_unit(
             )
 
         provenance = _build_shared_provenance(extraction_unit)
+        noun_class, noun_class_provenance = _resolve_noun_class(
+            extraction_unit, parser_output
+        )
 
         lemma = Lemma.objects.create(
             headword=parser_output.get("headword") or extraction_unit.raw_text.strip(),
             headword_kind=_map_headword_kind(parser_output.get("headword_kind")),
             part_of_speech_code=_parser_pos_code(parser_output),
             part_of_speech_label=_parser_pos_label(parser_output),
-            noun_class=_parser_noun_class(parser_output),
+            noun_class=noun_class,
             dialects=list(parser_output.get("dialects") or []),
             comparative_bantu_marker=bool(
                 parser_output.get("comparative_bantu_marker", False)
@@ -113,6 +117,7 @@ def publish_reviewed_extraction_unit(
                 headword=parser_output.get("headword"),
                 headword_kind=parser_output.get("headword_kind", "unknown"),
                 part_of_speech=_parser_part_of_speech(parser_output),
+                **noun_class_provenance,
             ),
             review_state=ReviewState.PUBLISHED,
         )
@@ -312,6 +317,36 @@ def _record_provenance(
         "record_type": record_type,
         **extra,
     }
+
+
+def _resolve_noun_class(
+    extraction_unit: ExtractionUnit, parser_output: dict[str, object]
+) -> tuple[NounClass | None, dict[str, object]]:
+    """Resolve the noun class a new record should carry.
+
+    The verbatim source line is the authority: parsers dropped Hannan's
+    sub-class letter, so ``n 1a`` arrived as class ``1`` and ``n 1a (M), 5 (Z)``
+    as no class at all. When the line attests a class that maps to a reviewed
+    ``NounClass`` row, that wins; otherwise the parser's reading is used. A
+    disagreement is recorded rather than resolved silently.
+    """
+    attested = read_attested_noun_classes(extraction_unit.raw_text)
+    parser_class = _parser_noun_class(parser_output)
+    if not attested:
+        return parser_class, {}
+
+    attested_class = NounClass.objects.filter(class_number=attested[0]).first()
+    if attested_class is None:
+        return parser_class, {
+            "attested_noun_classes": attested,
+            "attested_noun_class_unmapped": True,
+        }
+    if parser_class is not None and parser_class.class_number != attested_class.class_number:
+        return attested_class, {
+            "attested_noun_classes": attested,
+            "parser_noun_class": parser_class.class_number,
+        }
+    return attested_class, {"attested_noun_classes": attested}
 
 
 def _parser_part_of_speech(parser_output: dict[str, object]) -> dict[str, str] | None:

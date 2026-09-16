@@ -834,3 +834,67 @@ def test_publish_stores_a_canonical_part_of_speech_code(hannan_source):
     bundle = publish_reviewed_extraction_unit(unit)
 
     assert bundle.lemma.part_of_speech_code == "vt"
+
+
+@pytest.mark.django_db
+def test_publish_prefers_the_class_attested_by_the_source_line(hannan_source):
+    """Regression: parsers dropped the sub-class letter, so `n 1a` published as `1`.
+
+    Hannan's class 1a takes a different concord from class 1, and the source line
+    is the authority for which one an entry belongs to. The parser's conflicting
+    reading is recorded rather than discarded.
+    """
+    parser_output = _noun_parser_output(classes=["1"])
+    parser_output["headword"] = "Chikumi"
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_073:entry_015:chikumi",
+        raw_text="Chikumi [LHH]KMZ n 1a June.",
+        parser_output=parser_output,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+    NounClass.objects.create(class_number="1", display_order=1, label="Class 1")
+    NounClass.objects.create(class_number="1a", display_order=10, label="Class 1a")
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class.class_number == "1a"
+    assert bundle.lemma.provenance["parser_noun_class"] == "1"
+    assert bundle.lemma.provenance["attested_noun_classes"] == ["1a"]
+
+
+@pytest.mark.django_db
+def test_publish_falls_back_to_the_parser_when_the_line_attests_no_class(
+    hannan_source, noun_class_five
+):
+    unit = _approved_noun_unit(
+        hannan_source,
+        _noun_parser_output(classes=[5]),
+        locator="hannan:page_021:entry_001:biku:fallback",
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class.class_number == "5"
+
+
+@pytest.mark.django_db
+def test_publish_uses_the_parser_class_when_the_line_class_has_no_row(
+    hannan_source, noun_class_five
+):
+    """An attested class with no reviewed NounClass row must not erase the parser's."""
+    parser_output = _noun_parser_output(classes=[5])
+    unit = ExtractionUnit.objects.create(
+        source=hannan_source,
+        source_location_reference="hannan:page_002:entry_001:amai:unmapped",
+        raw_text="amai [HL] n 2b, pl: vana-, Mother.",
+        parser_output=parser_output,
+        confidence=1.0,
+        review_state=ReviewState.APPROVED,
+    )
+
+    bundle = publish_reviewed_extraction_unit(unit)
+
+    assert bundle.lemma.noun_class.class_number == "5"
+    assert bundle.lemma.provenance["attested_noun_class_unmapped"] is True
