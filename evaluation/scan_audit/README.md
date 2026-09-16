@@ -31,3 +31,24 @@ cross-references and running heads.
 before it is believed.** Three separate bugs in the sizing tool each produced a
 confident zero for a defect the scan had already shown to be real. Silent
 measurement failures look exactly like results.
+
+## A confusable pair is settled by the letter's shape, not by eye
+
+The headword sample (38 of 527 candidates, 2026-09-16) found that a pair like
+`bumba`/`bumha` is hard to read by eye below roughly 20x - one reading of `p148`
+`dzimbabwe` came out as `dzimbahwe` and had to be corrected. Two tests settle the
+letter from page pixels instead, and both are independent of any extracted text:
+
+- **b against h**: a printed `b` encloses a counter, a hole in the glyph; `h`
+  never does. Count the holes in the rendered headword and compare with the count
+  the spelling predicts. Calibrated on the same page before use (`dzimba`=3,
+  `dzimbo`=3, `madz`=2, `dzikiti`=1).
+- **v against w**: measure the disputed letter's ink width. At this page size
+  `v` runs about 4.8-5.1 pt and `w` about 7.2-7.8 pt.
+
+The sample also narrowed what the 527 screen is actually looking at: both the
+flagged pairs and the symmetric pairs are almost entirely **legitimate distinct
+words** - `bwabwa` and `bwahwa` are two entries the dictionary prints on the same
+page, one an ideophone of talking rapidly and one a noun meaning potato blight.
+A screen that flags such pairs is reporting a feature of the dictionary, not a
+defect in the record.
