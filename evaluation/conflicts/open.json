@@ -85,6 +85,38 @@
       ],
       "resolution_needed": "None for the plural path, which normalises before use. Worth re-running the extraction or normalising at ingest if the text is ever used for other fields; an unresolved homoglyph is invisible in review.",
       "impact": "none on published data; a latent hazard for any future consumer of that file"
+    },
+    {
+      "id": "two-headwords-from-one-printed-line",
+      "title": "Two published headwords are sourced to one printed line, and the page prints only one of them",
+      "field": "headword",
+      "status": "open",
+      "kind": "source_defect",
+      "summary": "The lemmas `bimha` and `bimba` both cite hannan:page_021:entry_007, but the printed line reads `bimba [LL] KMZ n 5, pl: map-, mab- (M), Reedbuck R 292.` The string `bimha` occurs nowhere on that page, so one of the two headwords was not extracted from print.",
+      "sources": [
+        {
+          "source": "Hannan, Standard Shona Dictionary (scan)",
+          "locator": "dictionary p.21, PDF p.45, entry 7",
+          "claim": "the line prints `bimba`, not `bimha`",
+          "verbatim": "bimba [LL] KMZ n 5, pl: map-, mab- (M), Reedbuck R 292."
+        },
+        {
+          "source": "extraction units",
+          "locator": "hannan:page_021:entry_007",
+          "claim": "one line produced two lemma headwords"
+        }
+      ],
+      "evidence": [
+        "Found by the tone audit: the headword could not be rendered because it has no text hit on the page it cites.",
+        "A vision query on the crop independently spelled b-i-m-b-a and quoted [LL].",
+        "Both lemmas carry the same tone (LL), so the tone verdict for the line is unaffected either way."
+      ],
+      "resolution_needed": "Determine which headword is spurious. If `bimha` is not in the scan, the record is a parser artefact and should be retired; if it is a homograph printed elsewhere, its source locator is wrong. Needs a scan check across the dictionary for both spellings before acting.",
+      "impact": "two published lemmas from one printed entry; related to the 3,519 duplicate normalized-headword groups already known, which this gives a first concrete cause for",
+      "affected_headwords": [
+        "bimha",
+        "bimba"
+      ]
     }
   ]
 }
