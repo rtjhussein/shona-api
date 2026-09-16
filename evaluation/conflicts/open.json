@@ -152,6 +152,34 @@
         "nzvirihì",
         "nzwaiwhi"
       ]
+    },
+    {
+      "id": "multiword-ideophone-tone-truncated",
+      "title": "Multi-word ideophones publish only the first word's tone pattern",
+      "field": "tone",
+      "status": "open",
+      "kind": "source_defect",
+      "summary": "A two-word ideophone headword carries one tone group per word (`kwakwara kwakwara [LLL LLL]`), and some entries publish only the first group (`LLL`). Four of the forty entries audited on Hannan page 300 do this, so the loss is real but NOT universal: `badara badara` publishes `LLL LLL` correctly, and `bha bha bha` publishes `H H H`.",
+      "sources": [
+        {
+          "source": "Hannan, Standard Shona Dictionary (scan)",
+          "locator": "dictionary p.300, PDF p.324, entries 1, 3, 7 and others",
+          "claim": "the bracket prints a pattern per word",
+          "verbatim": "kwakwara kwakwara [LLL LLL]Z ideo of Making a noise (as of sticks)."
+        },
+        {
+          "source": "published tone records",
+          "locator": "lexicon_tonerecord.pattern",
+          "claim": "only the first group is stored"
+        }
+      ],
+      "evidence": [
+        "Found by the per-field audit on 2026-09-16 over all 40 entries of the page, every crop re-read independently.",
+        "Not a missing capability: the engine already stores a multi-word bracket correctly elsewhere (`munhondo churu` -> LLL HH), so the loss is in the ideophone path.",
+        "Measured after the audit: 1,174 of the 6,272 ideophone lemmas have a multi-word headword, and the published shapes differ between them -- some keep one group per word, some keep only the first, some join the groups without a space (`bambai bambai` -> `LLHLLH`)."
+      ],
+      "resolution_needed": "Size it before repairing it: for the 1,174 multi-word ideophones, compare the stored pattern with the scan's bracket. A repair needs to know whether it is correcting four records or four hundred, and the same audit will show whether the joined spelling (`LLHLLH`) is a different defect or the same pattern written without a space. The non-ideophone records already answer the modelling question -- `munhondo churu` stores `LLL HH` -- so the target shape is one pattern with the groups separated.",
+      "impact": "4 of 40 entries on one ideophone-heavy page; 1,174 multi-word ideophones carry the shape, and the published forms differ among them"
     }
   ]
 }
