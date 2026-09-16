@@ -942,3 +942,519 @@ def test_search_reports_truncation_when_the_limit_is_reached(
     assert data["limit"] == 1
     assert data["count"] == 1
     assert data["truncated"] is True
+
+
+def create_published_lemmas(*specifications):
+    """Create lemmas for wordlist and pattern tests.
+
+    `Lemma.save` derives the phonology fields, so these tests read the stored
+    graphemes and syllable counts the endpoints filter on rather than
+    hand-written stand-ins. Publication state defaults to published and can be
+    overridden per specification.
+    """
+    lemmas = []
+    for specification in specifications:
+        overrides = {
+            key: value
+            for key, value in specification.items()
+            if key
+            not in {
+                "headword",
+                "headword_kind",
+                "part_of_speech_code",
+                "review_state",
+            }
+        }
+        lemmas.append(
+            Lemma.objects.create(
+                headword=specification["headword"],
+                headword_kind=specification.get(
+                    "headword_kind", Lemma.HeadwordKind.NOUN
+                ),
+                part_of_speech_code=specification.get("part_of_speech_code", "n"),
+                review_state=specification.get(
+                    "review_state", ReviewState.PUBLISHED
+                ),
+                **overrides,
+            )
+        )
+    return lemmas
+
+
+@pytest.mark.django_db
+def test_wordlist_endpoint_returns_only_published_lemmas(
+    client, api_key, current_release
+):
+    published, *_ = create_published_lemmas(
+        {"headword": "sadza", "frequency_tier": Lemma.FrequencyTier.HIGH},
+        {"headword": "bota", "review_state": ReviewState.APPROVED},
+        {"headword": "muriwo", "review_state": ReviewState.DRAFT},
+    )
+
+    response = client.get("/v1/wordlist", HTTP_AUTHORIZATION=f"Api-Key {api_key}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["api_version"] == "v1"
+    assert body["data_release"] == current_release.version
+    assert body["rule_set_version"] == current_release.rule_set_version
+    assert body["generated_at"].endswith("Z")
+    data = body["data"]
+    assert [result["public_id"] for result in data["results"]] == [
+        published.public_id
+    ]
+    assert data["count"] == 1
+    assert data["limit"] == 20
+    assert data["offset"] == 0
+    assert data["truncated"] is False
+    # A word game reads the stored grapheme data, so it must be in the payload.
+    assert data["results"][0]["graphemes"] == ["s", "a", "dz", "a"]
+    assert data["results"][0]["grapheme_count"] == 4
+    assert data["results"][0]["syllables"] == ["sa", "dza"]
+    assert data["results"][0]["syllable_count"] == 2
+
+
+@pytest.mark.django_db
+def test_wordlist_endpoint_paginates_with_limit_and_offset(
+    client, api_key, current_release
+):
+    lemmas = create_published_lemmas(
+        {"headword": "sadza"},
+        {"headword": "bota"},
+        {"headword": "muriwo"},
+    )
+    all_public_ids = {lemma.public_id for lemma in lemmas}
+
+    first_page = client.get(
+        "/v1/wordlist",
+        {"limit": 2},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    second_page = client.get(
+        "/v1/wordlist",
+        {"limit": 2, "offset": 2},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert first_page.status_code == 200
+    assert second_page.status_code == 200
+    first_data = first_page.json()["data"]
+    second_data = second_page.json()["data"]
+    assert first_data["count"] == 2
+    assert first_data["limit"] == 2
+    assert first_data["offset"] == 0
+    # Reaching the limit is what says more may exist, exactly as /v1/search
+    # reports it; the short second page says the set is complete.
+    assert first_data["truncated"] is True
+    assert second_data["count"] == 1
+    assert second_data["limit"] == 2
+    assert second_data["offset"] == 2
+    assert second_data["truncated"] is False
+    first_ids = {result["public_id"] for result in first_data["results"]}
+    second_ids = {result["public_id"] for result in second_data["results"]}
+    assert first_ids.isdisjoint(second_ids)
+    assert first_ids | second_ids == all_public_ids
+
+
+@pytest.mark.django_db
+def test_wordlist_seed_rotates_the_order_reproducibly(
+    client, api_key, current_release
+):
+    lemmas = create_published_lemmas(
+        {"headword": "sadza"},
+        {"headword": "bota"},
+        {"headword": "muriwo"},
+    )
+    all_public_ids = {lemma.public_id for lemma in lemmas}
+
+    def ordered_public_ids(seed):
+        response = client.get(
+            "/v1/wordlist",
+            {"seed": seed},
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert data["filters"]["seed"] == seed
+        return [result["public_id"] for result in data["results"]]
+
+    first = ordered_public_ids(11)
+    second = ordered_public_ids(11)
+    other = ordered_public_ids(12)
+
+    assert first == second
+    assert first != other
+    # A seed rotates the sequence; it never changes which lemmas are in it.
+    assert set(first) == set(second) == all_public_ids
+    assert set(other) == all_public_ids
+
+
+@pytest.mark.django_db
+def test_wordlist_rejects_filters_the_published_lexicon_cannot_apply(
+    client, api_key, current_release
+):
+    create_published_lemmas({"headword": "sadza"})
+
+    response = client.get(
+        "/v1/wordlist",
+        {"guessable": "true"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 400
+    body = response.json()
+    assert body["api_version"] == "v1"
+    assert body["error"]["code"] == "WORDLIST_FILTER_UNSUPPORTED"
+    # The parameter is named, so a client learns which filter was refused.
+    assert "guessable" in body["error"]["message"]
+    assert body["error"]["detail"]["field"] == "guessable"
+    assert body["error"]["detail"]["value"] == "true"
+
+    labels_response = client.get(
+        "/v1/wordlist",
+        {"labels": "audience.child_safe"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert labels_response.status_code == 400
+    assert labels_response.json()["error"]["detail"]["field"] == "labels"
+
+    # The 400 is about the filter, not about the data: the same request without
+    # it succeeds and returns the lemma.
+    without_filter = client.get(
+        "/v1/wordlist",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    assert without_filter.status_code == 200
+    assert without_filter.json()["data"]["count"] == 1
+
+
+@pytest.mark.django_db
+def test_wordlist_length_bounds_headword_characters(client, api_key, current_release):
+    sadza, mbwa = create_published_lemmas(
+        {"headword": "sadza"},  # 5 characters
+        {"headword": "mbwa"},  # 4 characters
+    )
+
+    def public_ids(**params):
+        response = client.get(
+            "/v1/wordlist",
+            params,
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 200
+        return {result["public_id"] for result in response.json()["data"]["results"]}
+
+    assert public_ids(length=4) == {mbwa.public_id}
+    assert public_ids(length=5) == {sadza.public_id}
+    assert public_ids(min_length=5) == {sadza.public_id}
+    assert public_ids(max_length=4) == {mbwa.public_id}
+
+
+@pytest.mark.django_db
+def test_wordlist_grapheme_length_and_syllable_count_use_stored_phonology(
+    client, api_key, current_release
+):
+    sadza, mbwa = create_published_lemmas(
+        {"headword": "sadza"},  # 4 graphemes (dz is one), 2 syllables
+        {"headword": "mbwa"},  # 2 graphemes (mbw is one), 1 syllable
+    )
+
+    def public_ids(**params):
+        response = client.get(
+            "/v1/wordlist",
+            params,
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 200
+        return {result["public_id"] for result in response.json()["data"]["results"]}
+
+    # `mbwa` is four characters but two graphemes, so the grapheme filter must
+    # disagree with the character filter above.
+    assert public_ids(grapheme_length=4) == {sadza.public_id}
+    assert public_ids(grapheme_length=2) == {mbwa.public_id}
+    assert public_ids(syllable_count=2) == {sadza.public_id}
+    assert public_ids(syllable_count=1) == {mbwa.public_id}
+
+
+@pytest.mark.django_db
+def test_wordlist_applies_pos_frequency_learner_level_and_dialect_filters(
+    client, api_key, current_release
+):
+    target, *_ = create_published_lemmas(
+        {
+            "headword": "sadza",
+            "part_of_speech_code": "n",
+            "frequency_tier": Lemma.FrequencyTier.HIGH,
+            "learner_level": Lemma.LearnerLevel.BEGINNER,
+            "dialects": ["K", "Z"],
+        },
+        {
+            "headword": "buda",
+            "headword_kind": Lemma.HeadwordKind.VERB_STEM,
+            "part_of_speech_code": "vi",
+            "frequency_tier": Lemma.FrequencyTier.LOW,
+            "learner_level": Lemma.LearnerLevel.ADVANCED,
+            "dialects": ["M"],
+        },
+    )
+
+    response = client.get(
+        "/v1/wordlist",
+        {
+            "pos": "n",
+            "frequency_tier": "high",
+            "learner_level": "beginner",
+            "dialect": "K",
+        },
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert [result["public_id"] for result in data["results"]] == [target.public_id]
+    assert data["filters"] == {
+        "pos": "n",
+        "frequency_tier": "high",
+        "learner_level": "beginner",
+        "dialect": "K",
+    }
+
+
+@pytest.mark.django_db
+def test_wordlist_rejects_invalid_pagination(client, api_key, current_release):
+    create_published_lemmas({"headword": "sadza"})
+
+    for params, field in (
+        ({"limit": 501}, "limit"),
+        ({"limit": 0}, "limit"),
+        ({"offset": -1}, "offset"),
+    ):
+        response = client.get(
+            "/v1/wordlist",
+            params,
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+
+        assert response.status_code == 400, params
+        assert response.json()["error"]["code"] == "WORDLIST_FILTER_INVALID", params
+        assert response.json()["error"]["detail"]["field"] == field, params
+
+
+@pytest.mark.django_db
+def test_wordlist_rejects_invalid_count_filters(client, api_key, current_release):
+    create_published_lemmas({"headword": "sadza"})
+
+    for params, field in (
+        ({"length": "five"}, "length"),
+        ({"grapheme_length": 0}, "grapheme_length"),
+        ({"syllable_count": "many"}, "syllable_count"),
+        ({"seed": "daily"}, "seed"),
+    ):
+        response = client.get(
+            "/v1/wordlist",
+            params,
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+
+        assert response.status_code == 400, params
+        assert response.json()["error"]["code"] == "WORDLIST_FILTER_INVALID", params
+        assert response.json()["error"]["detail"]["field"] == field, params
+
+
+@pytest.mark.django_db
+def test_wordlist_rejects_invalid_choice_filters(client, api_key, current_release):
+    create_published_lemmas({"headword": "sadza"})
+
+    for params, field in (
+        ({"dialect": "Nd"}, "dialect"),
+        ({"pos": "noun"}, "pos"),
+        ({"learner_level": "expert"}, "learner_level"),
+        ({"frequency_tier": "core"}, "frequency_tier"),
+    ):
+        response = client.get(
+            "/v1/wordlist",
+            params,
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+
+        assert response.status_code == 400, params
+        assert response.json()["error"]["code"] == "WORDLIST_FILTER_INVALID", params
+        assert response.json()["error"]["detail"]["field"] == field, params
+
+
+@pytest.mark.django_db
+def test_pattern_search_question_mark_matches_exactly_one_grapheme(
+    client, api_key, current_release
+):
+    shumba, sha = create_published_lemmas(
+        {"headword": "shumba"},  # graphemes: sh, u, mb, a
+        {"headword": "sha"},  # graphemes: sh, a
+    )
+
+    def public_ids(pattern):
+        response = client.get(
+            "/v1/search/pattern",
+            {"q": pattern},
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 200
+        return [result["lemma"]["public_id"] for result in response.json()["data"]["results"]]
+
+    # `?` consumes the whole digraph `sh`: same grapheme count, and the pattern
+    # still does not match, because `s` is not `sh`.
+    assert public_ids("s?mba") == []
+    assert public_ids("?umba") == [shumba.public_id]
+    # The acceptance case for a shorter word: `s?a` is three graphemes, so a
+    # two-grapheme headword cannot match it even though `sha` is three
+    # characters.
+    assert public_ids("s?a") == []
+    assert public_ids("?a") == [sha.public_id]
+
+
+@pytest.mark.django_db
+def test_pattern_search_star_matches_zero_or_more_graphemes(
+    client, api_key, current_release
+):
+    sadza, shumba = create_published_lemmas(
+        {"headword": "sadza"},  # graphemes: s, a, dz, a
+        {"headword": "shumba"},  # graphemes: sh, u, mb, a
+    )
+
+    def public_ids(pattern):
+        response = client.get(
+            "/v1/search/pattern",
+            {"q": pattern},
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 200
+        return sorted(
+            result["lemma"]["public_id"]
+            for result in response.json()["data"]["results"]
+        )
+
+    # Zero graphemes: `s*adza` is `sadza`.
+    assert public_ids("s*adza") == [sadza.public_id]
+    # Two graphemes: `*` covers `a` and `dz`.
+    assert public_ids("s*a") == [sadza.public_id]
+    # A bare `*` matches every published headword, including the empty tail of
+    # each one.
+    assert public_ids("*") == sorted([sadza.public_id, shumba.public_id])
+    assert public_ids("s*z") == []
+
+
+@pytest.mark.django_db
+def test_pattern_search_length_counts_graphemes_not_characters(
+    client, api_key, current_release
+):
+    sadza, mbwa = create_published_lemmas(
+        {"headword": "sadza"},  # 5 characters, 4 graphemes
+        {"headword": "mbwa"},  # 4 characters, 2 graphemes (mbw is one)
+    )
+
+    response = client.get(
+        "/v1/search/pattern",
+        {"q": "*", "length": 4},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    # The compiled pattern is echoed as graphemes, and `length` is echoed as
+    # the filter the client sent.
+    assert data["query"]["raw"] == "*"
+    assert data["query"]["graphemes"] == ["*"]
+    assert data["query"]["filters"] == {"length": 4}
+    assert [result["lemma"]["public_id"] for result in data["results"]] == [
+        sadza.public_id
+    ]
+    assert data["count"] == 1
+    assert data["limit"] == 20
+    assert data["truncated"] is False
+    assert data["results"][0]["result_type"] == "lemma"
+    assert data["results"][0]["match_type"] == "grapheme_pattern"
+
+    short_response = client.get(
+        "/v1/search/pattern",
+        {"q": "mbw*", "length": 2},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert short_response.status_code == 200
+    assert [
+        result["lemma"]["public_id"]
+        for result in short_response.json()["data"]["results"]
+    ] == [mbwa.public_id]
+
+
+@pytest.mark.django_db
+def test_pattern_search_filters_by_part_of_speech_and_returns_only_published_lemmas(
+    client, api_key, current_release
+):
+    sadza, buda, bota = create_published_lemmas(
+        {"headword": "sadza", "part_of_speech_code": "n"},
+        {
+            "headword": "buda",
+            "headword_kind": Lemma.HeadwordKind.VERB_STEM,
+            "part_of_speech_code": "vi",
+        },
+        {"headword": "bota", "review_state": ReviewState.APPROVED},
+    )
+
+    def public_ids(params):
+        response = client.get(
+            "/v1/search/pattern",
+            params,
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 200
+        return [
+            result["lemma"]["public_id"]
+            for result in response.json()["data"]["results"]
+        ]
+
+    assert public_ids({"q": "*", "pos": "n"}) == [sadza.public_id]
+    assert public_ids({"q": "*", "pos": "vi"}) == [buda.public_id]
+    # `bota` is approved but not published, so no query reaches it.
+    assert bota.public_id not in public_ids({"q": "*"})
+
+
+@pytest.mark.django_db
+def test_pattern_search_requires_a_pattern_and_valid_filters(
+    client, api_key, current_release
+):
+    create_published_lemmas({"headword": "sadza"})
+
+    empty = client.get(
+        "/v1/search/pattern",
+        {"q": "   "},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    missing = client.get(
+        "/v1/search/pattern",
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    invalid_pos = client.get(
+        "/v1/search/pattern",
+        {"q": "*", "pos": "noun"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+    invalid_length = client.get(
+        "/v1/search/pattern",
+        {"q": "*", "length": "four"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert empty.status_code == 400
+    assert empty.json()["error"] == {
+        "code": "PATTERN_QUERY_REQUIRED",
+        "message": "Pattern search requires a non-empty 'q' query parameter.",
+        "detail": None,
+    }
+    assert missing.status_code == 400
+    assert missing.json()["error"]["code"] == "PATTERN_QUERY_REQUIRED"
+    assert invalid_pos.status_code == 400
+    assert invalid_pos.json()["error"]["code"] == "PATTERN_FILTER_INVALID"
+    assert invalid_pos.json()["error"]["detail"]["field"] == "pos"
+    assert invalid_length.status_code == 400
+    assert invalid_length.json()["error"]["detail"]["field"] == "length"

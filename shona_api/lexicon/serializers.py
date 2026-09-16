@@ -88,6 +88,48 @@ class LemmaCoreSerializer(serializers.ModelSerializer):
         return data
 
 
+class WordlistEntrySerializer(serializers.ModelSerializer):
+    """Flat word-game projection of a published lemma.
+
+    `/v1/wordlist` serves up to 500 rows per request, and `LemmaCoreSerializer`
+    cannot: its `entry_quality` summary resolves every sense cross-reference
+    with its own lookup, which costs about 0.2s per lemma on the published
+    lexicon (measured over 40,522 lemmas). Nothing here touches a related
+    table, so a page costs one query regardless of its size.
+
+    `character_length` is computed from the headword: no such column exists, so
+    the `length`/`min_length`/`max_length` filters bound it in SQL instead.
+    """
+
+    noun_class = NounClassSerializer(read_only=True)
+    character_length = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lemma
+        fields = (
+            "public_id",
+            "headword",
+            "normalized_headword",
+            "headword_kind",
+            "part_of_speech_code",
+            "part_of_speech_label",
+            "noun_class",
+            "dialects",
+            "frequency_tier",
+            "learner_level",
+            "phonology_inventory_version",
+            "graphemes",
+            "grapheme_count",
+            "character_length",
+            "syllables",
+            "syllable_count",
+            "review_state",
+        )
+
+    def get_character_length(self, obj):
+        return len(obj.headword)
+
+
 class SenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sense

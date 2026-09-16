@@ -155,6 +155,246 @@ def build_openapi_spec():
                     "security": [{"ApiKeyAuth": []}],
                 }
             },
+            reverse("pattern-search"): {
+                "get": {
+                    "tags": ["Lexicon"],
+                    "summary": "Match published headwords by grapheme pattern.",
+                    "description": (
+                        "Wildcard matching is grapheme-aware, not "
+                        "character-aware. `?` matches exactly one stored "
+                        "grapheme and `*` matches zero or more, so `s?a` does "
+                        "not match `sha`: `sh` is one grapheme and `sha` is "
+                        "two. Candidate rows are filtered in SQL on the stored "
+                        "grapheme_count before the pattern is applied, so "
+                        "`length` counts graphemes as well."
+                    ),
+                    "operationId": "searchLemmaPattern",
+                    "parameters": [
+                        {
+                            "name": "q",
+                            "in": "query",
+                            "required": True,
+                            "description": (
+                                "Wildcard pattern over graphemes: `?` matches "
+                                "exactly one grapheme, `*` matches zero or "
+                                "more."
+                            ),
+                            "schema": {"type": "string", "minLength": 1},
+                            "examples": {
+                                "one_grapheme": {"value": "?a?a"},
+                                "many_graphemes": {"value": "sh*ba"},
+                            },
+                        },
+                        {
+                            "name": "length",
+                            "in": "query",
+                            "required": False,
+                            "description": (
+                                "Exact grapheme length of the headword, not "
+                                "its character length."
+                            ),
+                            "schema": {"type": "integer", "minimum": 1},
+                            "examples": {"graphemes": {"value": 5}},
+                        },
+                        {
+                            "name": "pos",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional bounded part-of-speech filter.",
+                            "schema": {
+                                "type": "string",
+                                "enum": [
+                                    "n",
+                                    "vi",
+                                    "vt",
+                                    "v t",
+                                    "v i",
+                                    "adj",
+                                    "adv",
+                                    "ideo",
+                                    "interj",
+                                ],
+                            },
+                        },
+                        {
+                            "name": "limit",
+                            "in": "query",
+                            "required": False,
+                            "description": "Maximum results to return, from 1 to 50.",
+                            "schema": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 50,
+                                "default": 20,
+                            },
+                        },
+                    ],
+                    "responses": {
+                        "200": success_response(
+                            "Grapheme pattern matches.",
+                            {"$ref": "#/components/schemas/PatternSearchData"},
+                        ),
+                        "400": error_response("Missing, empty, or invalid pattern."),
+                        "401": auth_error_response(),
+                        "429": rate_limit_response(),
+                        "503": current_release_response(),
+                    },
+                    "security": [{"ApiKeyAuth": []}],
+                }
+            },
+            reverse("wordlist"): {
+                "get": {
+                    "tags": ["Lexicon"],
+                    "summary": "List published lemmas for word games.",
+                    "description": (
+                        "A bounded, deterministic catalogue ordered by "
+                        "public_id. `seed` rotates that order by a cyclic "
+                        "shift, so the same seed always returns the same "
+                        "sequence and a different seed returns a different "
+                        "one; no random ordering is used. `min_length` and "
+                        "`max_length` bound the headword's characters, while "
+                        "`grapheme_length` and `syllable_count` are exact "
+                        "counts. Filters with no data behind them "
+                        "(`guessable`, `character_length`, `labels`, "
+                        "`exclude_labels`) are refused with 400 "
+                        "WORDLIST_FILTER_UNSUPPORTED rather than silently "
+                        "returning unfiltered results."
+                    ),
+                    "operationId": "listWordlist",
+                    "parameters": [
+                        {
+                            "name": "length",
+                            "in": "query",
+                            "required": False,
+                            "description": "Exact headword character length.",
+                            "schema": {"type": "integer", "minimum": 1},
+                        },
+                        {
+                            "name": "min_length",
+                            "in": "query",
+                            "required": False,
+                            "description": "Minimum headword character length.",
+                            "schema": {"type": "integer", "minimum": 1},
+                        },
+                        {
+                            "name": "max_length",
+                            "in": "query",
+                            "required": False,
+                            "description": "Maximum headword character length.",
+                            "schema": {"type": "integer", "minimum": 1},
+                        },
+                        {
+                            "name": "grapheme_length",
+                            "in": "query",
+                            "required": False,
+                            "description": "Exact grapheme count of the headword.",
+                            "schema": {"type": "integer", "minimum": 1},
+                        },
+                        {
+                            "name": "syllable_count",
+                            "in": "query",
+                            "required": False,
+                            "description": "Exact syllable count of the headword.",
+                            "schema": {"type": "integer", "minimum": 1},
+                        },
+                        {
+                            "name": "pos",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional bounded part-of-speech filter.",
+                            "schema": {
+                                "type": "string",
+                                "enum": [
+                                    "n",
+                                    "vi",
+                                    "vt",
+                                    "v t",
+                                    "v i",
+                                    "adj",
+                                    "adv",
+                                    "ideo",
+                                    "interj",
+                                ],
+                            },
+                        },
+                        {
+                            "name": "frequency_tier",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional frequency tier filter.",
+                            "schema": {
+                                "type": "string",
+                                "enum": ["high", "medium", "low", "unknown"],
+                            },
+                        },
+                        {
+                            "name": "learner_level",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional learner level filter.",
+                            "schema": {
+                                "type": "string",
+                                "enum": [
+                                    "beginner",
+                                    "intermediate",
+                                    "advanced",
+                                    "unknown",
+                                ],
+                            },
+                        },
+                        {
+                            "name": "dialect",
+                            "in": "query",
+                            "required": False,
+                            "description": "Optional Hannan dialect filter.",
+                            "schema": {"type": "string", "enum": ["K", "Ko", "M", "Z"]},
+                        },
+                        {
+                            "name": "seed",
+                            "in": "query",
+                            "required": False,
+                            "description": (
+                                "Integer seed for a reproducible rotation of "
+                                "the public_id ordering."
+                            ),
+                            "schema": {"type": "integer"},
+                            "examples": {"daily_puzzle": {"value": 20260101}},
+                        },
+                        {
+                            "name": "limit",
+                            "in": "query",
+                            "required": False,
+                            "description": "Maximum results to return, from 1 to 500.",
+                            "schema": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 500,
+                                "default": 20,
+                            },
+                        },
+                        {
+                            "name": "offset",
+                            "in": "query",
+                            "required": False,
+                            "description": "Number of lemmas to skip.",
+                            "schema": {"type": "integer", "minimum": 0, "default": 0},
+                        },
+                    ],
+                    "responses": {
+                        "200": success_response(
+                            "Wordlist lemmas.",
+                            {"$ref": "#/components/schemas/WordlistData"},
+                        ),
+                        "400": error_response(
+                            "Invalid filter value, or a filter with no supporting data."
+                        ),
+                        "401": auth_error_response(),
+                        "429": rate_limit_response(),
+                        "503": current_release_response(),
+                    },
+                    "security": [{"ApiKeyAuth": []}],
+                }
+            },
             path_with_public_id("lemma-read"): {
                 "get": {
                     "tags": ["Lexicon"],
@@ -569,6 +809,117 @@ def schemas():
             },
             "required": ["query", "count", "results"],
         },
+        "PatternSearchData": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "properties": {
+                        "raw": {"type": "string"},
+                        "graphemes": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": (
+                                "The compiled pattern: literal text segmented "
+                                "into graphemes, with `?` and `*` kept as "
+                                "tokens."
+                            ),
+                        },
+                        "filters": json_object,
+                    },
+                    "required": ["raw", "graphemes"],
+                },
+                "count": {"type": "integer"},
+                "limit": {"type": "integer"},
+                "truncated": {
+                    "type": "boolean",
+                    "description": (
+                        "True when the limit was reached, so more matches may "
+                        "exist. `count` is how many results this response "
+                        "contains, not how many matched."
+                    ),
+                },
+                "results": {
+                    "type": "array",
+                    "items": {"$ref": "#/components/schemas/SearchResult"},
+                },
+            },
+            "required": ["query", "count", "limit", "truncated", "results"],
+        },
+        "WordlistData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "description": (
+                        "How many lemmas this response contains, not how many "
+                        "matched."
+                    ),
+                },
+                "limit": {"type": "integer"},
+                "offset": {"type": "integer"},
+                "truncated": {
+                    "type": "boolean",
+                    "description": (
+                        "True when the limit was reached, so more lemmas may "
+                        "exist."
+                    ),
+                },
+                "filters": json_object,
+                "results": {
+                    "type": "array",
+                    "items": {"$ref": "#/components/schemas/WordlistEntry"},
+                },
+            },
+            "required": ["count", "limit", "offset", "truncated", "results"],
+        },
+        "WordlistEntry": {
+            "type": "object",
+            "description": (
+                "Flat word-game projection of a published lemma. It carries the "
+                "stored grapheme and syllable data a word game needs and no "
+                "sense/form/tone payload, so a 500-entry page stays one query."
+            ),
+            "properties": {
+                "public_id": {"type": "string"},
+                "headword": {"type": "string"},
+                "normalized_headword": {"type": "string"},
+                "headword_kind": {"type": "string"},
+                "part_of_speech_code": {"type": "string"},
+                "part_of_speech_label": {"type": "string"},
+                "noun_class": {"$ref": "#/components/schemas/NounClass"},
+                "dialects": string_array,
+                "frequency_tier": {"type": "string"},
+                "learner_level": {"type": "string"},
+                "phonology_inventory_version": {"type": "string"},
+                "graphemes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Stored grapheme segmentation of the headword.",
+                },
+                "grapheme_count": {"type": "integer"},
+                "character_length": {
+                    "type": "integer",
+                    "description": (
+                        "`len(headword)`. No character-length column exists, so "
+                        "this is computed and the length filters bound it in SQL."
+                    ),
+                },
+                "syllables": string_array,
+                "syllable_count": {"type": "integer"},
+                "review_state": {"type": "string"},
+            },
+            "required": [
+                "public_id",
+                "headword",
+                "normalized_headword",
+                "graphemes",
+                "grapheme_count",
+                "character_length",
+                "syllables",
+                "syllable_count",
+            ],
+        },
         "MorphologyEnrichmentStatus": {
             "type": "object",
             "properties": {
@@ -596,13 +947,16 @@ def schemas():
                         "morphology_lemma",
                         "fuzzy_lemma",
                         "fuzzy_form",
+                        "grapheme_pattern",
                     ],
                     "description": (
                         "Which search tier produced this result. "
                         "`morphology_lemma` means the query was an inflected form "
                         "that the morphology engine resolved to this lemma; "
                         "`fuzzy_*` results are similarity matches and are only "
-                        "returned when no exact or morphological tier matched."
+                        "returned when no exact or morphological tier matched; "
+                        "`grapheme_pattern` is a grapheme wildcard match from "
+                        "/v1/search/pattern."
                     ),
                     "example": "exact_lemma",
                 },

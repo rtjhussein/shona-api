@@ -11,7 +11,14 @@ def compute_phonology_fields(
     # (`['bye', ' bye']`). A space separates words; it is not a segment of either
     # one, so each word is segmented on its own and the results are concatenated
     # into the flat lists the records already hold.
-    words = text.split()
+    #
+    # The leading hyphen is the bound-morpheme marker (`-dya`, `-nyaku nyaku`),
+    # an editorial annotation rather than a segment of the word, so it is dropped
+    # the same way: `normalize_orthography('-kwedza')` is already `kwedza`, while
+    # segmenting the raw headword gave ['-', 'kw', 'e', 'dz', 'a'] and counted it.
+    # 13,466 published lemmas carried it, with wordlist grapheme_length and the
+    # pattern endpoint's `?` both matching against the marker.
+    words = [word.lstrip("-") for word in text.split()]
     graphemes = [
         grapheme for word in words for grapheme in segment_graphemes(word, inventory=inventory)
     ]

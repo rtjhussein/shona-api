@@ -247,6 +247,10 @@ def search_public_lemmas_by_grapheme_pattern(
     filters = build_public_search_filters(**(filters or {}))
     candidates = bound_pattern_candidates(
         public_lemma_queryset(filters)
+        # The scan reads ids and stored graphemes only, so the detail
+        # prefetches the public queryset carries would be paid for per chunk
+        # and then thrown away.
+        .prefetch_related(None)
         .order_by("normalized_headword", "headword", "public_id")
         .values_list("public_id", "graphemes"),
         tokens,
