@@ -1,0 +1,400 @@
+{
+  "lemmas": [
+    {
+      "headword": "-taura",
+      "key": "taura",
+      "locator": "FSI Unit 12 Note 1 p.118 (Ndinotaura); Fortune -taur-is- TC II",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-taura",
+      "key": "taura_draft",
+      "locator": "eval-contract homograph (DRAFT, must stay invisible)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "published": false,
+      "source_key": "eval"
+    },
+    {
+      "headword": "-dzidzisa",
+      "key": "dzidzisa",
+      "locator": "FSI Unit 12 p.119 (Unodzidzisa)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-gona",
+      "key": "gona",
+      "locator": "FSI Unit 12 p.120 (Tinogona; Handigoni); Hannan p.26",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-da",
+      "key": "da",
+      "locator": "FSI Unit 12 p.119 (Unoda; Handidi)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-pa",
+      "key": "pa",
+      "locator": "Fortune p.20 ku-p-a; Hannan -pa [H] KKoMZ vt Give; FSI Ipa",
+      "pos": "vt",
+      "pos_label": "transitive verb",
+      "source_key": "source_hannan"
+    },
+    {
+      "headword": "-ziva",
+      "key": "ziva",
+      "locator": "FSI p.118 Handizivi; Fortune ha-ndi-ziv-e; Hannan p.xii",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_hannan"
+    },
+    {
+      "headword": "-pinda",
+      "key": "pinda",
+      "locator": "FSI Unit 13 p.129 Pinda!; FSI Unit 32 usapinda",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-verenga",
+      "key": "verenga",
+      "locator": "FSI Unit 13 p.129 Verenga!",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-enda",
+      "key": "enda",
+      "locator": "Fortune ku-chi-end-a p.78; FSI kuenda/Enda! p.129",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-uya",
+      "key": "uya",
+      "locator": "FSI Unit 13 p.130 Uya!",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-tenga",
+      "key": "tenga",
+      "locator": "FSI Unit 13 p.130 Tenga!",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-tengesa",
+      "key": "tengesa",
+      "locator": "FSI Unit 13 p.130 Tengesai (sell)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-pedza",
+      "key": "pedza",
+      "locator": "FSI Unit 13 p.130 Pedzai",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-rera",
+      "key": "rera",
+      "locator": "FSI Unit 13 p.130 Rerai",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-putsa",
+      "key": "putsa",
+      "locator": "FSI Unit 32 p.323 Usaputsa",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-isa",
+      "key": "isa",
+      "locator": "FSI Unit 34 p.340 Usarise (put; cl5 bhuku)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-zadza",
+      "key": "zadza",
+      "locator": "FSI Unit 33 p.332 Tinazadza/Hatizadzi (fill)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-bika",
+      "key": "bika",
+      "locator": "Fortune 2.10.2.2 bik-a; -bik-ir- applicative",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-tema",
+      "key": "tema",
+      "locator": "Fortune -tem-er-; v-a-ka-tem-a triple pp.25-26",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-zorora",
+      "key": "zorora",
+      "locator": "Fortune ku-zoror-a p.21 (rest)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-tevera",
+      "key": "tevera",
+      "locator": "Fortune ku-tever-a p.21 (follow)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-muka",
+      "key": "muka",
+      "locator": "Fortune -muk-is- (rise); -muts- mutation source",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-tapa",
+      "key": "tapa",
+      "locator": "Fortune -tap-iw-/-tap-w- (capture)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-tsvaira",
+      "key": "tsvaira",
+      "locator": "FSI p.333 kutsvairwa (sweep)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-sunga",
+      "key": "sunga",
+      "locator": "Fortune -sung-unur- (untie) base",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-chata",
+      "key": "chata",
+      "locator": "Fortune -chat-anur- (divorce) base -chat- (marry)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-pfeka",
+      "key": "pfeka",
+      "locator": "Fortune -pfek-enur- (undress) base",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-pamhidza",
+      "key": "pamhidza",
+      "locator": "Fortune va-pamhidz-ir-an-i 3.4.2.8 p.110",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-taurisa",
+      "key": "taurisa",
+      "locator": "Fortune TC II tauris-a (causative stem, own lemma)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-runga",
+      "key": "runga",
+      "locator": "FSI Unit 32 Musakurungira (applied stem of -runga)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-radzika",
+      "key": "radzika",
+      "locator": "FSI Unit 34 Muradzike (put/hang)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-ambura",
+      "key": "ambura",
+      "locator": "hannan:page_026:entry:ambura (-ambura [L] M Ignite; Umba yaambura)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_hannan"
+    },
+    {
+      "headword": "-dya",
+      "key": "dya",
+      "locator": "Hannan Ndinodya/Idya/Chidya; Fortune mu-dy-ir-o; FSI Idya/Adye",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_hannan"
+    },
+    {
+      "headword": "-fa",
+      "key": "fa",
+      "locator": "Fortune ku-sa-f-a nenzara (die)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-tora",
+      "key": "tora",
+      "locator": "Fortune kuzvitora (take)",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-ti",
+      "key": "ti",
+      "locator": "Fortune 3.3.18 ku-ti (divergent, no -a)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-nzi",
+      "key": "nzi",
+      "locator": "Fortune ku-nzi; Hannan -nzi [L] KZ defective v Be said",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_hannan"
+    },
+    {
+      "headword": "-na",
+      "key": "na",
+      "locator": "eval-contract ONLY: defective fixture; no verb stem attested (see SRC-059)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "eval"
+    },
+    {
+      "headword": "-tuka",
+      "key": "tuka",
+      "locator": "Fortune -tuk-urur- (curse) base",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-senda",
+      "key": "senda",
+      "locator": "Fortune -send-urur- (replane) base",
+      "pos": "vt",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    },
+    {
+      "headword": "-dirira",
+      "key": "dirira",
+      "locator": "FSI Unit 32 tisadzidirire (subjunctive reference only; no endpoint use)",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fsi"
+    },
+    {
+      "headword": "-buda",
+      "key": "buda",
+      "locator": "eval-reference: perfective SRC-054 note (-bud-irir-) base",
+      "pos": "v",
+      "pos_label": "verb",
+      "source_key": "source_fortune"
+    }
+  ],
+  "noun_classes": [
+    {
+      "class_number": "1",
+      "label": "Class 1",
+      "object_concord": "mu",
+      "prefix": "mu",
+      "subject_concord": "a"
+    },
+    {
+      "class_number": "2",
+      "label": "Class 2",
+      "object_concord": "va",
+      "prefix": "va",
+      "subject_concord": "va"
+    },
+    {
+      "class_number": "5",
+      "label": "Class 5",
+      "object_concord": "ri",
+      "prefix": "ri",
+      "subject_concord": "ri"
+    },
+    {
+      "class_number": "6",
+      "label": "Class 6",
+      "object_concord": "a",
+      "prefix": "a",
+      "subject_concord": "a"
+    },
+    {
+      "class_number": "7",
+      "label": "Class 7",
+      "object_concord": "chi",
+      "prefix": "chi",
+      "subject_concord": "chi"
+    },
+    {
+      "class_number": "8",
+      "label": "Class 8",
+      "object_concord": "zvi",
+      "prefix": "zvi",
+      "subject_concord": "zvi"
+    },
+    {
+      "class_number": "9",
+      "label": "Class 9",
+      "prefix": "i",
+      "subject_concord": "i",
+      "object_concord": "i"
+    }
+  ]
+}
