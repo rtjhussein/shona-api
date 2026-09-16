@@ -180,6 +180,53 @@
       ],
       "resolution_needed": "26 of the 1,205 multi-word ideophones hold a pattern that cannot cover every word -- a bounded repair, not a project. Read those 26 brackets against the scan first, because some ideophones may legitimately carry one group for the whole expression (`kwa kwa kwa` with `L`), then fix the ideophone path to keep the whole bracket. The non-ideophone records already answer the modelling question: `munhondo churu` stores `LLL HH`.",
       "impact": "26 of 1,205 multi-word ideophones, sized by tools/size_audit_candidates.py"
+    },
+    {
+      "id": "multiword-headword-syllables-carry-the-space",
+      "title": "Syllabification of a multi-word headword carries the space into the next syllable",
+      "field": "syllables / graphemes",
+      "status": "open",
+      "kind": "source_defect",
+      "summary": "A multi-word headword is syllabified as one string, so the space becomes part of the following syllable: `bye bye` stores ['bye', ' bye'] and `shwaba shwaba` stores ['shwa', 'ba', ' shwa', 'ba']. A client splitting on whitespace gets a leading space on half the syllables, and a game reading syllable_count sees double the words' count.",
+      "sources": [
+        {
+          "source": "published records",
+          "locator": "lexicon_lemma.syllables",
+          "claim": "the space is inside the syllable, not a separator"
+        }
+      ],
+      "evidence": [
+        "Found while repairing two headwords from the scan on 2026-09-16; the syllables were recomputed by the current code, so this is behaviour, not stale data.",
+        "Syllabification closes each syllable on a vowel and the space is not in the grapheme inventory, so it falls through as a single-character segment and attaches to the next syllable."
+      ],
+      "resolution_needed": "Decide whether syllables should be a flat list containing the space or a list of per-word lists. The flat list is what every existing record holds, so the cheaper fix is to syllabify per word and concatenate. Needs sizing first: 1,483 published headwords contain a space.",
+      "impact": "every multi-word headword; 1,483 published lemmas carry the shape"
+    },
+    {
+      "id": "duplicate-ideophone-fragment-na-na",
+      "title": "A published ideophone is a fragment of another published ideophone",
+      "field": "headword",
+      "status": "open",
+      "kind": "source_defect",
+      "summary": "`n'a n'a` is published as its own ideophone, but the page carries a single entry printed as three tokens and `n'a n'a n'a` is already published with the same shape. The two-token record cannot be renamed to the page's spelling without colliding, so it is a duplicate rather than a misread.",
+      "sources": [
+        {
+          "source": "Hannan, Standard Shona Dictionary (scan)",
+          "locator": "dictionary p.447, PDF p.471",
+          "claim": "one entry, three printed tokens, bracket [L LL]",
+          "verbatim": "n'a n'a n'a ... [L L L]"
+        },
+        {
+          "source": "published lemmas",
+          "locator": "lexicon_lemma",
+          "claim": "both `n'a n'a` and `n'a n'a n'a` exist as published ideophones"
+        }
+      ],
+      "evidence": [
+        "Found by the ideophone tone audit: the page prints three tokens where the record has two, and a same-shaped record already exists."
+      ],
+      "resolution_needed": "Editorial: retire the fragment or treat it as a homograph with its own sense. Merging is a decision about the entry, not a string fix, and the scan shows one entry rather than two.",
+      "impact": "one published record; the same shape as the spurious `bimha` finding, where one printed line produced two published headwords"
     }
   ]
 }
