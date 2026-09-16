@@ -23,7 +23,9 @@ from .search import (
     MAX_SEARCH_LIMIT,
     SEARCH_NORMALIZER_VERSION,
     filter_json_array,
+    filter_public_lemmas,
     normalize_search_query,
+    public_lemma_queryset,
     search_public_records,
     search_public_records_fuzzy,
 )
@@ -165,6 +167,16 @@ class SearchView(APIView):
             release_metadata=release_metadata,
         )
 
+        # Tier 3: an inflected form resolves to its lemma. The product
+        # requirements make this a search tier, not a side channel -- a client
+        # searching "ndinobuda" was shown no results at all, only an enrichment
+        # blob it had to interpret. It runs only when exact lemma and form
+        # matches found nothing, so a lexical hit is never displaced.
+        if not results:
+            results = self._morphology_lemma_results(
+                morphology_analysis, filters=filters
+            )
+
         if not results and not (morphology_analysis and morphology_analysis.get("analyses")):
             results = self._search_fuzzy(normalized_query, filters=filters)
 
@@ -192,6 +204,46 @@ class SearchView(APIView):
 
     def _search_fuzzy(self, normalized_query, *, filters):
         return search_public_records_fuzzy(normalized_query, filters=filters)
+
+    def _morphology_lemma_results(self, morphology_analysis, *, filters):
+        """Return the lemmas an inflected query resolves to, in reading order.
+
+        Only readings the analyzer produced under its evidence gates reach this
+        point, so an excluded or deferred derivation (an unverified extension
+        style, a deferred vowel boundary) yields no result -- exactly as it
+        yields no enrichment. Order follows the analyzer's confidence ranking so
+        the most likely reading is the first result, rather than the model's
+        alphabetical default.
+        """
+        if not morphology_analysis:
+            return []
+
+        lemma_ids: list[str] = []
+        for analysis in morphology_analysis.get("analyses", []):
+            verb_stem = (analysis.get("slots") or {}).get("verb_stem") or {}
+            lemma_id = verb_stem.get("lemma_public_id")
+            if isinstance(lemma_id, str) and lemma_id and lemma_id not in lemma_ids:
+                lemma_ids.append(lemma_id)
+        if not lemma_ids:
+            return []
+
+        lemmas = {
+            lemma.public_id: lemma
+            for lemma in filter_public_lemmas(
+                public_lemma_queryset(filters).filter(public_id__in=lemma_ids),
+                filters,
+            )
+        }
+        return [
+            {
+                "result_type": "lemma",
+                "match_type": "morphology_lemma",
+                "lemma": lemmas[lemma_id],
+                "form": None,
+            }
+            for lemma_id in lemma_ids
+            if lemma_id in lemmas
+        ][: filters["limit"]]
 
     def _parse_filters(self, request):
         filters = {

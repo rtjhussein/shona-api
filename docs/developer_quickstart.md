@@ -77,13 +77,22 @@ curl.exe "http://127.0.0.1:8000/v1/search?q=buda" `
   -H "Authorization: Api-Key shona_sk_..."
 ```
 
-Search currently supports exact lemma and exact form lookup using the v1
-orthography normalizer. Empty searches return `SEARCH_QUERY_REQUIRED`.
-Zero-result searches return a successful envelope with `count: 0` and a
-`zero_result` object. When search can analyze a supported verb form such as
-`ndinobuda`, a simple `ku-` infinitive such as `kubuda`, or an imperative
-such as `usadye` or `budai`, the response also includes `morphology` and
-`morphology_enrichment` with linked lemma details.
+Search resolves a query in tiers, and a later tier is only consulted when the
+earlier ones matched nothing: exact lemma, exact form, morphological
+resolution, then fuzzy similarity. Every result reports its tier in
+`match_type`, so a client can tell an attested headword from an inferred one.
+
+An inflected form resolves to the lemma it belongs to: `?q=ndinobuda` returns
+the `-buda` record with `match_type: "morphology_lemma"`. A surface the engine
+refuses resolves to nothing — search never invents a reading the analyzer
+declined to produce.
+
+Empty searches return `SEARCH_QUERY_REQUIRED`. Zero-result searches return a
+successful envelope with `count: 0` and a `zero_result` object. When search can
+analyze a supported verb form such as `ndinobuda`, a simple `ku-` infinitive
+such as `kubuda`, or an imperative such as `usadye` or `budai`, the response
+also includes `morphology` and `morphology_enrichment` with linked lemma
+details.
 Unsupported or failed morphology enrichment keeps the search response
 successful and records the fallback under `zero_result.morphology_enrichment`
 when there are no exact matches. Some unsupported surfaces include

@@ -201,7 +201,7 @@ No linguistic expectation weakened; no API change to make the evaluator green.
   imported from the morphology implementation, and linguistic values are never
   derived from it.
 
-## Amendment 2026-09-13 (malformed-response robustness)
+### Amendment 2026-09-13 (malformed-response robustness)
 
 No linguistic expectation weakened; no API change. Valid JSON with malformed
 response structures (non-object `data`, missing/non-list `analyses`,
@@ -215,3 +215,35 @@ parse/validate layer (`_extract_data`, `_reading_list`) covers
 analyze/search/round-trip/generate without a blanket handler around the run;
 the standalone runner still exits non-zero on any scored failure with
 machine-readable results and the report produced.
+
+
+## Amendment 2026-09-16 (search retrieval tier; no expectation changed)
+
+Search gained a retrieval tier and no corpus expectation moved. Recorded so the
+search contract's scope is not inferred from the corpus alone.
+
+`/v1/search` now resolves an inflected form to its lemma as a *result*, per
+product requirements section 7.1 tier 3 ("Morphological analysis: parse
+inflected form to lemma"). Previously the resolution appeared only as an
+enrichment object beside `count: 0`. Tiers run in order -- exact lemma, exact
+form, morphological resolution (`match_type: "morphology_lemma"`), fuzzy
+similarity -- and a later tier is consulted only when the earlier ones matched
+nothing, so a lexical hit is never displaced.
+
+Why no expectation changed: the search checks assert *membership*
+(`expected_lexical_hits` among returned headwords, required/prohibited readings
+among `morphology.analyses`, `expected_absent` over the raw body). None asserts
+that `results` is empty, so a newly populated result list satisfies every
+existing case. The evaluator was re-run after the change and reports 0 scored
+failures on the frozen corpus.
+
+What the tier must never do, and the cases that already bind it:
+
+- surface an evidence-gated derivation: CT-SEARCH-03 (`ndinotauridza`) must
+  still expose the `unverified_extension_derivation` lane and no reading;
+- surface a deferred boundary: CT-SEARCH-04 (`vanovambura`) must still return no
+  matched enrichment;
+- displace a lexical hit: CT-AMB-01 (`taurisa`) must still return the exact
+  hit;
+- reach an unpublished lemma: the tier re-queries through the public
+  (published-only) queryset rather than trusting the analyzer's reviewed set.

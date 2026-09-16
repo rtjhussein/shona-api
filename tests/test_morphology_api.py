@@ -1271,7 +1271,11 @@ def test_independent_lemma_survives_pro_verb_restriction(
     )
     assert response.status_code == 200
     data = response.json()["data"]
-    assert data["count"] == 0
+    # The surviving reading is also a search result now, and it points at the
+    # independent stem rather than the excluded derivation.
+    assert data["count"] == 1
+    assert data["results"][0]["match_type"] == "morphology_lemma"
+    assert data["results"][0]["lemma"]["public_id"] == ni.public_id
     assert data["morphology_enrichment"]["status"] == "matched"
     assert data["morphology"]["count"] == 1
     assert data["morphology"]["analyses"][0]["lemma"]["public_id"] == ni.public_id
@@ -2386,3 +2390,115 @@ def test_generate_endpoint_reversive_long_round_trips(
     ]
 
 
+
+
+# --- tier 3: an inflected form resolves to its lemma ------------------------
+
+
+@pytest.fixture
+def published_verb_lemma(current_release):
+    """Public search serves published records only; approved is not enough."""
+    return Lemma.objects.create(
+        headword="-buda",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vi",
+        part_of_speech_label="intransitive verb",
+        review_state=ReviewState.PUBLISHED,
+    )
+
+
+@pytest.mark.django_db
+def test_search_resolves_an_inflected_form_to_its_lemma(
+    client, api_key, current_release, published_verb_lemma
+):
+    """Searching an inflected form must return a result, not only a blob.
+
+    The product requirements make morphological resolution a search tier. Before
+    this, `?q=ndinobuda` returned count 0 with the lemma buried in an enrichment
+    object the client had to interpret.
+    """
+    response = client.get(
+        "/v1/search",
+        {"q": "ndinobuda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    body = response.json()["data"]
+    assert body["count"] == 1
+    result = body["results"][0]
+    assert result["match_type"] == "morphology_lemma"
+    assert result["result_type"] == "lemma"
+    assert result["lemma"]["public_id"] == published_verb_lemma.public_id
+
+
+@pytest.mark.django_db
+def test_search_keeps_an_exact_lexical_hit_ahead_of_the_morphology_tier(
+    client, api_key, current_release, published_verb_lemma
+):
+    """`buda` is both a headword and an imperative reading; the headword wins.
+
+    Later tiers are consulted only when the earlier ones matched nothing, so a
+    lexical hit is never displaced by an inferred one.
+    """
+    response = client.get(
+        "/v1/search",
+        {"q": "buda"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    results = response.json()["data"]["results"]
+    assert results
+    assert results[0]["match_type"] == "exact_lemma"
+    assert "morphology_lemma" not in [result["match_type"] for result in results]
+
+
+@pytest.mark.django_db
+def test_search_reports_no_morphology_result_when_the_reading_is_unsupported(
+    client, api_key, current_release, verb_lemma
+):
+    """A surface the engine refuses must not acquire a lemma through search.
+
+    `kuchikoro` is `ku-` prefixed but `-chikoro` is not a reviewed verb stem, so
+    the analyzer resolves nothing and the tier returns nothing.
+    """
+    response = client.get(
+        "/v1/search",
+        {"q": "kuchikoro"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    results = response.json()["data"]["results"]
+    assert "morphology_lemma" not in [result["match_type"] for result in results]
+
+
+@pytest.mark.django_db
+def test_search_never_resolves_to_an_unpublished_lemma(
+    client, api_key, current_release
+):
+    """Morphology reads reviewed stems only, and the tier re-checked publication.
+
+    A draft verb stem is invisible to the analyzer, so a surface built on it
+    cannot reach the public result list.
+    """
+    Lemma.objects.create(
+        headword="-famba",
+        headword_kind=Lemma.HeadwordKind.VERB_STEM,
+        part_of_speech_code="vi",
+        part_of_speech_label="intransitive verb",
+        review_state=ReviewState.DRAFT,
+    )
+
+    response = client.get(
+        "/v1/search",
+        {"q": "ndinofamba"},
+        HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+    )
+
+    assert response.status_code == 200
+    results = response.json()["data"]["results"]
+    assert all(
+        result["lemma"]["headword"] != "-famba" for result in results
+    )
