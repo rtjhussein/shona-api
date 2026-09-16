@@ -649,43 +649,28 @@ def generate_form(
             "phonology": compute_phonology_fields(form),
         }
 
-    has_extensions = bool(applied_extensions)
+    # Warnings state only what this engine does NOT do. They must never deny a
+    # capability the endpoint actually has: negative polarity, object concords,
+    # and extensions are all implemented, and whether one was applied is
+    # already visible in `generated.slots`.
     warnings = [
         {
             "code": "GENERATION_PARTIAL_RULE_SET",
             "message": (
-                "v1 generation supports only single-token positive present verb forms."
-                if polarity == "positive" else
-                "v1 generation supports only single-token negative present verb forms."
+                "v1 finite generation covers single-token present-tense verb "
+                "forms only; past, future, and subjunctive forms are not "
+                "generated. Infinitive and imperative forms are available "
+                "through the 'generation_type' feature."
+            ),
+        },
+        {
+            "code": "TONE_NOT_GENERATED",
+            "message": (
+                "Tone is not generated. Lexical tone records for reviewed "
+                "lemmas are available through the lemma read endpoint."
             ),
         },
     ]
-    if polarity == "positive":
-        if has_extensions:
-            tone_message = (
-                "Tone and negative forms are not generated."
-                if has_object else
-                "Tone, object markers, and negative forms are not generated."
-            )
-        else:
-            tone_message = "Tone, negative forms, and extensions are not generated." if has_object else "Tone, object markers, negative forms, and extensions are not generated."
-        warnings.append({
-            "code": "TONE_NOT_GENERATED",
-            "message": tone_message,
-        })
-    else:
-        if has_extensions:
-            tone_message = (
-                "Tone is not generated."
-                if has_object else
-                "Tone and object markers are not generated."
-            )
-        else:
-            tone_message = "Tone and extensions are not generated." if has_object else "Tone, object markers, and extensions are not generated."
-        warnings.append({
-            "code": "TONE_NOT_GENERATED",
-            "message": tone_message,
-        })
 
     return {
         "input": {
@@ -1515,17 +1500,17 @@ def _build_positive_analysis(
     if has_object:
         rule_id = "fortune.concord.object.001"
         confidence = min(subject_candidate["confidence"], object_candidate["confidence"])
-        limitations = [
-            "v1 supports only single-token positive present verb forms.",
-            "Negative forms and tone are not analyzed.",
-        ]
     else:
         rule_id = SUPPORTED_RULE_ID
         confidence = subject_candidate["confidence"]
-        limitations = [
-            "v1 supports only single-token positive present verb forms.",
-            "Object markers, negative forms, and tone are not analyzed.",
-        ]
+    # Object concords and negative forms are implemented (this lane reports the
+    # concord rule id when an object is present, and negation has its own lane),
+    # so the limitations never claim they are unavailable.
+    limitations = [
+        "v1 finite analysis covers single-token present-tense verb forms; "
+        "past, future, and subjunctive forms are not analyzed.",
+        "Tone is not analyzed.",
+    ]
     return {
         "analysis_type": "verb_form",
         "confidence": confidence,
@@ -1736,17 +1721,15 @@ def _build_negative_analysis(
     if has_object:
         rule_id = "fortune.concord.object.001"
         confidence = min(subject_candidate["confidence"], object_candidate["confidence"])
-        limitations = [
-            "v1 supports only single-token negative present verb forms.",
-            "Tone is not analyzed.",
-        ]
     else:
         rule_id = "fortune.verbal.negation.001"
         confidence = subject_candidate["confidence"]
-        limitations = [
-            "v1 supports only single-token negative present verb forms.",
-            "Object markers, positive forms, and tone are not analyzed.",
-        ]
+    # Object concords and positive forms are implemented; see the positive lane.
+    limitations = [
+        "v1 finite analysis covers single-token present-tense verb forms; "
+        "past, future, and subjunctive forms are not analyzed.",
+        "Tone is not analyzed.",
+    ]
     return {
         "analysis_type": "verb_form",
         "confidence": confidence,

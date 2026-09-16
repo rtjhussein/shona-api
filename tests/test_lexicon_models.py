@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.admin import LemmaAdmin, NounClassAdmin
 from shona_api.lexicon.models import Form, Lemma, NounClass, Sense, ToneRecord
+from shona_api.phonology import DEFAULT_GRAPHEME_INVENTORY
 
 
 @pytest.mark.django_db
@@ -69,7 +70,7 @@ def test_lemma_and_form_compute_phonology_fields_on_save():
     )
 
     assert lemma.normalized_headword == "zimbabwe"
-    assert lemma.phonology_inventory_version == "shona-core-v1"
+    assert lemma.phonology_inventory_version == DEFAULT_GRAPHEME_INVENTORY.version
     assert lemma.graphemes == ["z", "i", "mb", "a", "bw", "e"]
     assert lemma.grapheme_count == 6
     assert lemma.syllables == ["zi", "mba", "bwe"]

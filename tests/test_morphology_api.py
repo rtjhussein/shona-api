@@ -7,6 +7,7 @@ from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Lemma, NounClass
 from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
+from shona_api.phonology import DEFAULT_GRAPHEME_INVENTORY
 from shona_api.releases.models import DataRelease
 
 
@@ -351,9 +352,9 @@ def test_analyze_endpoint_returns_bounded_positive_present_verb_analysis(
             "value": "a",
         },
     }
-    assert analysis["phonology"]["phonology_inventory_version"] == "shona-core-v1"
+    assert analysis["phonology"]["phonology_inventory_version"] == DEFAULT_GRAPHEME_INVENTORY.version
     assert analysis["phonology"]["syllables"] == ["ndi", "no", "bu", "da"]
-    assert "tone" in analysis["limitations"][1]
+    assert any("tone" in limitation.casefold() for limitation in analysis["limitations"])
 
 
 @pytest.mark.django_db
@@ -408,7 +409,6 @@ def test_analyze_endpoint_returns_ku_infinitive_analysis(
             "value": "a",
         },
     }
-    assert "optionally negative" in analysis["limitations"][0]
 
 
 @pytest.mark.django_db
@@ -582,20 +582,57 @@ def test_generate_endpoint_returns_bounded_positive_present_verb_form(
         "bu",
         "da",
     ]
-    assert body["data"]["warnings"] == [
-        {
-            "code": "GENERATION_PARTIAL_RULE_SET",
-            "message": (
-                "v1 generation supports only single-token positive present verb forms."
-            ),
-        },
-        {
-            "code": "TONE_NOT_GENERATED",
-            "message": (
-                "Tone, object markers, negative forms, and extensions are not generated."
-            ),
-        },
-    ]
+    warning_codes = [warning["code"] for warning in body["data"]["warnings"]]
+    assert warning_codes == ["GENERATION_PARTIAL_RULE_SET", "TONE_NOT_GENERATED"]
+    assert all(
+        isinstance(warning["message"], str) and warning["message"]
+        for warning in body["data"]["warnings"]
+    )
+
+
+@pytest.mark.django_db
+def test_capability_denials_absent_from_generation_warnings(
+    client, api_key, current_release, verb_lemma
+):
+    """Warnings must not deny a capability the endpoint implements.
+
+    Regression: the finite path emitted "Tone, object markers, negative forms,
+    and extensions are not generated." for a positive request, and "Tone,
+    object markers, and extensions are not generated." for a negative one,
+    although polarity, object concords, and extensions are all implemented and
+    are reported in ``generated.slots``. A client reading a limitation must not
+    be told an implemented feature is missing.
+    """
+    for polarity in ("positive", "negative"):
+        response = client.post(
+            "/v1/generate",
+            {
+                "lemma_public_id": verb_lemma.public_id,
+                "features": {
+                    "generation_type": "verb_form",
+                    "subject": {
+                        "type": "person",
+                        "person": "first",
+                        "number": "singular",
+                    },
+                    "tense_aspect": "present",
+                    "polarity": polarity,
+                },
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Api-Key {api_key}",
+        )
+        assert response.status_code == 200
+        text = " ".join(
+            warning["message"] for warning in response.json()["data"]["warnings"]
+        ).casefold()
+        for denied in (
+            "object markers",
+            "extensions are not generated",
+            "negative forms are not generated",
+            "positive forms are not generated",
+        ):
+            assert denied not in text, (polarity, denied, text)
 
 
 @pytest.mark.django_db

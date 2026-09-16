@@ -6,6 +6,7 @@ from shona_api.api_auth.models import APIKey
 from shona_api.editorial.models import ReviewState
 from shona_api.lexicon.models import Form, Lemma, Sense, ToneRecord
 from shona_api.morphology.services import MORPHOLOGY_RULES_VERSION
+from shona_api.phonology import DEFAULT_GRAPHEME_INVENTORY
 from shona_api.releases.models import DataRelease
 
 
@@ -133,7 +134,7 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
             "first_appearance_page": "",
             "frequency_tier": Lemma.FrequencyTier.UNKNOWN,
             "frequency_score": 0.0,
-            "phonology_inventory_version": "shona-core-v1",
+            "phonology_inventory_version": DEFAULT_GRAPHEME_INVENTORY.version,
             "graphemes": ["b", "u", "d", "a"],
             "grapheme_count": 4,
             "syllables": ["bu", "da"],
@@ -197,7 +198,7 @@ def test_lemma_read_endpoint_returns_envelope_with_core_lexical_records(
                 "dialects": [],
                 "grammar": ["nominalized"],
                 "sense_public_id": sense.public_id,
-                "phonology_inventory_version": "shona-core-v1",
+                "phonology_inventory_version": DEFAULT_GRAPHEME_INVENTORY.version,
                 "graphemes": ["mb", "u", "d", "o"],
                 "grapheme_count": 4,
                 "syllables": ["mbu", "do"],

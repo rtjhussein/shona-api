@@ -1,6 +1,7 @@
 import pytest
 
 from shona_api.phonology import (
+    DEFAULT_GRAPHEME_INVENTORY,
     GraphemeInventory,
     compute_phonology_fields,
     get_grapheme_inventory,
@@ -34,6 +35,29 @@ def test_grapheme_inventory_is_versioned_and_configurable():
         get_grapheme_inventory("missing")
 
 
+def test_default_inventory_treats_labialised_and_pre_reform_clusters_as_one_grapheme():
+    """A grapheme is one phoneme, not one character.
+
+    shona-core-v1 split these clusters, so `grapheme_length` (the field word
+    games filter on) was wrong for every word containing one. `mbwa` (dog) is
+    core vocabulary and was counted as three graphemes.
+    """
+    assert segment_graphemes("mbwa") == ["mbw", "a"]
+    assert segment_graphemes("ngwe") == ["ngw", "e"]
+    assert segment_graphemes("ndwandwe") == ["ndw", "a", "ndw", "e"]
+    assert segment_graphemes("kunzwisisa") == ["k", "u", "nzw", "i", "s", "i", "s", "a"]
+    assert segment_graphemes("bvekenyedzwa") == ["bv", "e", "k", "e", "ny", "e", "dzw", "a"]
+    assert segment_graphemes("kutya") == ["k", "u", "ty", "a"]
+    assert segment_graphemes("tshumba") == ["tsh", "u", "mb", "a"]
+
+
+def test_inventory_version_bump_does_not_change_syllabification():
+    assert syllabify_word("ngwe") == ["ngwe"]
+    assert syllabify_word("mbwa") == ["mbwa"]
+    assert syllabify_word("ndwandwe") == ["ndwa", "ndwe"]
+    assert syllabify_word("kutya") == ["ku", "tya"]
+
+
 def test_syllabify_word_returns_stable_syllables_for_representative_forms():
     assert syllabify_word("chikoro") == ["chi", "ko", "ro"]
     assert syllabify_word("mhoro") == ["mho", "ro"]
@@ -43,7 +67,7 @@ def test_syllabify_word_returns_stable_syllables_for_representative_forms():
 
 def test_compute_phonology_fields_returns_payload_for_future_save_hooks():
     assert compute_phonology_fields("Zimbabwe") == {
-        "phonology_inventory_version": "shona-core-v1",
+        "phonology_inventory_version": DEFAULT_GRAPHEME_INVENTORY.version,
         "graphemes": ["z", "i", "mb", "a", "bw", "e"],
         "grapheme_count": 6,
         "syllables": ["zi", "mba", "bwe"],
