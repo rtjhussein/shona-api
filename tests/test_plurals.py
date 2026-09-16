@@ -135,8 +135,14 @@ def test_the_first_recorded_form_wins_and_the_rest_are_alternatives():
         # not state: `map-` with `bhamadza` would need `p -> bh`.
         ("bhamadza", ["map-"], "5", PLURAL_ALLOMORPH_UNVERIFIED),
         # Only the class whose plural rule is established is derived.
-        ("kota", ["vak-"], "1", PLURAL_CLASS_UNVERIFIED),
-        ("rusero", ["sero 10 k"], "11", PLURAL_CLASS_UNVERIFIED),
+        # No class rule is encoded for 2a yet, so its prefix cannot be applied.
+        ("vanabudibudi", ["vavana-"], "2a", PLURAL_CLASS_UNVERIFIED),
+        # Class 1 is verified, but `kota` carries none of its singular
+        # prefixes, so the plural prefix has nothing to replace.
+        ("kota", ["vak-"], "1", PLURAL_ALLOMORPH_UNVERIFIED),
+        # The parser put a cross-reference in the plural field; there is no
+        # plural to publish.
+        ("rusero", ["see bemu."], "11", PLURAL_NOT_A_PREFIX),
         ("biku", [], "5", NO_RECORDED_PLURAL),
         # A recorded value that is neither a trailing-hyphen prefix nor a whole
         # form: malformed rather than irregular, so it is refused, not guessed.

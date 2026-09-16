@@ -32,8 +32,8 @@
       "denominator": 324
     },
     "plural_form": {
-      "passed": 27,
-      "failed": 15,
+      "passed": 35,
+      "failed": 7,
       "not_applicable": 282,
       "denominator": 42
     },
@@ -41,7 +41,7 @@
   },
   "coverage": {
     "nouns_with_source_plural": 42,
-    "with_a_published_form": 27
+    "with_a_published_form": 35
   },
   "results": [
     {
@@ -1386,7 +1386,8 @@
             "sero 10 k & tsero 10 mz"
           ],
           "actual_forms": [
-            "sera"
+            "sera",
+            "sero"
           ]
         }
       },
@@ -1430,7 +1431,9 @@
           "expected_prefixes": [
             "nzwanza 10"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "nzwanza"
+          ]
         }
       },
       "unresolved": false
@@ -1506,11 +1509,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "nzwodzi"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "nzwodzi"
+          ]
         }
       },
       "unresolved": false
@@ -7659,11 +7664,13 @@
           "actual": "o n 3, pl: moyo, Heart (physical organ)."
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "moyo"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "moyo"
+          ]
         }
       },
       "unresolved": false
@@ -7780,11 +7787,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "vamuk"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vamukugu"
+          ]
         }
       },
       "unresolved": false
@@ -7943,13 +7952,15 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "mat",
             "vamut",
             "vanamut"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "matiro"
+          ]
         }
       },
       "unresolved": false
@@ -7988,12 +7999,14 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "vamuu",
             "vanamuu"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "vamuumbira"
+          ]
         }
       },
       "unresolved": false
@@ -10245,11 +10258,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "mab"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "mabanzu"
+          ]
         }
       },
       "unresolved": false
@@ -10374,7 +10389,9 @@
           "expected_prefixes": [
             "ndwara 10"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "ndwara"
+          ]
         }
       },
       "unresolved": false
@@ -10413,12 +10430,14 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "ma",
             "u"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "marebvu"
+          ]
         }
       },
       "unresolved": false
@@ -11725,11 +11744,13 @@
           "actual": "noun"
         },
         "plural_form": {
-          "status": "fail",
+          "status": "pass",
           "expected_prefixes": [
             "maune"
           ],
-          "actual_forms": []
+          "actual_forms": [
+            "maune"
+          ]
         }
       },
       "unresolved": false

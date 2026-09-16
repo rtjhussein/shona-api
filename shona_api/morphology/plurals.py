@@ -24,6 +24,7 @@ for review -- a wrong plural is worse than a missing one.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Sequence
 
@@ -31,6 +32,7 @@ from shona_api.phonology import segment_graphemes
 
 NO_RECORDED_PLURAL = "NO_RECORDED_PLURAL"
 PLURAL_NOT_A_PREFIX = "PLURAL_NOT_A_PREFIX"
+PLURAL_NASAL_PLACEHOLDER = "PLURAL_NASAL_PLACEHOLDER"
 PLURAL_ALLOMORPH_UNVERIFIED = "PLURAL_ALLOMORPH_UNVERIFIED"
 PLURAL_EMPTY_STEM = "PLURAL_EMPTY_STEM"
 PLURAL_CLASS_UNVERIFIED = "PLURAL_CLASS_UNVERIFIED"
@@ -43,7 +45,78 @@ PLURAL_PREFIX_FORM_UNVERIFIED = "PLURAL_PREFIX_FORM_UNVERIFIED"
 # each needs its own source work before a surface can be published as fact.
 #
 # 1,956 of the 2,060 published nouns carrying a plural prefix are class 5.
-SOURCE_VERIFIED_PLURAL_CLASSES = frozenset({"5", "1a"})
+@dataclass(frozen=True)
+class PluralClassRule:
+    """What the source states about one class's correlative plural.
+
+    ``prefixes`` are the plural-class prefixes the source gives for the class
+    (with their allomorphs); a recorded prefix has to start with one of them.
+    ``singular_prefixes`` are the class's own prefixes, which the plural
+    *replaces* -- Fortune 3.3.14 describes the class 11 plural as formed with a
+    prefix "substituted for or superimposed on the prefix /ru-/", and the same
+    shape holds wherever the singular carries a prefix of its own. An empty
+    tuple means the singular prefix is realised within the stem (class 5) or is
+    /ø-/, so the plural attaches to the headword as recorded.
+    """
+
+    plural_class: str
+    prefixes: tuple[str, ...]
+    singular_prefixes: tuple[str, ...]
+    kind: str
+    locator: str
+
+
+# Fortune Vol 1. PDF page = printed page + 12, the offset used elsewhere here.
+PLURAL_CLASS_RULES: dict[str, PluralClassRule] = {
+    "1": PluralClassRule(
+        # Class 1 plurals are "predominantly" in class 2, with class 6 for the
+        # tribe names of group (3) (3.3.1, printed p.39); class 6 in turn lists
+        # class 1 among its correlating singulars (3.3.9, printed p.52).
+        "2", ("va", "v", "ma"), ("mu", "mw", "m"), "standard",
+        "3.3.1/3.3.2 printed pp.39-42: '/va-/' with '/v-/ before underived vowel-commencing "
+        "stems', and class 6 for group (3); prefix substitution per 3.2.6 printed p.34",
+    ),
+    "3": PluralClassRule(
+        "4", ("mi", "mw"), ("mu", "mw", "m"), "standard",
+        "3.3.7 Noun class 4, printed p.49: '/mi-/', '/mw-/ before underived vowel-commencing "
+        "stems'; prefix substitution per 3.2.6 printed p.34",
+    ),
+    "5": PluralClassRule(
+        "6", ("ma",), (), "standard",
+        "3.3.8/3.3.9 printed pp.50-52: class 6 '/ma-/' is the correlative plural of class 5",
+    ),
+    "7": PluralClassRule(
+        "8", ("zvi", "zv", "zva"), ("chi", "ch"), "standard",
+        "3.3.11 Noun class 8, printed p.60: '/zvi-/', allomorphs '/zv-/' and '/zva-/' "
+        "corresponding to '/chi-/' and '/cha-/'",
+    ),
+    "9": PluralClassRule(
+        "10", ("dzi",), (), "standard",
+        "3.3.13 Noun class 10, printed p.65: '/dzi-/', allomorph '/\u00d8-/'",
+    ),
+    "11": PluralClassRule(
+        # Fortune states both mechanisms -- "substituted for or superimposed on
+        # the prefix /ru-/" -- and never says which stems take which. The
+        # recorded value decides per entry: `ruvi` records `maruvi`, the
+        # superimposing shape, while 104 other class 11 nouns record a bare
+        # prefix (`mab-`, `mad-`) whose plural has no `ru`, i.e. substitution.
+        # The recorded form is the source's own statement of the plural's
+        # shape, so the rule never has to choose between the two.
+        "10", ("dzi", "ma"), ("ru", "rw", "r"), "standard",
+        "3.3.14 Noun class 11, printed p.67: plurals 'either in cl. 10, with prefix /\u00d8-N-/ "
+        "substituted for or superimposed on the prefix /ru-/, or, less often, in cl. 6, with prefix /ma-/'",
+    ),
+    "14": PluralClassRule(
+        "6", ("ma",), ("u", "ru"), "standard",
+        "3.3.17 Noun class 14, printed p.74: 'singular with plurals of cl. 6'",
+    ),
+    "1a": PluralClassRule(
+        "2a", ("va", "vana"), (), "honorific",
+        "3.3.3/3.3.4 printed pp.42-44: the class 2a plural is 'almost always honorific'",
+    ),
+}
+
+SOURCE_VERIFIED_PLURAL_CLASSES = frozenset(PLURAL_CLASS_RULES)
 
 # Underlying consonant -> the initial the singular shows, from Fortune 3.3.8:
 # (2) "voiced implosive" before /p, t/; (3) "voiced depressor" before
@@ -149,6 +222,12 @@ class PluralDerivation:
         return payload
 
 
+def prefix_of(recorded: str) -> str:
+    """The recorded plural without its trailing hyphen, for shape checks."""
+    text = strip_dialect_tag(recorded)
+    return text[:-1] if text.endswith("-") else text
+
+
 def strip_dialect_tag(recorded: str) -> str:
     """Drop a dialect restriction, however the source wrote it.
 
@@ -165,6 +244,19 @@ def strip_dialect_tag(recorded: str) -> str:
     return text
 
 
+# A recorded plural that is not a prefix must look like a word. Parsers
+# occasionally put the rest of the dictionary line in the plural field
+# (`pl: of jahwi q v. 2. M Muddy water. cp matakasvina KZ.`), and publishing
+# that as a plural would be worse than publishing nothing.
+RECORDED_FORM_RE = re.compile(r"^[^\s\-]+$")
+# A recorded form may carry its own class as an annotation -- `mhamburo 10`, or
+# `sero 10 k` with a dialect too. The annotation describes the plural, so the
+# surface is the token before it.
+ANNOTATED_FORM_RE = re.compile(
+    r"^(?P<form>[^\s]+)\s+\d+[a-z]?(?:\s+[A-Za-z()]+)?$"
+)
+
+
 def derive_plural(
     headword: str,
     recorded_forms: Sequence[str],
@@ -174,19 +266,14 @@ def derive_plural(
     """Derive the plural surface for ``headword`` from the recorded plural forms.
 
     Raises :class:`PluralDerivationError` with a stable code when the recorded
-    material does not establish the plural. ``noun_class`` is required: the rule
-    below is the class 5 -> class 6 one, and applying it to a class whose plural
-    the sources state differently would invent a form.
-    """
-    if noun_class not in SOURCE_VERIFIED_PLURAL_CLASSES:
-        raise PluralDerivationError(
-            PLURAL_CLASS_UNVERIFIED,
-            "The sources verified so far establish the plural rule for "
-            f"{sorted(SOURCE_VERIFIED_PLURAL_CLASSES)} only; this noun is "
-            f"class {noun_class!r}.",
-            detail={"noun_class": noun_class},
-        )
+    material does not establish the plural.
 
+    A plural the source writes out in full is **attested**, not derived, so it
+    is published whatever the noun's class: no rule is being applied, and
+    gating it on a class rule would withhold a plural the source states
+    outright. The class gate applies only where a recorded *prefix* has to be
+    applied to the stem, which is where a wrong rule would invent a form.
+    """
     recorded = next(
         (form for form in recorded_forms if isinstance(form, str) and form.strip()),
         None,
@@ -202,17 +289,73 @@ def derive_plural(
     # A recorded form with no trailing hyphen is the complete plural, written
     # out because it is irregular (`pl: moyo`) or suppletive (`pl: meno`).
     if not stripped.endswith("-"):
-        if "-" in stripped:
+        annotated = ANNOTATED_FORM_RE.match(stripped)
+        if annotated is not None:
+            stripped = annotated.group("form")
+        if "-" in stripped or not RECORDED_FORM_RE.match(stripped):
             raise PluralDerivationError(
                 PLURAL_NOT_A_PREFIX,
                 "The recorded plural is neither a trailing-hyphen prefix nor a "
-                "complete form.",
+                "single complete form.",
                 detail={"recorded": recorded},
             )
-        return PluralDerivation(surface=stripped, recorded=recorded, basis="recorded_form")
+        return PluralDerivation(
+            surface=stripped,
+            recorded=recorded,
+            basis="recorded_form",
+            plural_kind=(
+                "honorific" if noun_class in HONORIFIC_PLURAL_CLASSES else "standard"
+            ),
+        )
 
+    if noun_class not in SOURCE_VERIFIED_PLURAL_CLASSES:
+        raise PluralDerivationError(
+            PLURAL_CLASS_UNVERIFIED,
+            "A recorded plural prefix can only be applied where the sources "
+            "establish that class's rule; verified so far: "
+            f"{sorted(SOURCE_VERIFIED_PLURAL_CLASSES)}; this noun is "
+            f"class {noun_class!r}.",
+            detail={"noun_class": noun_class, "recorded": recorded},
+        )
+
+    # Hannan writes a capital N for a nasal that assimilates to whatever follows
+    # (`maNg-`), and segmentation case-folds, which would silently read it as
+    # the ordinary `ng`. Resolving it needs an assimilation rule no source here
+    # states, so it is refused rather than read as an `ng`.
+    if "N" in headword or "N" in prefix_of(stripped):
+        raise PluralDerivationError(
+            PLURAL_NASAL_PLACEHOLDER,
+            "The entry uses Hannan's capital-N placeholder for a nasal that "
+            "assimilates to the following consonant; no available source states "
+            "the assimilation.",
+            detail={"recorded": recorded, "headword": headword},
+        )
+
+    rule = PLURAL_CLASS_RULES[noun_class]
     prefix = stripped[:-1]
-    stem_graphemes = segment_graphemes(headword)
+    if not _plural_prefix_allowed(prefix, rule):
+        raise PluralDerivationError(
+            PLURAL_ALLOMORPH_UNVERIFIED,
+            f"The recorded prefix {prefix + '-'!r} does not begin with a prefix the "
+            f"sources state for class {noun_class} (class {rule.plural_class}: "
+            f"{', '.join(rule.prefixes)}).",
+            detail={"recorded": recorded, "noun_class": noun_class, "rule": rule.locator},
+        )
+
+    stem = headword
+    if rule.singular_prefixes:
+        stripped_stem = _strip_singular_prefix(headword, rule)
+        if stripped_stem is None:
+            raise PluralDerivationError(
+                PLURAL_ALLOMORPH_UNVERIFIED,
+                f"The headword does not begin with any class {noun_class} prefix the "
+                f"sources state ({', '.join(rule.singular_prefixes)}), so the plural "
+                "prefix has nothing to replace.",
+                detail={"recorded": recorded, "headword": headword, "rule": rule.locator},
+            )
+        stem = stripped_stem
+
+    stem_graphemes = segment_graphemes(stem)
     if not prefix or not stem_graphemes:
         raise PluralDerivationError(
             PLURAL_EMPTY_STEM,
@@ -250,9 +393,41 @@ def derive_plural(
         surface=surface,
         recorded=recorded,
         basis=f"{basis}_prefix" if size else "prefix_plus_stem",
-        plural_kind="honorific" if noun_class in HONORIFIC_PLURAL_CLASSES else "standard",
+        plural_kind=rule.kind,
         allomorph=allomorph,
     )
+
+
+PREFIX_SUBSTITUTION_LOCATOR = (
+    "Fortune Vol 1 3.2.6 'Position of primary and secondary prefixes', printed p.34: "
+    "a secondary prefix is 'one which is substituted for a primary prefix', "
+    "e.g. chi-kadzi (7) cp. mu-kadzi (1)"
+)
+
+
+def _strip_singular_prefix(headword: str, rule: PluralClassRule) -> str | None:
+    """Remove the singular's own primary prefix, which the plural replaces.
+
+    `mu-kadzi` (1) cp. `chi-kadzi` (7) shows the plural attaching to the stem,
+    not to the prefixed form it replaces (3.2.6). Returns ``None`` when the
+    headword does not begin with any prefix the class states.
+    """
+    graphemes = segment_graphemes(headword)
+    for candidate in sorted(rule.singular_prefixes, key=len, reverse=True):
+        candidate_graphemes = segment_graphemes(candidate)
+        if graphemes[: len(candidate_graphemes)] == candidate_graphemes:
+            return "".join(graphemes[len(candidate_graphemes) :])
+    return None
+
+
+def _plural_prefix_allowed(prefix: str, rule: PluralClassRule) -> bool:
+    """The recorded prefix must begin with one the source states for the class."""
+    graphemes = segment_graphemes(prefix)
+    for candidate in rule.prefixes:
+        candidate_graphemes = segment_graphemes(candidate)
+        if graphemes[: len(candidate_graphemes)] == candidate_graphemes:
+            return True
+    return False
 
 
 def _shared_span(

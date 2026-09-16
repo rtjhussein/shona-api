@@ -302,8 +302,8 @@ which is the authority when the two disagree. All are read-only until invoked
 without `--dry-run`.
 
 `publish_noun_plurals` derives a plural only where the sources establish the
-rule (Fortune Vol 1 3.3.8/3.3.9 for class 5 → 6; 3.3.3/3.3.4 for the honorific
-class 1a → 2a plural) and only from a plural the line records; anything else is
+rule (Fortune Vol 1, one locator per class in `PLURAL_CLASS_RULES`) and only
+from a plural the line records; anything else is
 refused with a stable code. Each published plural carries `form_kind=plural`
 and a `plural_kind` of `standard` or `honorific`, so a consumer can tell the
 plural it can count with from the one that is honorific. See
@@ -372,7 +372,7 @@ a future import that quietly drops noun-class coverage fails the gate instead of
 degrading the lexicon unnoticed. Raise a baseline deliberately, with
 `python tools/evaluate_lexical_qa.py ... --write-baseline`.
 
-A highly comprehensive suite of **588 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
+A highly comprehensive suite of **589 automated tests** validates API auth, rate-limiting, schemas, models, parser segments, GPT JSONL ingestion, published-corpus QA, rule-based morphology, grapheme segmentation, the frozen source-backed morphology evaluation corpus (`evaluation/source_backed/v1`), the lexical QA harness (`evaluation/lexical_qa/v1`), and the verification gate itself.
 
 The suite always boots on `config/settings.test` (pinned via pytest `--ds`, so a stray `DJANGO_SETTINGS_MODULE` environment variable cannot silently run it under dev settings): MD5 password hashing, SQLite, and a LocMem cache — no Redis or Postgres required.
 
