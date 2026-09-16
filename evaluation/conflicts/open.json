@@ -117,6 +117,41 @@
         "bimha",
         "bimba"
       ]
+    },
+    {
+      "id": "headword-consonant-and-diacritic-misreads",
+      "title": "Headwords diverge from the scan: a consonant read as a neighbour, and a tone diacritic that is not printed",
+      "field": "headword",
+      "status": "open",
+      "kind": "source_defect",
+      "summary": "Three of nine headwords on Hannan page 500 differ from the scan. Two are the same consonant-neighbour misread as the plural prefixes (`nzvinzvi-i` -> `nzvinzi-i`, dropping the v; `nzwaivhi` -> `nzwaiwhi`, v read as w). The third adds a tone diacritic the page does not print (`nzvirihi` -> `nzvirihì`), which is more dangerous: it looks like data rather than damage.",
+      "sources": [
+        {
+          "source": "Hannan, Standard Shona Dictionary (scan)",
+          "locator": "dictionary p.500, PDF p.524",
+          "claim": "the page prints `nzvinzvi-i`, `nzvirihi`, `nzwaivhi`",
+          "verbatim": "nzvinzvi-i [HL] KMZ ideo of Being pitch-black. / nzvirihi [LLH]M n 9 Mozambique Canary R859. / nzwaivhi [LHL]Z n 10 Chameleons (pl of rwaivhi)."
+        },
+        {
+          "source": "published lemmas",
+          "locator": "lexicon_lemma.normalized_headword",
+          "claim": "the corpus holds nzvinzi-i, nzvirihì, nzwaiwhi"
+        }
+      ],
+      "evidence": [
+        "Found by the per-field audit on 2026-09-16; the three audited fields (tone, POS, class) were clean on the same page, so this is not a reading error in the audit.",
+        "Read at 8x and 12x and through an independent vision query, which agreed."
+      ],
+      "resolution_needed": "Measure the field before repairing it: a scan check of headwords across the dictionary is needed to size the consonant and diacritic misread classes, since a repair needs to know whether it is correcting three records or three hundred. Both classes are mechanical to detect.",
+      "impact": "3 of 9 headwords on one page; the field has never been audited at scale, and a wrong headword is the most visible defect a dictionary can have",
+      "affected_headwords": [
+        "nzvinzvi-i",
+        "nzvirihi",
+        "nzwaivhi",
+        "nzvinzi-i",
+        "nzvirihì",
+        "nzwaiwhi"
+      ]
     }
   ]
 }
