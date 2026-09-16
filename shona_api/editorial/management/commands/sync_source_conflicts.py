@@ -83,8 +83,10 @@ class Command(BaseCommand):
                 continue
 
             locators = self._affected_locators(conflict)
-            lemmas = list(self._lemmas_for(locators)) + list(
-                self._lemmas_for_parser_classes(conflict.get("affected_parser_class_values"))
+            lemmas = (
+                list(self._lemmas_for(locators))
+                + list(self._lemmas_for_parser_classes(conflict.get("affected_parser_class_values")))
+                + list(self._lemmas_for_headwords(conflict.get("affected_headwords")))
             )
             if not lemmas:
                 self.stdout.write(
@@ -152,6 +154,12 @@ class Command(BaseCommand):
                 continue
             locators.append(columns[4].strip())
         return locators
+
+    def _lemmas_for_headwords(self, headwords):
+        """Named lemmas, for a conflict that affects specific entries rather than a pattern."""
+        if not headwords:
+            return []
+        return Lemma.objects.filter(headword__in=headwords)
 
     def _lemmas_for_parser_classes(self, class_values):
         """Lemmas whose parser output recorded one of these class values.
